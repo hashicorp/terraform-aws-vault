@@ -4,7 +4,7 @@ This folder contains a [Terraform](https://www.terraform.io/) module that can be
 Balancer (ELB)](https://aws.amazon.com/elasticloadbalancing/classicloadbalancer/) in front of the Vault cluster
 from the [vault-cluster module](/modules/vault-cluster). This is useful if you need to access Vault from the public
 Internet. Note that for most users, we recommend NOT making Vault accessible from the public Internet and using
-DNS to access your Vault cluster instead (see the [vault-dnsmasq module](/modules/vault-dnsmasq) for details).
+DNS to access your Vault cluster instead (see the [install-dnsmasq module](/modules/install-dnsmasq) for details).
 
 
 

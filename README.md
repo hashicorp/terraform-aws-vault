@@ -20,7 +20,7 @@ This Blueprint includes:
 * [vault-cluster](/modules/vault-cluster): Terraform code to deploy a cluster of Vault servers using an [Auto Scaling 
   Group](https://aws.amazon.com/autoscaling/).
     
-* [vault-dnsmasq](/modules/vault-dnsmasq): Installs Dnsmasq on your servers so you can access Vault using DNS (e.g. 
+* [install-dnsmasq](/modules/install-dnsmasq): Installs Dnsmasq on your servers so you can access Vault using DNS (e.g. 
   using an address like `vault.service.consul`).
     
 * [vault-elb](/modules/vault-elb): Configures an [Elastic Load Balancer 
@@ -94,8 +94,8 @@ To deploy a Vault cluster with this Blueprint:
    the [unseal command](https://www.vaultproject.io/docs/concepts/seal.html) with their unseal key. Once the proper 
    number of key shards have been entered, your Vault nodes will be unsealed, and your cluster will be ready for use!
 
-If you only need to access Vault from inside your AWS account (recommended), install the [vault-dnsmasq 
-module](/modules/vault-dnsmasq) on each server, and that server will be able to reach Vault using DNS (e.g. using an
+If you only need to access Vault from inside your AWS account (recommended), install the [install-dnsmasq 
+module](/modules/install-dnsmasq) on each server, and that server will be able to reach Vault using DNS (e.g. using an
 address like `vault.service.consul`). See the [vault-cluster-private example](/examples/vault-cluster-private) for 
 working sample code.
 

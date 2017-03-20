@@ -73,7 +73,7 @@ This module uses Consul not only as a [storage backend](https://www.vaultproject
 but also as a way to register [DNS entries](https://www.consul.io/docs/guides/forwarding.html). This allows servers in
 the same AWS account to access Vault using DNS (e.g. using an address like `vault.service.consul`).
 
-To set this up, install the [vault-dnsmasq module](/modules/vault-dnsmasq) on each server that needs to access Vault.
+To set this up, install the [install-dnsmasq module](/modules/install-dnsmasq) on each server that needs to access Vault.
 
 
 ### Access Vault from the public Internet

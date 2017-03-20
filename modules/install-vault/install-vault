@@ -3,7 +3,7 @@
 # operating systems:
 #
 # 1. Ubuntu 16.04
-# 1. Amazon Linux
+# 2. Amazon Linux
 
 set -e
 
@@ -102,11 +102,11 @@ function create_supervisor_config {
 }
 
 function has_yum {
-  [ -n "$(command -v yum)" ]
+  [[ -n "$(command -v yum)" ]]
 }
 
 function has_apt_get {
-  [ -n "$(command -v apt-get)" ]
+  [[ -n "$(command -v apt-get)" ]]
 }
 
 function install_dependencies {

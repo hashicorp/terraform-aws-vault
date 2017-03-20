@@ -84,8 +84,13 @@ resource "aws_route53_record" "vault_elb" {
   type    = "A"
 
   alias {
-    name                   = "${aws_elb.vault.dns_name}"
-    zone_id                = "${aws_elb.vault.zone_id}"
-    evaluate_target_health = true
+    name    = "${aws_elb.vault.dns_name}"
+    zone_id = "${aws_elb.vault.zone_id}"
+
+    # When set to true, if either none of the ELB's EC2 instances are healthy or the ELB itself is unhealthy,
+    # Route 53 routes queries to "other resources." But since we haven't defined any other resources, we'd rather
+    # avoid any latency due to switchovers and just wait for the ELB and Vault instances to come back online.
+    # For more info, see http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-values-alias.html#rrsets-values-alias-evaluate-target-health
+    evaluate_target_health = false
   }
 }

@@ -20,7 +20,13 @@ This Blueprint includes:
 * [vault-cluster](/modules/vault-cluster): Terraform code to deploy a cluster of Vault servers using an [Auto Scaling 
   Group](https://aws.amazon.com/autoscaling/).
     
-  
+* [vault-dnsmasq](/modules/vault-dnsmasq): Installs Dnsmasq on your servers so you can access Vault using DNS (e.g. 
+  using an address like `vault.service.consul`).
+    
+* [vault-elb](/modules/vault-elb): Configures an [Elastic Load Balancer 
+  (ELB)](https://aws.amazon.com/elasticloadbalancing/classicloadbalancer/) in front of Vault if you need to access it
+  from the public Internet.
+   
 
 
 

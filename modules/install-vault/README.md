@@ -30,8 +30,9 @@ You can then run the `run-vault` script when the server is booting to start Vaul
 We recommend running the `install-vault` script as part of a [Packer](https://www.packer.io/) template to create a
 Vault [Amazon Machine Image (AMI)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) (see the 
 [vault-ami example](/examples/vault-ami) for sample code). You can then deploy the AMI across an Auto 
-Scaling Group using the [vault-cluster module](/modules/vault-cluster) (see the [vault-cluster 
-example](/examples/vault-cluster) for fully-working sample code).
+Scaling Group using the [vault-cluster module](/modules/vault-cluster) (see the 
+[vault-cluster-public](/examples/vault-cluster-public) and [vault-cluster-private](/examples/vault-cluster-private) 
+examples for fully-working sample code).
 
 
 

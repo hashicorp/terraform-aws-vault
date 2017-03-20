@@ -52,7 +52,8 @@ Note the following parameters:
 
 You can find the other parameters in [vars.tf](vars.tf).
 
-Check out the [vault-cluster example](/examples/vault-cluster example) for working sample code.
+Check out the [vault-cluster-public](/examples/vault-cluster-public) and 
+[vault-cluster-private](/examples/vault-cluster-private) examples for working sample code.
 
 
 
@@ -282,7 +283,8 @@ Consul in the same cluster because:
    consumption on the server.
 
 Check out the [Consul AWS Blueprint](https://github.com/gruntwork-io/consul-aws-blueprint) for how to deploy a Consul 
-cluster in AWS. See the [vault-cluster example](/examples/vault-cluster) for sample code that shows how to run both a
+cluster in AWS. See the [vault-cluster-public](/examples/vault-cluster-public) and 
+[vault-cluster-private](/examples/vault-cluster-private) examples for sample code that shows how to run both a
 Vault and Consul cluster.
 
 

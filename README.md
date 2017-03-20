@@ -94,12 +94,15 @@ To deploy a Vault cluster with this Blueprint:
    the [unseal command](https://www.vaultproject.io/docs/concepts/seal.html) with their unseal key. Once the proper 
    number of key shards have been entered, your Vault nodes will be unsealed, and your cluster will be ready for use!
 
-1. If you only need to access Vault from inside your AWS account (recommended), install the [vault-dnsmasq 
-   module](/modules/vault-dnsmasq) on each server, and that server will be able to reach Vault using DNS (e.g. using an
-   address like `vault.service.consul`). If you need to access Vault from the public Internet, deploy the [vault-elb 
-   module](/modules/vault-elb) in a public subnet and have all requests to Vault go through the ELB. 
+If you only need to access Vault from inside your AWS account (recommended), install the [vault-dnsmasq 
+module](/modules/vault-dnsmasq) on each server, and that server will be able to reach Vault using DNS (e.g. using an
+address like `vault.service.consul`). See the [vault-cluster-private example](/examples/vault-cluster-private) for 
+working sample code.
 
-Check out the [vault-cluster example](/examples/vault-cluster) for working sample code.
+If you need to access Vault from the public Internet, deploy the [vault-elb module](/modules/vault-elb) in a public 
+subnet and have all requests to Vault go through the ELB. See the [vault-cluster-public 
+example](/examples/vault-cluster-public) for working sample code.
+
 
  
 

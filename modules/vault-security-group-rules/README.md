@@ -3,7 +3,7 @@
 This folder contains a [Terraform](https://www.terraform.io/) module that defines the security group rules used by a 
 [Vault](https://www.vaultproject.io/) cluster to control the traffic that is allowed to go in and out of the cluster. 
 
-Normally, you'd get these rules by default if you're using the [vault-cluster module](/examples/vault-cluster), but if 
+Normally, you'd get these rules by default if you're using the [vault-cluster module](/modules/vault-cluster), but if 
 you're running Vault on top of a different cluster, then you can use this module to add the necessary security group 
 rules to that cluster. For example, imagine you were using the [consul-cluster 
 module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/consul-cluster) to run a cluster of 

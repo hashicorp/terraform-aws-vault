@@ -48,7 +48,7 @@ Note the following parameters:
 
 You can find the other parameters in [vars.tf](vars.tf).
 
-Check out the [vault-cluster example](/examples/vault-cluster example) for working sample code.
+Check out the [vault-cluster-public example](/examples/vault-cluster-public) for working sample code.
 
 
 

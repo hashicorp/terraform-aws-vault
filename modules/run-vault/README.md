@@ -18,7 +18,7 @@ module](/modules/install-vault). The default install path is `/opt/vault/bin`, s
 run:
 
 ```
-/opt/vault/bin/run-vault
+/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt --tls-key-file /opt/vault/tls/vault.key
 ```
 
 This will:
@@ -38,7 +38,8 @@ Data](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html#user-dat
 when the EC2 Instance is first booting. After running `run-vault` on that initial boot, the `supervisord` configuration 
 will automatically restart Vault if it crashes or the EC2 instance reboots.
 
-See the [vault-cluster example](/examples/vault-cluster example) for fully-working sample code.
+See the [vault-cluster-public](/examples/vault-cluster-public) and 
+[vault-cluster-private](/examples/vault-cluster-private) examples for fully-working sample code.
 
 
 

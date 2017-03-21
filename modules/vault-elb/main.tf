@@ -19,8 +19,9 @@ resource "aws_elb" "vault" {
   connection_draining         = "${var.connection_draining}"
   connection_draining_timeout = "${var.connection_draining_timeout}"
 
-  security_groups = ["${aws_security_group.vault.id}"]
-  subnets         = ["${var.subnet_ids}"]
+  security_groups    = ["${aws_security_group.vault.id}"]
+  availability_zones = ["${var.availability_zones}"]
+  subnets            = ["${var.subnet_ids}"]
 
   listener {
     lb_port           = "${var.vault_api_port}"

@@ -1,7 +1,8 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY A VAULT CLUSTER AND A CONSUL CLUSTER IN AWS
-# This is an example of how to use the vault-cluster module to deploy a Vault cluster in AWS. This cluster uses Consul,
-# running in a separate cluster, as its storage backend.
+# DEPLOY A VAULT CLUSTER, AN ELB, AND A CONSUL CLUSTER IN AWS
+# This is an example of how to use the vault-cluster and vault-elb modules to deploy a Vault cluster in AWS with an 
+# Elastic Load Balancer (ELB) in front of it. This cluster uses Consul, running in a separate cluster, as its storage 
+# backend.
 # ---------------------------------------------------------------------------------------------------------------------
 
 provider "aws" {
@@ -62,6 +63,36 @@ data "template_file" "user_data_vault_cluster" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# DEPLOY THE ELB
+# ---------------------------------------------------------------------------------------------------------------------
+
+module "vault_elb" {
+  # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
+  # to a specific version of the modules, such as the following example:
+  # source = "git::git@github.com:gruntwork-io/vault-aws-blueprint.git//modules/vault-elb?ref=v0.0.1"
+  source = "../../modules/vault-elb"
+
+  name = "${var.vault_cluster_name}"
+
+  vpc_id             = "${data.aws_vpc.default.id}"
+  availability_zones = ["${data.aws_availability_zones.all.names}"]
+
+  # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
+  # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
+  allowed_inbound_cidr_blocks = ["0.0.0.0/0"]
+
+  # In order to access Vault over HTTPS, we need a domain name that matches the TLS cert
+  create_dns_entry = true
+  hosted_zone_id   = "${data.aws_route53_zone.selected.zone_id}"
+  domain_name      = "${var.vault_domain_name}"
+}
+
+# Look up the Route 53 Hosted Zone by domain name
+data "aws_route53_zone" "selected" {
+  name = "${var.hosted_zone_domain_name}."
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY THE CONSUL CLUSTER
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -107,7 +138,7 @@ data "template_file" "user_data_consul" {
 # DEPLOY THE CLUSTERS IN THE DEFAULT VPC AND AVAILABILITY ZONES
 # Using the default VPC and all availability zones makes this example easy to run and test, but in a production
 # deployment, we strongly recommend deploying into a custom VPC and private subnets (the latter specified via the
-# subnet_ids parameter in the consul-cluster module).
+# subnet_ids parameter in the consul-cluster module). Only the ELB should run in the public subnets.
 # ---------------------------------------------------------------------------------------------------------------------
 
 data "aws_vpc" "default" {
@@ -115,3 +146,4 @@ data "aws_vpc" "default" {
 }
 
 data "aws_availability_zones" "all" {}
+

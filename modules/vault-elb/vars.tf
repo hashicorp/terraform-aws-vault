@@ -11,11 +11,6 @@ variable "vpc_id" {
   description = "The ID of the VPC into which the ELB should be deployed."
 }
 
-variable "subnet_ids" {
-  description = "A list of subnet IDs in which to run the ELB. If you want the ELB to be publicly accessible, these should be public subnets."
-  type = "list"
-}
-
 variable "allowed_inbound_cidr_blocks" {
   description = "A list of CIDR-formatted IP address ranges from which the ELB will accept requests."
   type        = "list"
@@ -25,6 +20,18 @@ variable "allowed_inbound_cidr_blocks" {
 # OPTIONAL PARAMETERS
 # These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------
+
+variable "subnet_ids" {
+  description = "The subnet IDs into which the ELB should be deployed. You will typically want to deploy the ELB into public subnets so your Vault cluster can run in private subnets. At least one of var.subnet_ids or var.availability_zones must be non-empty."
+  type        = "list"
+  default     = []
+}
+
+variable "availability_zones" {
+  description = "The availability zones into which the ELB should be deployed. At least one of var.subnet_ids or var.availability_zones must be non-empty."
+  type        = "list"
+  default     = []
+}
 
 variable "create_dns_entry" {
   description = "If set to true, this module will create a Route 53 DNS A record for the ELB in the var.hosted_zone_id hosted zone with the domain name in var.domain_name."

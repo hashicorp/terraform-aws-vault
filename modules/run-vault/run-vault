@@ -9,7 +9,6 @@ readonly SUPERVISOR_CONFIG_PATH="/etc/supervisor/conf.d/run-vault.conf"
 readonly DEFAULT_PORT=8200
 
 readonly EC2_INSTANCE_METADATA_URL="http://169.254.169.254/latest/meta-data"
-readonly EC2_INSTANCE_DYNAMIC_DATA_URL="http://169.254.169.254/latest/dynamic"
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -24,6 +23,7 @@ function print_usage {
   echo -e "  --tls-cert-file\tSpecifies the path to the certificate for TLS. Required. To use a CA certificate, concatenate the primary certificate and the CA certificate together."
   echo -e "  --tls-key-file\tSpecifies the path to the private key for the certificate. Required."
   echo -e "  --port\t\tThe port for Vault to listen on. Optional. Default is $DEFAULT_PORT."
+  echo -e "  --cluster-port\tThe port for Vault to listen on for server-to-server requests. Optional. Default is --port + 1."
   echo -e "  --config-dir\t\tThe path to the Vault config folder. Optional. Default is the absolute path of '../config', relative to this script."
   echo -e "  --bin-dir\t\tThe path to the folder with Vault binary. Optional. Default is the absolute path of the parent folder of this script."
   echo -e "  --log-dir\t\tThe path to the Vault log folder. Optional. Default is the absolute path of '../log', relative to this script."
@@ -80,25 +80,8 @@ function lookup_path_in_instance_metadata {
   curl --silent --location "$EC2_INSTANCE_METADATA_URL/$path/"
 }
 
-function lookup_path_in_instance_dynamic_data {
-  local readonly path="$1"
-  curl --silent --location "$EC2_INSTANCE_DYNAMIC_DATA_URL/$path/"
-}
-
 function get_instance_ip_address {
   lookup_path_in_instance_metadata "local-ipv4"
-}
-
-function get_instance_id {
-  lookup_path_in_instance_metadata "instance-id"
-}
-
-function get_instance_availability_zone {
-  lookup_path_in_instance_metadata "placement/availability-zone"
-}
-
-function get_instance_region {
-  lookup_path_in_instance_dynamic_data "instance-identity/document" | jq -r ".region"
 }
 
 function assert_is_installed {
@@ -114,12 +97,13 @@ function generate_vault_config {
   local readonly tls_cert_file="$1"
   local readonly tls_key_file="$2"
   local readonly port="$3"
-  local readonly config_dir="$4"
-  local readonly user="$5"
+  local readonly cluster_port="$4"
+  local readonly config_dir="$5"
+  local readonly user="$6"
   local readonly config_path="$config_dir/$VAULT_CONFIG_FILE"
 
-  # TODO: set redirect_addr in listener.tcp?
-  # TODO: set cluster_addr in listener.tcp?
+  local instance_ip_address
+  instance_ip_address=$(get_instance_ip_address)
 
   log_info "Creating default Vault config file in $config_path"
   cat > "$config_path" <<EOF
@@ -128,12 +112,17 @@ storage "consul" {
   path    = "vault/"
   scheme  = "http"
   service = "vault"
+
+  # HA settings
+  cluster_addr  = "https://$instance_ip_address:$cluster_port"
+  redirect_addr = "https://$instance_ip_address:$cluster_port"
 }
 
 listener "tcp" {
-  address       = "0.0.0.0:$port"
-  tls_cert_file = "$tls_cert_file"
-  tls_key_file  = "$tls_key_file"
+  address         = "0.0.0.0:$port"
+  cluster_address = "0.0.0.0:$cluster_port"
+  tls_cert_file   = "$tls_cert_file"
+  tls_key_file    = "$tls_key_file"
 }
 EOF
   chown "$user:$user" "$config_path"
@@ -176,6 +165,7 @@ function run {
   local tls_cert_file=""
   local tls_key_file=""
   local port="$DEFAULT_PORT"
+  local cluster_port=""
   local config_dir=""
   local bin_dir=""
   local log_dir=""
@@ -198,6 +188,11 @@ function run {
       --port)
         assert_not_empty "$key" "$2"
         port="$2"
+        shift
+        ;;
+      --cluster-port)
+        assert_not_empty "$key" "$2"
+        cluster_port="$2"
         shift
         ;;
       --config-dir)
@@ -261,10 +256,14 @@ function run {
     user=$(get_owner_of_path "$config_dir")
   fi
 
+  if [[ -z "$cluster_port" ]]; then
+    cluster_port=$(( $port + 1 ))
+  fi
+
   if [[ "$skip_vault_config" == "true" ]]; then
     log_info "The --skip-vault-config flag is set, so will not generate a default Vault config file."
   else
-    generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$config_dir" "$user"
+    generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$cluster_port" "$config_dir" "$user"
   fi
 
   generate_supervisor_config "$SUPERVISOR_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_dir" "$user"

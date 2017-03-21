@@ -118,7 +118,8 @@ module "security_group_rules" {
   security_group_id           = "${aws_security_group.lc_security_group.id}"
   allowed_inbound_cidr_blocks = ["${var.allowed_inbound_cidr_blocks}"]
 
-  api_port = "${var.api_port}"
+  api_port     = "${var.api_port}"
+  cluster_port = "${var.cluster_port}"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

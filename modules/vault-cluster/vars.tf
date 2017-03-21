@@ -132,6 +132,11 @@ variable "api_port" {
   default = 8200
 }
 
+variable "cluster_port" {
+  description = "The port to use for Vault server-to-server communication"
+  default = 8201
+}
+
 variable "ssh_port" {
   description = "The port used for SSH connections"
   default     = 22

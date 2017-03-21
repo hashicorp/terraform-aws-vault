@@ -12,10 +12,10 @@ resource "aws_security_group_rule" "allow_api_inbound_from_cidr_blocks" {
   security_group_id = "${var.security_group_id}"
 }
 
-resource "aws_security_group_rule" "allow_api_inbound_from_self" {
+resource "aws_security_group_rule" "allow_cluster_inbound_from_self" {
   type        = "ingress"
-  from_port   = "${var.api_port}"
-  to_port     = "${var.api_port}"
+  from_port   = "${var.cluster_port}"
+  to_port     = "${var.cluster_port}"
   protocol    = "tcp"
   self        = true
 

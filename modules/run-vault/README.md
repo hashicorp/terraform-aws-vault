@@ -54,6 +54,8 @@ The `run-vault` script accepts the following arguments:
 * `--tls-key-file` (required): Specifies the path to the private key for the certificate. See [How do you handle 
   encryption?](#how-do-you_handle-encryption) for more info.
 * `--port` (optional): The port Vault should listen on. Default is `8200`.   
+* `--cluster-port` (optional): The port Vault should listen on for server-to-server communication. Default is 
+  `--port + 1`.   
 * `config-dir` (optional): The path to the Vault config folder. Default is to take the absolute path of `../config`, 
   relative to the `run-vault` script itself.
 * `user` (optional): The user to run Vault as. Default is to use the owner of `config-dir`.
@@ -91,18 +93,21 @@ available.
     * [path](https://www.vaultproject.io/docs/configuration/storage/consul.html#path): Set to `vault/`.
     * [service](https://www.vaultproject.io/docs/configuration/storage/consul.html#service): Set to `vault`.  
     * [redirect_addr](https://www.vaultproject.io/docs/configuration/storage/consul.html#redirect_addr): 
-      TODO: What should this be set to? If it's the EC2 Instance private IP address, that won't work with domain names
-      in the TLS certs. Does that mean we need to set up a custom DNS name for each node and include that in its
-      TLS cert?  
+      Set to `https://<PRIVATE_IP>:<CLUSTER_PORT>` where `PRIVATE_IP` is the Instance's private IP fetched from
+      [Metadata](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) and `CLUSTER_PORT` is
+      the value passed to `--cluster-port`.  
     * [cluster_addr](https://www.vaultproject.io/docs/configuration/storage/consul.html#cluster_addr): 
-      TODO: What should this be set to? If it's the EC2 Instance private IP address, that won't work with domain names
-      in the TLS certs. Does that mean we need to set up a custom DNS name for each node and include that in its
-      TLS cert?  
-
+      Set to `https://<PRIVATE_IP>:<CLUSTER_PORT>` where `PRIVATE_IP` is the Instance's private IP fetched from
+      [Metadata](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) and `CLUSTER_PORT` is
+      the value passed to `--cluster-port`.
+      
 * [listener](https://www.vaultproject.io/docs/configuration/index.html#listener): Configure a [TCP 
   listener](https://www.vaultproject.io/docs/configuration/listener/tcp.html) with the following settings:
 
-    * [address](https://www.vaultproject.io/docs/configuration/listener/tcp.html#address): Bind to `0.0.0.0:8200`.
+    * [address](https://www.vaultproject.io/docs/configuration/listener/tcp.html#address): Bind to `0.0.0.0:<PORT>` 
+      where `PORT` is the value passed to `--port`.
+    * [cluster_address](https://www.vaultproject.io/docs/configuration/listener/tcp.html#cluster_address): Bind to 
+      `0.0.0.0:<CLUSTER_PORT>` where `CLUSTER` is the value passed to `--cluster-port`.
     * [tls_cert_file](https://www.vaultproject.io/docs/configuration/listener/tcp.html#tls_cert_file): Set to the 
       `--tls-cert-file` parameter.
     * [tls_key_file](https://www.vaultproject.io/docs/configuration/listener/tcp.html#tls_key_file): Set to the 

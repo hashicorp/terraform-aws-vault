@@ -158,7 +158,8 @@ Each EC2 Instance in the ASG has a Security Group that allows:
  
 * All outbound requests
 * Inbound requests on Vault's API port (default: port 8200)
-* Inbound SSH requests (default: port 8200)
+* Inbound requests on Vault's cluster port for server-to-server communication (default: port 8201)
+* Inbound SSH requests (default: port 22)
 
 The Security Group ID is exported as an output variable if you need to add additional rules. 
 

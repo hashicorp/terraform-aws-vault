@@ -21,3 +21,8 @@ variable "api_port" {
   description = "The port to use for Vault API calls"
   default = 8200
 }
+
+variable "cluster_address" {
+  description = "The port to use for Vault API calls"
+  default = 8200
+}

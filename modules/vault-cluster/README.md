@@ -73,7 +73,9 @@ This module uses Consul not only as a [storage backend](https://www.vaultproject
 but also as a way to register [DNS entries](https://www.consul.io/docs/guides/forwarding.html). This allows servers in
 the same AWS account to access Vault using DNS (e.g. using an address like `vault.service.consul`).
 
-To set this up, install the [install-dnsmasq module](/modules/install-dnsmasq) on each server that needs to access Vault.
+To set this up, use the [install-dnsmasq 
+module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-dnsmasq) on each server that 
+needs to access Vault.
 
 
 ### Access Vault from the public Internet
@@ -228,7 +230,7 @@ for more info.
 
 Note that if you want to enable encryption for the root EBS Volume for your Vault Instances (despite the fact that 
 Vault itself doesn't write anything to this volume), you need to enable that in your AMI. If you're creating the AMI 
-using Packer (e.g. as shown in the [vault-ami example](/examples/vault-ami)), you need to set the [encrypt_boot 
+using Packer (e.g. as shown in the [vault-consul-ami example](/examples/vault-consul-ami)), you need to set the [encrypt_boot 
 parameter](https://www.packer.io/docs/builders/amazon-ebs.html#encrypt_boot) to `true`.  
 
 

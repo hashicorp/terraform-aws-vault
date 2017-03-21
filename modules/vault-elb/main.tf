@@ -84,54 +84,6 @@ resource "aws_proxy_protocol_policy" "vault" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# ENABLE EXTRA TLS CIPHERS FOR THE VAULT BACKENDS
-# It seems that the default TLS ciphers used by AWS are not supported by Go/Vault for HTTPS. Every time the ELB tries
-# to do a health check, you get the error:
-#
-# TLS handshake error from 172.31.79.100:50335: tls: no cipher suite supported by both client and server
-#
-# Here, we try to add several of the ciphers supposedly supported by go to work around this error
-#
-# http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-ssl-security-policy.html#ssl-ciphers
-# https://golang.org/src/crypto/tls/cipher_suites.go
-# ---------------------------------------------------------------------------------------------------------------------
-
-resource "aws_load_balancer_policy" "tls_ciphers" {
-  load_balancer_name = "${aws_elb.vault.name}"
-  policy_name        = "${var.name}-tls-ciphers"
-  policy_type_name   = "SSLNegotiationPolicyType"
-
-  policy_attribute = {
-    name  = "ECDHE-RSA-AES128-GCM-SHA256"
-    value = "true"
-  }
-
-  policy_attribute = {
-    name  = "ECDHE-ECDSA-AES128-GCM-SHA256"
-    value = "true"
-  }
-
-  policy_attribute = {
-    name  = "ECDHE-ECDSA-AES256-GCM-SHA384"
-    value = "true"
-  }
-
-  policy_attribute = {
-    name  = "Protocol-TLSv1.2"
-    value = "true"
-  }
-}
-
-resource "aws_load_balancer_backend_server_policy" "tls_ciphers" {
-  load_balancer_name = "${aws_elb.vault.name}"
-  instance_port      = "${var.vault_api_port}"
-
-  policy_names = [
-    "${aws_load_balancer_policy.tls_ciphers.policy_name}",
-  ]
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
 # OPTIONALLY CREATE A ROUTE 53 ENTRY FOR THE ELB
 # ---------------------------------------------------------------------------------------------------------------------
 

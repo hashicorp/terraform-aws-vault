@@ -29,6 +29,9 @@ module "vault_cluster" {
   vpc_id             = "${data.aws_vpc.default.id}"
   availability_zones = ["${data.aws_availability_zones.all.names}"]
 
+  # Tell each Vault server to register in the ELB
+  load_balancers = ["${module.vault_elb.load_balancer_name}"]
+
   # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
   # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
   allowed_ssh_cidr_blocks     = ["0.0.0.0/0"]

@@ -18,7 +18,7 @@ module](/modules/install-vault). The default install path is `/opt/vault/bin`, s
 run:
 
 ```
-/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt --tls-key-file /opt/vault/tls/vault.key
+/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
 ```
 
 This will:
@@ -63,7 +63,7 @@ The `run-vault` script accepts the following arguments:
 Example:
 
 ```
-/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt --tls-key-file /opt/vault/tls/vault.key
+/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
 ```
 
 
@@ -127,7 +127,7 @@ If you want to override *all* the default settings, you can tell `run-vault` not
 at all using the `--skip-vault-config` flag:
 
 ```
-/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt --tls-key-file /opt/vault/tls/vault.key --skip-vault-config
+/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --skip-vault-config
 ```
 
 
@@ -148,8 +148,10 @@ these keys](http://russellsimpkins.blogspot.com/2015/10/consul-adding-tls-using-
 these paths to the `run-vault` script:
 
 ```
-/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt --tls-key-file /opt/vault/tls/vault.key
+/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
 ```
+
+You can generate private TLS certs using the [private-tls-cert module](/modules/private-tls-cert).
 
 
 ### Consul encryption

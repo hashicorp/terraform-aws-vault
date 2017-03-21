@@ -71,11 +71,54 @@ transit to the servers that will use it.
 ### CA public key   
    
 Distribute the CA public key (the file at `ca_cert_public_key_file_path`) to any clients of those services so they can 
-validate the TLS certs. For example, to use the Vault client, you pass the CA public key via the `-ca-cert` argument:
+validate the TLS certs. Without the CA public key, the clients will reject any TLS connections: 
 
 ```
-vault status -ca-cert=ca.crt.pem
+vault read secret/foo
+
+Error initializing Vault: Get https://127.0.0.1:8200/v1/secret/foo: x509: certificate signed by unknown authority
 ```
+
+Most TLS clients offer a way to explicitly specify extra CA public keys that you want to trust. For example, with 
+Vault, you do this via the `-ca-cert` argument:
+
+```
+vault read -ca-cert=ca.crt.pem secret/foo
+
+Key                 Value
+---                 -----
+refresh_interval    768h0m0s
+value               bar
+```
+
+As an alternative, you can configure the CA trust on your server so that all TLS clients trust your private CA. To do 
+that, on Ubuntu:
+
+```
+sudo cp ca.crt.pem /usr/local/share/ca-certificates/
+sudo update-ca-certificates
+```
+
+To do that on Amazon Linux:
+
+```
+sudo update-ca-trust enable
+sudo cp ca.crt.pem /etc/pki/ca-trust/source/anchors/
+sudo update-ca-trust extract
+```
+
+Now your system will trust the CA public key without having to pass it in explicitly:
+
+```
+vault read secret/foo
+
+Key                 Value
+---                 -----
+refresh_interval    768h0m0s
+value               bar
+```
+
+
 
 ### CA private key
 

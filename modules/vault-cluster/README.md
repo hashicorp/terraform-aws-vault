@@ -25,7 +25,7 @@ module "vault_cluster" {
   # Configure and start Vault during boot. 
   user_data = <<-EOF
               #!/bin/bash
-              /opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt --tls-key-file /opt/vault/tls/vault.key
+              /opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
               EOF
   
   # ... See vars.tf for the other parameters you must define for the vault-cluster module
@@ -75,7 +75,26 @@ the same AWS account to access Vault using DNS (e.g. using an address like `vaul
 
 To set this up, use the [install-dnsmasq 
 module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-dnsmasq) on each server that 
-needs to access Vault.
+needs to access Vault. This allows you to access Vault from your EC2 Instances as follows:
+
+```
+vault -address=https://vault.service.consul:8200 read secret/foo
+```
+
+You can configure the Vault address as an environment variable:
+
+```
+export VAULT_ADDR=https://vault.service.consul:8200
+```
+
+That way, you don't have to remember to pass the Vault address every time:
+
+```
+vault read secret/foo
+```
+
+
+Check out the [vault-cluster-private example](/examples/vault-cluster-private) for working sample code.
 
 
 ### Access Vault from the public Internet
@@ -87,8 +106,24 @@ recommend using VPN to access Vault.
 If VPN is not an option, and Vault must be accessible from the public Internet, you can use the [vault-elb 
 module](/modules/vault-elb) to deploy an [Elastic Load Balancer 
 (ELB)](https://aws.amazon.com/elasticloadbalancing/classicloadbalancer/) in public subnets, and have all your users
-access Vault via this ELB.
+access Vault via this ELB:
 
+```
+vault -address=https://<ELB_DNS_NAME>:8200 read secret/foo
+```
+
+Where `ELB_DNS_NAME` is the DNS name for your ELB, such as `vault.example.com`. You can configure the Vault address as 
+an environment variable:
+
+```
+export VAULT_ADDR=https://vault.example.com:8200
+```
+
+That way, you don't have to remember to pass the Vault address every time:
+
+```
+vault read secret/foo
+```
 
 
 

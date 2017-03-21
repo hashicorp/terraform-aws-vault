@@ -73,6 +73,7 @@ Create an OS user named `vault`. Create the following folders, all owned by user
 * `/opt/vault/data`: directory where the Vault agent can store state.
 * `/opt/vault/config`: directory where the Vault agent looks up configuration.
 * `/opt/vault/log`: directory where the Vault agent will store log files.
+* `/opt/vault/tls`: directory where the Vault will look for TLS certs.
 
 
 ### Install Vault binaries and scripts

@@ -29,9 +29,10 @@ module "vault_cluster" {
   vpc_id             = "${data.aws_vpc.default.id}"
   availability_zones = ["${data.aws_availability_zones.all.names}"]
 
-  # Tell each Vault server to register in the ELB
+  # Tell each Vault server to register in the ELB. However, do NOT use the ELB for the ASG health check, or the ASG
+  # will assume all sealed instances are unhealthy and repeatedly try to redeploy them.
   load_balancers    = ["${module.vault_elb.load_balancer_name}"]
-  health_check_type = "ELB"
+  health_check_type = "EC2"
 
   # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
   # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.

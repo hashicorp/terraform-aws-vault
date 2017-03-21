@@ -20,7 +20,7 @@ variable "hosted_zone_domain_name" {
 }
 
 variable "vault_domain_name" {
-  description = "The domain name to use in the DNS A record for the Vault ELB (e.g. vault.example.com). Should be a domain within the var.hosted_zone_domain_name hosted zone."
+  description = "The domain name to use in the DNS A record for the Vault ELB (e.g. vault.example.com). Make sure that a) this is a domain within the var.hosted_zone_domain_name hosted zone and b) this is the same domain name you used in the TLS certificates for Vault."
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

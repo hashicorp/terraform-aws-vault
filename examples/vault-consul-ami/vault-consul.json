@@ -51,29 +51,36 @@
   }],
   "provisioners": [{
     "type": "file",
-    "source": "{{user `tls_public_key_path`}}",
-    "destination": "/tmp/tls/vault.crt.pem",
-    "pause_before": "30s"
-  },{
-    "type": "file",
-    "source": "{{user `tls_private_key_path`}}",
-    "destination": "/tmp/tls/vault.key.pem"
-  },{
-    "type": "file",
-    "source": "{{user `ca_public_key_path`}}",
-    "destination": "/tmp/tls/ca.crt.pem"
-  },{
-    "type": "file",
     "source": "{{template_dir}}/../../../vault-aws-blueprint",
-    "destination": "/tmp"
+    "destination": "/tmp",
+    "pause_before": "30s"
   },{
     "type": "shell",
     "inline": [
-      "/tmp/vault-aws-blueprint/modules/install-vault/install-vault --version {{user `vault_version`}}",
-      "sudo cp /tmp/tls/* /opt/vault/tls/",
+      "/tmp/vault-aws-blueprint/modules/install-vault/install-vault --version {{user `vault_version`}}"
+    ]
+  },{
+    "type": "file",
+    "source": "{{user `tls_public_key_path`}}",
+    "destination": "/tmp/vault.crt.pem"
+  },{
+    "type": "file",
+    "source": "{{user `tls_private_key_path`}}",
+    "destination": "/tmp/vault.key.pem"
+  },{
+    "type": "file",
+    "source": "{{user `ca_public_key_path`}}",
+    "destination": "/tmp/ca.crt.pem"
+  },{
+    "type": "shell",
+    "inline": [
+      "sudo mv /tmp/vault.crt.pem /opt/vault/tls/",
+      "sudo mv /tmp/vault.key.pem /opt/vault/tls/",
+      "sudo mv /tmp/ca.crt.pem /opt/vault/tls/",
       "sudo chown vault:vault /opt/vault/tls/*",
       "sudo chmod 600 /opt/vault/tls/*"
-    ]
+    ],
+    "only": ["ubuntu-16-ami"]
   },{
     "type": "shell",
     "inline": [

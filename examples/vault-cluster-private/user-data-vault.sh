@@ -24,11 +24,11 @@ function update_certificate_store {
   echo "Adding Vault CA cert file to OS certificate store"
 
   if $(command_exists "update-ca-certificates"); then
-    cp "$CA_TLS_CERT_FILE" /usr/local/share/ca-certificates/
+    cp "$CA_TLS_CERT_FILE" /usr/local/share/ca-certificates/vault-ca.crt
     update-ca-certificates
   elif $(command_exists "update-ca-trust"); then
     update-ca-trust enable
-    cp "$CA_TLS_CERT_FILE" /etc/pki/ca-trust/source/anchors/
+    cp "$CA_TLS_CERT_FILE" /etc/pki/ca-trust/source/anchors/vault-ca.crt
     update-ca-trust extract
   else
     echo "WARNING: Did not find the update-ca-certificates or update-ca-trust commands. Cannot update OS certificate store. You will have to pass the CA cert file manually to Vault: $CA_TLS_CERT_FILE."

@@ -91,23 +91,9 @@ refresh_interval    768h0m0s
 value               bar
 ```
 
-As an alternative, you can configure the CA trust on your server so that all TLS clients trust your private CA. To do 
-that, on Ubuntu:
-
-```
-sudo cp ca.crt.pem /usr/local/share/ca-certificates/
-sudo update-ca-certificates
-```
-
-To do that on Amazon Linux:
-
-```
-sudo update-ca-trust enable
-sudo cp ca.crt.pem /etc/pki/ca-trust/source/anchors/
-sudo update-ca-trust extract
-```
-
-Now your system will trust the CA public key without having to pass it in explicitly:
+As an alternative, you can configure the CA trust on your server so that all TLS clients trust your private CA by 
+running the [update-certificate-store module](/modules/update-certificate-store) on your server. Once you do that, 
+your system will trust the CA public key without having to pass it in explicitly:
 
 ```
 vault read secret/foo

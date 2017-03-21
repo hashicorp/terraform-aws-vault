@@ -38,5 +38,5 @@ To deploy a Vault Cluster:
 
 After the `apply` command finishes, a Vault and Consul cluster will boot up and discover each other.
  
-To see how to connect to the Vault cluster and start reading and writing secrets, head over to the [How do you connect 
-to the Vault cluster?](/modules/vault-cluster#how-do-you-connect-to-the-vault-cluster) docs.
+To see how to connect to the Vault cluster, initialize it, and start reading and writing secrets, head over to the 
+[How do you use the Vault cluster?](/modules/vault-cluster#how-do-you-use-the-vault-cluster) docs.

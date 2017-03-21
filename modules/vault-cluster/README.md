@@ -59,19 +59,96 @@ Check out the [vault-cluster-public](/examples/vault-cluster-public) and
 
 
 
-## How do you connect to the Vault cluster?
+## How do you use the Vault cluster?
 
-There are two ways to connect to Vault:
 
+### Initializing the Vault cluster
+
+The very first time you deploy a new Vault cluster, you need to [initialize the 
+Vault](https://www.vaultproject.io/intro/getting-started/deploy.html#initializing-the-vault). The easiest way to do 
+this is to SSH to one of the servers that has Vault installed and run:
+
+```
+vault init
+
+Key 1: 427cd2c310be3b84fe69372e683a790e01
+Key 2: 0e2b8f3555b42a232f7ace6fe0e68eaf02
+Key 3: 37837e5559b322d0585a6e411614695403
+Key 4: 8dd72fd7d1af254de5f82d1270fd87ab04
+Key 5: b47fdeb7dda82dbe92d88d3c860f605005
+Initial Root Token: eaf5cc32-b48f-7785-5c94-90b5ce300e9b
+
+Vault initialized with 5 keys and a key threshold of 3!
+```
+
+Vault will print out the [unseal keys](https://www.vaultproject.io/docs/concepts/seal.html) and a [root 
+token](https://www.vaultproject.io/docs/concepts/tokens.html#root-tokens). This is the **only time ever** that all of 
+this data is known by Vault, so you **MUST** save it in a secure place immediately! Also, this is the only time that 
+the unseal keys should ever be so close together. You should distribute each one to a different, trusted administrator
+for safe keeping in completely separate secret stores and NEVER store them all in the same place. 
+
+In fact, a better option is to initial Vault with [PGP, GPG, or 
+Keybase](https://www.vaultproject.io/docs/concepts/pgp-gpg-keybase.html) so that each unseal key is encrypted with a
+different user's public key. That way, no one, not even the operator running the `init` command can see all the keys
+in one place:
+
+```
+vault init -pgp-keys="keybase:jefferai,keybase:vishalnayak,keybase:sethvargo"
+
+Key 1: wcBMA37rwGt6FS1VAQgAk1q8XQh6yc...
+Key 2: wcBMA0wwnMXgRzYYAQgAavqbTCxZGD...
+Key 3: wcFMA2DjqDb4YhTAARAAeTFyYxPmUd...
+...
+```
+
+See [Using PGP, GPG, and Keybase](https://www.vaultproject.io/docs/concepts/pgp-gpg-keybase.html) for more info.
+
+
+### Unsealing the Vault cluster
+
+Now that you have the unseal keys, you can [unseal Vault](https://www.vaultproject.io/docs/concepts/seal.html) by 
+having 3 out of the 5 administrators (or whatever your key shard threshold is) do the following:
+
+1. SSH to a Vault server.
+1. Run `vault unseal`.
+1. Enter the unseal key when prompted.
+1. Repeat for each of the other Vault servers.
+
+Once this process is complete, all the Vault servers will be unsealed and you will be able to start reading and writing
+secrets.
+
+
+### Connecting to the Vault cluster to read and write secrets
+
+There are three ways to connect to Vault:
+
+1. [Access Vault from a Vault server](#access-vault-from-a-vault-server)
 1. [Access Vault from other servers in the same AWS account](#access-vault-from-other-servers-in-the-same-aws-account)
 1. [Access Vault from the public Internet](#access-vault-from-the-public-internet)
 
 
-### Access Vault from other servers in the same AWS account
+#### Access Vault from a Vault server
 
-This module uses Consul not only as a [storage backend](https://www.vaultproject.io/docs/configuration/storage/consul.html)
-but also as a way to register [DNS entries](https://www.consul.io/docs/guides/forwarding.html). This allows servers in
-the same AWS account to access Vault using DNS (e.g. using an address like `vault.service.consul`).
+When you SSH to a Vault server, the Vault client is already configured to talk to the Vault server on localhost, so 
+you can directly run Vault commands:
+
+```
+vault read secret/foo
+
+Key                 Value
+---                 -----
+refresh_interval    768h0m0s
+value               bar
+```
+
+
+#### Access Vault from other servers in the same AWS account
+
+To access Vault from a different server in the same account, you need to specify the URL of the Vault cluster. You 
+could manually look up the Vault cluster's IP address, but since this module uses Consul not only as a [storage 
+backend](https://www.vaultproject.io/docs/configuration/storage/consul.html) but also as a way to register [DNS 
+entries](https://www.consul.io/docs/guides/forwarding.html), you can access Vault 
+using a nice domain name instead, such as `vault.service.consul`.
 
 To set this up, use the [install-dnsmasq 
 module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-dnsmasq) on each server that 
@@ -79,6 +156,11 @@ needs to access Vault. This allows you to access Vault from your EC2 Instances a
 
 ```
 vault -address=https://vault.service.consul:8200 read secret/foo
+
+Key                 Value
+---                 -----
+refresh_interval    768h0m0s
+value               bar
 ```
 
 You can configure the Vault address as an environment variable:
@@ -91,21 +173,41 @@ That way, you don't have to remember to pass the Vault address every time:
 
 ```
 vault read secret/foo
+
+Key                 Value
+---                 -----
+refresh_interval    768h0m0s
+value               bar
 ```
 
+Note that if you're using a self-signed TLS cert (e.g. generated from the [private-tls-cert 
+module](/modules/private-tls-cert)), you'll need to have the CA certificate public key or you'll get an 
+"x509: certificate signed by unknown authority" error. You could pass the certificate manually:
+ 
+```
+vault read -ca-cert=/opt/vault/tls/ca.crt.pem secret/foo
+
+Key                 Value
+---                 -----
+refresh_interval    768h0m0s
+value               bar
+```
+
+However, to avoid having to add the `-ca-cert` argument to every single call, you can use the [update-certificate-store 
+module](/modules/update-certificate-store) to configure the server to trust this CA certificate.
 
 Check out the [vault-cluster-private example](/examples/vault-cluster-private) for working sample code.
 
 
-### Access Vault from the public Internet
+#### Access Vault from the public Internet
 
 We **strongly** recommend only running Vault in private subnets. That means it is not directly accessible from the 
-public Internet, which reduces your surface area to attackers. If you need users to be able to access Vault, we 
-recommend using VPN to access Vault. 
+public Internet, which reduces your surface area to attackers. If you need users to be able to access Vault from 
+outside of AWS, we recommend using VPN to connect to AWS. 
  
 If VPN is not an option, and Vault must be accessible from the public Internet, you can use the [vault-elb 
 module](/modules/vault-elb) to deploy an [Elastic Load Balancer 
-(ELB)](https://aws.amazon.com/elasticloadbalancing/classicloadbalancer/) in public subnets, and have all your users
+(ELB)](https://aws.amazon.com/elasticloadbalancing/classicloadbalancer/) in your public subnets, and have all your users
 access Vault via this ELB:
 
 ```

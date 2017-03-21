@@ -27,6 +27,10 @@ This Blueprint includes:
 * [private-tls-cert](/modules/private-tls-cert): Generate a private TLS certificate for use with a private Vault 
   cluster.
    
+* [update-certificate-store](/modules/update-certificate-store): Add a trusted, private CA certificate to an OS's 
+  certificate store. This allows you to establish TLS connections to services that use TLS certs signed by this CA 
+  certificate without getting x509 certificate errors.
+   
 
 
 
@@ -84,15 +88,8 @@ To deploy a Vault cluster with this Blueprint:
 
 1. Execute the [run-vault](/modules/run-vault) script during boot on each Instance to create the Vault cluster. 
 
-1. The first time only: Connect to one of the Vault nodes (e.g. via SSH) and run the [vault 
-   init](https://www.vaultproject.io/intro/getting-started/deploy.html#initializing-the-vault) command to create the
-   unseal keys and root token. For production usage, we **strongly** recommend running the init command with
-   [Keybase, PGP, or GPG](https://www.vaultproject.io/docs/concepts/pgp-gpg-keybase.html) to encrypt the unseal keys
-   and token. Distribute the unseal keys to your trusted administrators.
-
-1. Every time a Vault node boots: Have each administrator connect to each of the Vault nodes (e.g. via SSH) and run 
-   the [unseal command](https://www.vaultproject.io/docs/concepts/seal.html) with their unseal key. Once the proper 
-   number of key shards have been entered, your Vault nodes will be unsealed, and your cluster will be ready for use!
+1. Head over to the [How do you use the Vault cluster?](/modules/vault-cluster#how-do-you-use-the-vault-cluster) guide
+   to learn how to initialize, unseal, and use Vault.
 
 If you only need to access Vault from inside your AWS account (recommended), run the [install-dnsmasq 
 module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-dnsmasq) on each server, and 

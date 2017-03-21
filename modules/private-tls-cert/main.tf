@@ -17,7 +17,7 @@ resource "tls_self_signed_cert" "ca" {
   is_ca_certificate = true
 
   validity_period_hours = "${var.validity_period_hours}"
-  allowed_uses          = "${var.ca_cert_allowed_uses}"
+  allowed_uses          = ["${var.ca_cert_allowed_uses}"]
 
   subject {
     common_name  = "${var.ca_common_name}"

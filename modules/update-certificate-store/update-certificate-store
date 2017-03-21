@@ -22,7 +22,7 @@ function print_usage {
   echo "Options:"
   echo
   echo -e "  --cert-file-path\tThe path to the CA certificate to add to the OS certificate store. Required."
-  echo -e "  --dest-file-name\tCopy --ca-cert-file to a file with this name in a shared cert folder. Optional. Default: $DEFAULT_DEST_FILE_NAME."
+  echo -e "  --dest-file-name\tCopy --ca-cert-file to a file with this name in a shared cert folder. The extension MUST be .crt. Optional. Default: $DEFAULT_DEST_FILE_NAME."
   echo
   echo "Example:"
   echo

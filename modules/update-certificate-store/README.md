@@ -80,7 +80,7 @@ The `run-vault` script accepts the following arguments:
 * `--cert-file-path` (required): The path to the CA certificate to add to the OS certificate store.
 * `--dest-file-name` (optional): This script will copy `--ca-cert-file` to a file with this name in a shared 
   certificate folder on the OS. The default file name is `custom-ca.crt`, but you can use this parameter to customize 
-  it.
+  it. The extension MUST be `.crt` or the OS will ignore the file.
 
 Example:
 

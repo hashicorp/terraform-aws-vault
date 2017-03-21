@@ -3,7 +3,8 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "tls_private_key" "ca" {
-  algorithm = "${var.private_key_algorithm}"
+  algorithm   = "${var.private_key_algorithm}"
+  ecdsa_curve = "${var.private_key_ecdsa_curve}"
 
   # Store the CA certificate's private key in a file.
   provisioner "local-exec" {
@@ -35,7 +36,8 @@ resource "tls_self_signed_cert" "ca" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "tls_private_key" "cert" {
-  algorithm = "${var.private_key_algorithm}"
+  algorithm   = "${var.private_key_algorithm}"
+  ecdsa_curve = "${var.private_key_ecdsa_curve}"
 
   # Store the certificate's private key in a file
   provisioner "local-exec" {

@@ -86,3 +86,8 @@ variable "private_key_algorithm" {
   description = "The name of the algorithm to use for private keys. Must be one of: RSA or ECDSA."
   default = "ECDSA"
 }
+
+variable "private_key_ecdsa_curve" {
+  description = "The name of the elliptic curve to use. Should only be used if var.private_key_algorithm is ECDSA. Must be one of P224, P256, P384 or P521."
+  default = "P256"
+}

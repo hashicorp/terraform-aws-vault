@@ -20,12 +20,12 @@ This Blueprint includes:
 * [vault-cluster](/modules/vault-cluster): Terraform code to deploy a cluster of Vault servers using an [Auto Scaling 
   Group](https://aws.amazon.com/autoscaling/).
     
-* [install-dnsmasq](/modules/install-dnsmasq): Installs Dnsmasq on your servers so you can access Vault using DNS (e.g. 
-  using an address like `vault.service.consul`).
-    
 * [vault-elb](/modules/vault-elb): Configures an [Elastic Load Balancer 
   (ELB)](https://aws.amazon.com/elasticloadbalancing/classicloadbalancer/) in front of Vault if you need to access it
   from the public Internet.
+   
+* [private-tls-cert](/modules/private-tls-cert): Generate a private TLS certificate for use with a private Vault 
+  cluster.
    
 
 
@@ -74,7 +74,7 @@ To deploy a Vault cluster with this Blueprint:
 1. Create an AMI that has Vault installed (using the [install-vault module](/modules/install-vault)) and the Consul
    agent installed (using the [install-consul 
    module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-consul)). Here is an 
-   [example Packer template](/examples/vault-ami).
+   [example Packer template](/examples/vault-consul-ami).
 
 1. Deploy that AMI across an Auto Scaling Group in a private subnet using the Terraform [vault-cluster 
    module](/modules/vault-cluster). 
@@ -94,10 +94,10 @@ To deploy a Vault cluster with this Blueprint:
    the [unseal command](https://www.vaultproject.io/docs/concepts/seal.html) with their unseal key. Once the proper 
    number of key shards have been entered, your Vault nodes will be unsealed, and your cluster will be ready for use!
 
-If you only need to access Vault from inside your AWS account (recommended), install the [install-dnsmasq 
-module](/modules/install-dnsmasq) on each server, and that server will be able to reach Vault using DNS (e.g. using an
-address like `vault.service.consul`). See the [vault-cluster-private example](/examples/vault-cluster-private) for 
-working sample code.
+If you only need to access Vault from inside your AWS account (recommended), run the [install-dnsmasq 
+module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-dnsmasq) on each server, and 
+that server will be able to reach Vault using DNS (e.g. using an address like `vault.service.consul`). See the 
+[vault-cluster-private example](/examples/vault-cluster-private) for working sample code.
 
 If you need to access Vault from the public Internet, deploy the [vault-elb module](/modules/vault-elb) in a public 
 subnet and have all requests to Vault go through the ELB. See the [vault-cluster-public 

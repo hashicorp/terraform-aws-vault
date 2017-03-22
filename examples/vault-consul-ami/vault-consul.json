@@ -1,0 +1,98 @@
+{
+  "min_packer_version": "0.12.0",
+  "variables": {
+    "aws_region": "us-east-1",
+    "vault_version": "0.7.0",
+    "consul_blueprint_version": "v0.0.3",
+    "consul_version": "0.7.5",
+    "github_oauth_token": "{{env `GITHUB_OAUTH_TOKEN`}}",
+    "tls_public_key_path": null,
+    "tls_private_key_path": null
+  },
+  "builders": [{
+    "ami_name": "vault-consul-ubuntu-{{isotime | clean_ami_name}}",
+    "ami_description": "An Ubuntu 16.04 AMI that has Vault and Consul installed.",
+    "instance_type": "t2.micro",
+    "name": "ubuntu-16-ami",
+    "region": "{{user `aws_region`}}",
+    "type": "amazon-ebs",
+    "source_ami_filter": {
+      "filters": {
+        "virtualization-type": "hvm",
+        "architecture": "x86_64",
+        "name": "*ubuntu-xenial-16.04-amd64-server-*",
+        "block-device-mapping.volume-type": "gp2",
+        "root-device-type": "ebs"
+      },
+      "owners": ["099720109477"],
+      "most_recent": true
+    },
+    "ssh_username": "ubuntu"
+  },{
+    "ami_name": "vault-consul-amazon-linux-{{isotime | clean_ami_name}}",
+    "ami_description": "An Amazon Linux AMI that has Vault and Consul installed.",
+    "instance_type": "t2.micro",
+    "name": "amazon-linux-ami",
+    "region": "{{user `aws_region`}}",
+    "type": "amazon-ebs",
+    "source_ami_filter": {
+      "filters": {
+        "virtualization-type": "hvm",
+        "architecture": "x86_64",
+        "name": "*amzn-ami-hvm-*",
+        "block-device-mapping.volume-type": "gp2",
+        "root-device-type": "ebs"
+      },
+      "owners": ["amazon"],
+      "most_recent": true
+    },
+    "ssh_username": "ec2-user"
+  }],
+  "provisioners": [{
+    "type": "file",
+    "source": "{{template_dir}}/../../../vault-aws-blueprint",
+    "destination": "/tmp",
+    "pause_before": "30s"
+  },{
+    "type": "shell",
+    "inline": [
+      "/tmp/vault-aws-blueprint/modules/install-vault/install-vault --version {{user `vault_version`}}"
+    ]
+  },{
+    "type": "file",
+    "source": "{{user `tls_public_key_path`}}",
+    "destination": "/tmp/vault.crt.pem"
+  },{
+    "type": "file",
+    "source": "{{user `tls_private_key_path`}}",
+    "destination": "/tmp/vault.key.pem"
+  },{
+    "type": "shell",
+    "inline": [
+      "sudo mv /tmp/vault.crt.pem /opt/vault/tls/",
+      "sudo mv /tmp/vault.key.pem /opt/vault/tls/",
+      "sudo chown vault:vault /opt/vault/tls/*",
+      "sudo chmod 600 /opt/vault/tls/*",
+      "sudo /tmp/vault-aws-blueprint/modules/update-certificate-store/update-certificate-store --cert-file-path /opt/vault/tls/vault.crt.pem"
+    ]
+  },{
+    "type": "shell",
+    "inline": [
+      "sudo apt-get install -y git"
+    ],
+    "only": ["ubuntu-16-ami"]
+  },{
+    "type": "shell",
+    "inline": [
+      "sudo yum install -y git"
+    ],
+    "only": ["amazon-linux-ami"]
+  },{
+    "type": "shell",
+    "inline": [
+      "git clone --branch {{user `consul_blueprint_version`}} https://{{user `github_oauth_token`}}@github.com/gruntwork-io/consul-aws-blueprint.git /tmp/consul-aws-blueprint",
+      "/tmp/consul-aws-blueprint/modules/install-consul/install-consul --version {{user `consul_version`}}",
+      "/tmp/consul-aws-blueprint/modules/install-dnsmasq/install-dnsmasq"
+    ]
+  }]
+}

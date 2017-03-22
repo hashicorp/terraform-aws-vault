@@ -47,9 +47,7 @@ variable "allowed_uses" {
   type = "list"
   default = [
     "key_encipherment",
-    "digital_signature",
-    "server_auth",
-    "client_auth"
+    "digital_signature"
   ]
 }
 
@@ -60,10 +58,15 @@ variable "permissions" {
 
 variable "private_key_algorithm" {
   description = "The name of the algorithm to use for private keys. Must be one of: RSA or ECDSA."
-  default = "ECDSA"
+  default = "RSA"
 }
 
 variable "private_key_ecdsa_curve" {
   description = "The name of the elliptic curve to use. Should only be used if var.private_key_algorithm is ECDSA. Must be one of P224, P256, P384 or P521."
   default = "P256"
+}
+
+variable "private_key_rsa_bits" {
+  description = "The size of the generated RSA key in bits. Should only be used if var.private_key_algorithm is RSA."
+  default = "2048"
 }

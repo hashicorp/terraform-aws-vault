@@ -75,16 +75,6 @@ resource "aws_security_group_rule" "allow_all_outbound" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# ENABLE PROXY PROTOCOL ON THE LOAD BALANCER
-# This carries the information of the original IP address as a header.
-# ---------------------------------------------------------------------------------------------------------------------
-
-resource "aws_proxy_protocol_policy" "vault" {
-  load_balancer  = "${aws_elb.vault.name}"
-  instance_ports = ["${var.vault_api_port}"]
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
 # OPTIONALLY CREATE A ROUTE 53 ENTRY FOR THE ELB
 # ---------------------------------------------------------------------------------------------------------------------
 

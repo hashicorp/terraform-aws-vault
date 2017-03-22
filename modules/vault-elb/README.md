@@ -64,11 +64,8 @@ The ELB in this module is configured as follows:
    authentication](https://en.wikipedia.org/wiki/Mutual_authentication) so that Vault clients verify the server's
    certificate and the Vault server verifies the client's certificate. 
    
-1. **Proxy Protocol Header**: The ELB is configured to add the [Proxy Protocol 
-   Header](http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-proxy-protocol.html) so your servers
-   can see the IP address of the original client, rather than just the ELB's IP address.   
-   
-1. **Listeners**: The ELB only listens on the Vault API port (default: 8200).
+1. **Listeners**: The ELB only listens on one port (default: 443) and forwards the requests to Vault's API port
+   (default: 8200).
    
 1. **Health Check**: The ELB uses the [/sys/health endpoint](https://www.vaultproject.io/api/system/health.html) on
    your Vault servers, with the `standbyok` flag set to `true`, as a health check endpoint. This way, the ELB will see

@@ -149,9 +149,8 @@ Vault uses TLS to encrypt all data in transit. To configure encryption, you must
 
 ### Provide TLS certificates
 
-To enable RPC encryption, you need to provide the paths to the CA and signing keys ([here is a tutorial on generating 
-these keys](http://russellsimpkins.blogspot.com/2015/10/consul-adding-tls-using-self-signed.html)). You must pass
-these paths to the `run-vault` script:
+To enable RPC encryption, you need to provide the paths to the public and private keys of a TLS certificate to the 
+`run-vault` script:
 
 ```
 /opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem

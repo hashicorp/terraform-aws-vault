@@ -181,11 +181,11 @@ value               bar
 ```
 
 Note that if you're using a self-signed TLS cert (e.g. generated from the [private-tls-cert 
-module](/modules/private-tls-cert)), you'll need to have the CA certificate public key or you'll get an 
+module](/modules/private-tls-cert)), you'll need to have the certificate's public key or you'll get an 
 "x509: certificate signed by unknown authority" error. You could pass the certificate manually:
  
 ```
-vault read -ca-cert=/opt/vault/tls/ca.crt.pem secret/foo
+vault read -ca-cert=/opt/vault/tls/vault.crt.pem secret/foo
 
 Key                 Value
 ---                 -----
@@ -194,7 +194,7 @@ value               bar
 ```
 
 However, to avoid having to add the `-ca-cert` argument to every single call, you can use the [update-certificate-store 
-module](/modules/update-certificate-store) to configure the server to trust this CA certificate.
+module](/modules/update-certificate-store) to configure the server to trust this certificate.
 
 Check out the [vault-cluster-private example](/examples/vault-cluster-private) for working sample code.
 

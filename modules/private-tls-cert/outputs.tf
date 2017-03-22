@@ -1,15 +1,7 @@
-output "ca_cert_public_key_file_path" {
-  value = "${var.ca_cert_public_key_file_path}"
+output "private_key_file_path" {
+  value = "${var.private_key_file_path}"
 }
 
-output "ca_cert_private_key_file_path" {
-  value = "${var.ca_cert_private_key_file_path}"
-}
-
-output "cert_private_key_file_path" {
-  value = "${var.cert_private_key_file_path}"
-}
-
-output "cert_public_key_file_path" {
-  value = "${var.cert_public_key_file_path}"
+output "public_key_file_path" {
+  value = "${var.public_key_file_path}"
 }

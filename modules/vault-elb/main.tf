@@ -23,8 +23,9 @@ resource "aws_elb" "vault" {
   availability_zones = ["${var.availability_zones}"]
   subnets            = ["${var.subnet_ids}"]
 
+  # Run the ELB in TCP passthrough mode
   listener {
-    lb_port           = "${var.vault_api_port}"
+    lb_port           = "${var.lb_port}"
     lb_protocol       = "TCP"
     instance_port     = "${var.vault_api_port}"
     instance_protocol = "TCP"
@@ -55,8 +56,8 @@ resource "aws_security_group" "vault" {
 
 resource "aws_security_group_rule" "allow_inbound_api" {
   type        = "ingress"
-  from_port   = "${var.vault_api_port}"
-  to_port     = "${var.vault_api_port}"
+  from_port   = "${var.lb_port}"
+  to_port     = "${var.lb_port}"
   protocol    = "tcp"
   cidr_blocks = ["${var.allowed_inbound_cidr_blocks}"]
 

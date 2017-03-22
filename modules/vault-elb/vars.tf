@@ -48,6 +48,11 @@ variable "domain_name" {
   default = "replace-me"
 }
 
+variable "lb_port" {
+  description = "The port the load balancer should listen on for API requests."
+  default = 443
+}
+
 variable "vault_api_port" {
   description = "The port to listen on for API requests."
   default = 8200
@@ -80,12 +85,18 @@ variable "connection_draining_timeout" {
 
 variable "health_check_protocol" {
   description = "The protocol to use for health checks. Must be one of: HTTP, HTTPS, TCP, SSL."
-  default = "HTTPS"
+  default = "TCP"
 }
 
 variable "health_check_path" {
   description = "The path to use for health checks. Must return a 200 OK when the service is ready to receive requests from the ELB."
-  default = "/v1/sys/health?standbyok=true"
+  # We original had an HTTPS health check for /v1/sys/health?standbyok=true, but with self-signed certs, the Vault
+  # logs showed the error:
+  #
+  # TLS handshake error from 172.31.79.100:50335: tls: no cipher suite supported by both client and server
+  #
+  # So for now, we are sticking with a TCP health check.
+  default = ""
 }
 
 variable "health_check_interval" {

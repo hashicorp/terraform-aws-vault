@@ -54,6 +54,7 @@ The `run-vault` script accepts the following arguments:
 * `--tls-key-file` (required): Specifies the path to the private key for the certificate. See [How do you handle 
   encryption?](#how-do-you_handle-encryption) for more info.
 * `--port` (optional): The port Vault should listen on. Default is `8200`.   
+* `--log-level` (optional): The log verbosity to use with Vault. Default is `info`.   
 * `--cluster-port` (optional): The port Vault should listen on for server-to-server communication. Default is 
   `--port + 1`.   
 * `config-dir` (optional): The path to the Vault config folder. Default is to take the absolute path of `../config`, 

@@ -432,7 +432,9 @@ Vault server cluster and Consul server cluster.
 
 This module does not include anything for monitoring, alerting, or log aggregation. All ASGs and EC2 Instances come 
 with limited [CloudWatch](https://aws.amazon.com/cloudwatch/) metrics built-in, but beyond that, you will have to 
-provide your own solutions. 
+provide your own solutions. We especially recommend looking into Vault's [Audit 
+backends](https://www.vaultproject.io/docs/audit/index.html) for how you can capture detailed logging and audit 
+information.
 
 Given that any time Vault crashes, reboots, or restarts, you have to have the Vault admins manually unseal it (see
 [What happens if a node crashes?](#what-happens-if-a_node-crashes)), we **strongly** recommend configuring alerts that

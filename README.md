@@ -69,11 +69,13 @@ Each Blueprint has the following folder structure:
 
 Click on each of the modules above for more details.
 
-To deploy a Vault cluster with this Blueprint:
+To deploy Vault with this Blueprint, you will need to deploy two separate clusters: one to run 
+[Consul](https://www.consul.io/) servers (which Vault uses as a [storage 
+backend](https://www.vaultproject.io/docs/configuration/storage/index.html)) and one to run
+Vault servers. To deploy the Consul server cluster, use the [Consul AWS 
+Blueprint](https://github.com/gruntwork-io/consul-aws-blueprint). 
 
-1. Deploy a [Consul](https://www.consul.io/) cluster using the [Consul AWS 
-   Blueprint](https://github.com/gruntwork-io/consul-aws-blueprint). This Vault Blueprint uses Consul as its
-   [storage backend](https://www.vaultproject.io/docs/configuration/storage/index.html).
+To deploy the Vault cluster:
 
 1. Create an AMI that has Vault installed (using the [install-vault module](/modules/install-vault)) and the Consul
    agent installed (using the [install-consul 
@@ -84,7 +86,7 @@ To deploy a Vault cluster with this Blueprint:
    module](/modules/vault-cluster). 
 
 1. Execute the [run-consul script](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/run-consul)
-   with the `--client` flag during boot on each Instance to have the Consul agent connect to the Consul cluster. 
+   with the `--client` flag during boot on each Instance to have the Consul agent connect to the Consul server cluster. 
 
 1. Execute the [run-vault](/modules/run-vault) script during boot on each Instance to create the Vault cluster. 
 

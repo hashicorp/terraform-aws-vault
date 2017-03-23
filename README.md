@@ -95,8 +95,9 @@ To deploy the Vault cluster:
 
 If you only need to access Vault from inside your AWS account (recommended), run the [install-dnsmasq 
 module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-dnsmasq) on each server, and 
-that server will be able to reach Vault using DNS (e.g. using an address like `vault.service.consul`). See the 
-[vault-cluster-private example](/examples/vault-cluster-private) for working sample code.
+that server will be able to reach Vault using the Consul Server cluster as the DNS resolver (e.g. using an address l
+ike `vault.service.consul`). See the [vault-cluster-private example](/examples/vault-cluster-private) for working 
+sample code.
 
 If you need to access Vault from the public Internet, deploy the [vault-elb module](/modules/vault-elb) in a public 
 subnet and have all requests to Vault go through the ELB. See the [vault-cluster-public 

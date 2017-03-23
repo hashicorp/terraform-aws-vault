@@ -9,7 +9,8 @@ from the Consul AWS Blueprint.
 This example creates a private Vault cluster that is only accessible from servers within the AWS account. Each of the
 servers in this example has [Dnsmasq](http://www.thekelleys.org.uk/dnsmasq/doc.html) installed (via the 
 [install-dnsmasq module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-dnsmasq)) 
-which allows it to access Vault via DNS using the domain name `vault.service.consul`. For an example of a Vault cluster
+which allows it to use the Consul server cluster for service discovery and thereby access Vault via DNS using the 
+domain name `vault.service.consul`. For an example of a Vault cluster
 that is publicly accessible, see [vault-cluster-public](/examples/vault-cluster-public).
 
 ![Vault architecture](/_docs/architecture.png)

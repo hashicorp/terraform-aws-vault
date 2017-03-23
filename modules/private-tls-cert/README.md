@@ -59,13 +59,20 @@ module](/modules/run-vault), you need to pass it the TLS certs:
 /opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
 ```   
 
-We strongly recommend encrypting the private key file (e.g. using [KMS](https://aws.amazon.com/kms/)) while it's in 
-transit to the servers that will use it.   
+We **strongly** recommend encrypting the private key file while it's in transit to the servers that will use it. Here 
+are some of the ways you could do this:
+
+* Encrypt the certificate using [KMS](https://aws.amazon.com/kms/) and include the encrypted files in the AMI for your
+  Vault servers. Give those servers an IAM role that lets them access the same KMS key and decrypt their certs just
+  before booting.
+* Put your TLS cert in a secure S3 Bucket with encryption enabled. Give your Vault servers an IAM role that allows them
+  to download the certs from the S3 bucket just before booting.
+* Manually upload the certificate to each EC2 Instance with `scp`.
 
 
 ### Clients   
    
-Distribute the JUST the public key (the file at `public_key_file_path`) to any clients of those services so they can 
+Distribute JUST the public key (the file at `public_key_file_path`) to any clients of those services so they can 
 validate the server's TLS cert. Without the public key, the clients will reject any TLS connections: 
 
 ```

@@ -20,7 +20,7 @@ module "vault_cluster" {
 
   cluster_name  = "${var.vault_cluster_name}"
   cluster_size  = "${var.vault_cluster_size}"
-  instance_type = "t2.micro"
+  instance_type = "${var.vault_instance_type}"
 
   ami_id    = "${var.ami_id}"
   user_data = "${data.template_file.user_data_vault_cluster.rendered}"
@@ -56,7 +56,7 @@ data "template_file" "user_data_vault_cluster" {
   template = "${file("${path.module}/user-data-vault.sh")}"
 
   vars {
-    cluster_tag_key    = "${var.cluster_tag_key}"
+    cluster_tag_key    = "${var.consul_cluster_tag_key}"
     cluster_tag_value  = "${var.consul_cluster_name}"
   }
 }
@@ -70,10 +70,10 @@ module "consul_cluster" {
 
   cluster_name  = "${var.consul_cluster_name}"
   cluster_size  = "${var.consul_cluster_size}"
-  instance_type = "t2.micro"
+  instance_type = "${var.consul_instance_type}"
 
   # The EC2 Instances will use these tags to automatically discover each other and form a cluster
-  cluster_tag_key   = "${var.cluster_tag_key}"
+  cluster_tag_key   = "${var.consul_cluster_tag_key}"
   cluster_tag_value = "${var.consul_cluster_name}"
 
   ami_id    = "${var.ami_id}"
@@ -98,7 +98,7 @@ data "template_file" "user_data_consul" {
   template = "${file("${path.module}/user-data-consul.sh")}"
 
   vars {
-    cluster_tag_key   = "${var.cluster_tag_key}"
+    cluster_tag_key   = "${var.consul_cluster_tag_key}"
     cluster_tag_value = "${var.consul_cluster_name}"
   }
 }

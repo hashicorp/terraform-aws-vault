@@ -45,7 +45,17 @@ variable "consul_cluster_size" {
   default     = 3
 }
 
-variable "cluster_tag_key" {
+variable "vault_instance_type" {
+  description = "The type of EC2 Instance to run in the Vault ASG"
+  default = "t2.micro"
+}
+
+variable "consul_instance_type" {
+  description = "The type of EC2 Instance to run in the Consul ASG"
+  default = "t2.micro"
+}
+
+variable "consul_cluster_tag_key" {
   description = "The tag the Consul EC2 Instances will look for to automatically discover each other and form a cluster."
   default     = "consul-servers"
 }

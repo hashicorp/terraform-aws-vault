@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY A VAULT CLUSTER AND A CONSUL CLUSTER IN AWS
+# DEPLOY A VAULT SERVER CLUSTER AND A CONSUL SERVER CLUSTER IN AWS
 # This is an example of how to use the vault-cluster module to deploy a Vault cluster in AWS. This cluster uses Consul,
 # running in a separate cluster, as its storage backend.
 # ---------------------------------------------------------------------------------------------------------------------
@@ -9,7 +9,7 @@ provider "aws" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY THE VAULT CLUSTER
+# DEPLOY THE VAULT SERVER CLUSTER
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "vault_cluster" {
@@ -62,7 +62,7 @@ data "template_file" "user_data_vault_cluster" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY THE CONSUL CLUSTER
+# DEPLOY THE CONSUL SERVER CLUSTER
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_cluster" {

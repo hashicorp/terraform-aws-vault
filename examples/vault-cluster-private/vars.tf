@@ -26,12 +26,12 @@ variable "aws_region" {
 }
 
 variable "vault_cluster_name" {
-  description = "What to name the Nomad cluster and all of its associated resources"
+  description = "What to name the Vault server cluster and all of its associated resources"
   default     = "vault-example"
 }
 
 variable "consul_cluster_name" {
-  description = "What to name the Consul cluster and all of its associated resources"
+  description = "What to name the Consul server cluster and all of its associated resources"
   default     = "consul-example"
 }
 

@@ -425,7 +425,7 @@ Consul in the same cluster because:
 Check out the [Consul AWS Blueprint](https://github.com/gruntwork-io/consul-aws-blueprint) for how to deploy a Consul 
 cluster in AWS. See the [vault-cluster-public](/examples/vault-cluster-public) and 
 [vault-cluster-private](/examples/vault-cluster-private) examples for sample code that shows how to run both a
-Vault and Consul cluster.
+Vault server cluster and Consul server cluster.
 
 
 ### Monitoring, alerting, log aggregation

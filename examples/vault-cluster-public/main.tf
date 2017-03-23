@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY A VAULT CLUSTER, AN ELB, AND A CONSUL CLUSTER IN AWS
+# DEPLOY A VAULT SERVER CLUSTER, AN ELB, AND A CONSUL SERVER CLUSTER IN AWS
 # This is an example of how to use the vault-cluster and vault-elb modules to deploy a Vault cluster in AWS with an 
 # Elastic Load Balancer (ELB) in front of it. This cluster uses Consul, running in a separate cluster, as its storage 
 # backend.
@@ -10,7 +10,7 @@ provider "aws" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY THE VAULT CLUSTER
+# DEPLOY THE VAULT SERVER CLUSTER
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "vault_cluster" {
@@ -98,7 +98,7 @@ data "aws_route53_zone" "selected" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY THE CONSUL CLUSTER
+# DEPLOY THE CONSUL SERVER CLUSTER
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_cluster" {

@@ -18,7 +18,7 @@ module](/modules/install-vault). The default install path is `/opt/vault/bin`, s
 run:
 
 ```
-/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
+/opt/vault/bin/run-vault --s3-bucket my-vault-bucket --s3-bucket-region us-east-1 --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
 ```
 
 This will:
@@ -48,6 +48,8 @@ See the [vault-cluster-public](/examples/vault-cluster-public) and
 
 The `run-vault` script accepts the following arguments:
 
+* `--s3-bucket` (required): Specifies the S3 bucket to use to store Vault data. 
+* `--s3-bucket-region` (required): Specifies the AWS region where `--s3-bucket` lives. 
 * `--tls-cert-file` (required): Specifies the path to the certificate for TLS. To configure the listener to use a CA 
   certificate, concatenate the primary certificate and the CA certificate together. The primary certificate should 
   appear first in the combined file. See [How do you handle encryption?](#how-do-you_handle-encryption) for more info.
@@ -66,7 +68,7 @@ The `run-vault` script accepts the following arguments:
 Example:
 
 ```
-/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
+/opt/vault/bin/run-vault --s3-bucket my-vault-bucket --s3-bucket-region us-east-1 --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
 ```
 
 
@@ -84,8 +86,16 @@ available.
 
 `run-vault` sets the following configuration values by default:
 
-* [storage](https://www.vaultproject.io/docs/configuration/index.html#storage): Configure Consul as the storage 
-  backend with the following settings:
+* [storage](https://www.vaultproject.io/docs/configuration/index.html#storage): Configure S3 as the storage backend
+  with the following settings:
+ 
+     * [bucket](https://www.vaultproject.io/docs/configuration/storage/s3.html#bucket): Set to the `--s3-bucket`
+       parameter.
+     * [region](https://www.vaultproject.io/docs/configuration/storage/s3.html#region): Set to the `--s3-bucket-region` 
+       parameter.
+ 
+* [ha_storage](https://www.vaultproject.io/docs/configuration/index.html#ha_storage): Configure Consul as the [high 
+  availability](https://www.vaultproject.io/docs/concepts/ha.html) storage backend with the following settings:
 
     * [address](https://www.vaultproject.io/docs/configuration/storage/consul.html#address): Set the address to 
       `127.0.0.1:8500`. This is based on the assumption that the Consul agent is running on the same server.
@@ -133,7 +143,7 @@ If you want to override *all* the default settings, you can tell `run-vault` not
 at all using the `--skip-vault-config` flag:
 
 ```
-/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --skip-vault-config
+/opt/vault/bin/run-vault --s3-bucket my-vault-bucket --s3-bucket-region us-east-1 --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --skip-vault-config
 ```
 
 
@@ -149,21 +159,21 @@ Vault uses TLS to encrypt all data in transit. To configure encryption, you must
 
 ### Provide TLS certificates
 
-To enable RPC encryption, you need to provide the paths to the public and private keys of a TLS certificate to the 
-`run-vault` script:
+When you execute the `run-vault` script, you need to provide the paths to the public and private keys of a TLS 
+certificate:
 
 ```
-/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
+/opt/vault/bin/run-vault --s3-bucket my-vault-bucket --s3-bucket-region us-east-1 --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
 ```
 
-You can generate private TLS certs using the [private-tls-cert module](/modules/private-tls-cert).
+See the [private-tls-cert module](/modules/private-tls-cert) for information on how to generate a TLS certificate.
 
 
 ### Consul encryption
 
-Since this Vault Blueprint uses Consul as a storage backend, you may want to enable encryption for Consul too. Note 
-that Vault encrypts any data *before* sending it to a storage backend, so this isn't strictly necessary, but may be
-a good extra layer of security.
+Since this Vault Blueprint uses Consul as a high availability storage backend, you may want to enable encryption for 
+Consul too. Note that Vault encrypts any data *before* sending it to a storage backend, so this isn't strictly 
+necessary, but may be a good extra layer of security.
 
 By default, the Vault server nodes communicate with a local Consul agent running on the same server over (unencrypted) 
 HTTP. However, you can configure those agents to talk to the Consul servers using TLS. Check out the [official Consul 
@@ -172,4 +182,5 @@ encryption docs](https://github.com/gruntwork-io/consul-aws-blueprint/tree/maste
 for more info.
 
 
+ 
 

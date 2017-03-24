@@ -2,8 +2,9 @@
 
 This repo contains a Blueprint for how to deploy a [Vault](https://www.vaultproject.io/) cluster on 
 [AWS](https://aws.amazon.com/) using [Terraform](https://www.terraform.io/). Vault is an open source tool for managing
-secrets. This Blueprint uses [Consul](https://www.consul.io) as a [storage 
-backend](https://www.vaultproject.io/docs/configuration/storage/index.html):
+secrets. This Blueprint uses [S3](https://aws.amazon.com/s3/) as a [storage 
+backend](https://www.vaultproject.io/docs/configuration/storage/index.html) and a [Consul](https://www.consul.io) 
+server cluster as a [high availability backend](https://www.vaultproject.io/docs/concepts/ha.html):
 
 ![Vault architecture](/_docs/architecture.png)
 
@@ -69,11 +70,13 @@ Each Blueprint has the following folder structure:
 
 Click on each of the modules above for more details.
 
-To deploy a Vault cluster with this Blueprint:
+To deploy Vault with this Blueprint, you will need to deploy two separate clusters: one to run 
+[Consul](https://www.consul.io/) servers (which Vault uses as a [high availability 
+backend](https://www.vaultproject.io/docs/concepts/ha.html)) and one to run Vault servers. 
 
-1. Deploy a [Consul](https://www.consul.io/) cluster using the [Consul AWS 
-   Blueprint](https://github.com/gruntwork-io/consul-aws-blueprint). This Vault Blueprint uses Consul as its
-   [storage backend](https://www.vaultproject.io/docs/configuration/storage/index.html).
+To deploy the Consul server cluster, use the [Consul AWS Blueprint](https://github.com/gruntwork-io/consul-aws-blueprint). 
+
+To deploy the Vault cluster:
 
 1. Create an AMI that has Vault installed (using the [install-vault module](/modules/install-vault)) and the Consul
    agent installed (using the [install-consul 
@@ -84,23 +87,24 @@ To deploy a Vault cluster with this Blueprint:
    module](/modules/vault-cluster). 
 
 1. Execute the [run-consul script](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/run-consul)
-   with the `--client` flag during boot on each Instance to have the Consul agent connect to the Consul cluster. 
+   with the `--client` flag during boot on each Instance to have the Consul agent connect to the Consul server cluster. 
 
 1. Execute the [run-vault](/modules/run-vault) script during boot on each Instance to create the Vault cluster. 
+
+1. If you only need to access Vault from inside your AWS account (recommended), run the [install-dnsmasq 
+   module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-dnsmasq) on each server, and 
+   that server will be able to reach Vault using the Consul Server cluster as the DNS resolver (e.g. using an address 
+   like `vault.service.consul`). See the [vault-cluster-private example](/examples/vault-cluster-private) for working 
+   sample code.
+
+1. If you need to access Vault from the public Internet, deploy the [vault-elb module](/modules/vault-elb) in a public 
+   subnet and have all requests to Vault go through the ELB. See the [vault-cluster-public 
+   example](/examples/vault-cluster-public) for working sample code.
 
 1. Head over to the [How do you use the Vault cluster?](/modules/vault-cluster#how-do-you-use-the-vault-cluster) guide
    to learn how to initialize, unseal, and use Vault.
 
-If you only need to access Vault from inside your AWS account (recommended), run the [install-dnsmasq 
-module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-dnsmasq) on each server, and 
-that server will be able to reach Vault using DNS (e.g. using an address like `vault.service.consul`). See the 
-[vault-cluster-private example](/examples/vault-cluster-private) for working sample code.
-
-If you need to access Vault from the public Internet, deploy the [vault-elb module](/modules/vault-elb) in a public 
-subnet and have all requests to Vault go through the ELB. See the [vault-cluster-public 
-example](/examples/vault-cluster-public) for working sample code.
-
-
+ 
  
 
 

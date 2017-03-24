@@ -3,7 +3,7 @@
 This folder shows an example of Terraform code to deploy a [Vault](https://www.vaultproject.io/) cluster in 
 [AWS](https://aws.amazon.com/) using the [vault-cluster](/modules/vault-cluster) and [vault-elb](/modules/vault-elb) 
 modules. The Vault cluster uses [Consul](https://www.consul.io/) as a storage backend, so this example also deploys a 
-separate Consul cluster using the [consul-cluster 
+separate Consul server cluster using the [consul-cluster 
 module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/consul-cluster) from the Consul AWS 
 Blueprint.
 
@@ -35,7 +35,8 @@ To deploy a Vault Cluster:
 1. Run `terraform plan`.
 1. If the plan looks good, run `terraform apply`.
 
-After the `apply` command finishes, a Vault and Consul cluster will boot up and discover each other.
+After the `apply` command finishes, a Vault server cluster and Consul server cluster will boot up and discover each 
+other.
  
 To see how to connect to the Vault cluster, initialize it, and start reading and writing secrets, head over to the 
 [How do you use the Vault cluster?](/modules/vault-cluster#how-do-you-use-the-vault-cluster) docs.

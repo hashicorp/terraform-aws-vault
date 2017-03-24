@@ -88,12 +88,23 @@ resource "aws_security_group" "lc_security_group" {
   }
 }
 
-resource "aws_security_group_rule" "allow_ssh_inbound" {
+resource "aws_security_group_rule" "allow_ssh_inbound_from_cidr_blocks" {
   type        = "ingress"
   from_port   = "${var.ssh_port}"
   to_port     = "${var.ssh_port}"
   protocol    = "tcp"
   cidr_blocks = ["${var.allowed_ssh_cidr_blocks}"]
+
+  security_group_id = "${aws_security_group.lc_security_group.id}"
+}
+
+resource "aws_security_group_rule" "allow_ssh_inbound_from_security_group_ids" {
+  count                    = "${length(var.allowed_inbound_security_group_ids)}"
+  type                     = "ingress"
+  from_port                = "${var.ssh_port}"
+  to_port                  = "${var.ssh_port}"
+  protocol                 = "tcp"
+  source_security_group_id = "${element(var.allowed_inbound_security_group_ids, count.index)}"
 
   security_group_id = "${aws_security_group.lc_security_group.id}"
 }
@@ -115,8 +126,9 @@ resource "aws_security_group_rule" "allow_all_outbound" {
 module "security_group_rules" {
   source = "../vault-security-group-rules"
 
-  security_group_id           = "${aws_security_group.lc_security_group.id}"
-  allowed_inbound_cidr_blocks = ["${var.allowed_inbound_cidr_blocks}"]
+  security_group_id                  = "${aws_security_group.lc_security_group.id}"
+  allowed_inbound_cidr_blocks        = ["${var.allowed_inbound_cidr_blocks}"]
+  allowed_inbound_security_group_ids = ["${var.allowed_inbound_security_group_ids}"]
 
   api_port     = "${var.api_port}"
   cluster_port = "${var.cluster_port}"
@@ -162,5 +174,37 @@ data "aws_iam_policy_document" "instance_role" {
       type        = "Service"
       identifiers = ["ec2.amazonaws.com"]
     }
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# CREATE AN S3 BUCKET TO USE AS A STORAGE BACKEND
+# Also, add an IAM role policy that gives the Vault servers access to this S3 bucket
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "aws_s3_bucket" "vault_storage" {
+  bucket        = "${var.s3_bucket_name}"
+  force_destroy = "${var.force_destroy_s3_bucket}"
+
+  tags {
+    Description = "Used for secret storage with Vault. DO NOT DELETE this Bucket unless you know what you are doing."
+  }
+}
+
+resource "aws_iam_role_policy" "vault_s3" {
+  name   = "vault_s3"
+  role   = "${aws_iam_role.instance_role.id}"
+  policy = "${data.aws_iam_policy_document.vault_s3.json}"
+}
+
+data "aws_iam_policy_document" "vault_s3" {
+  statement {
+    effect  = "Allow"
+    actions = ["s3:*"]
+
+    resources = [
+      "${aws_s3_bucket.vault_storage.arn}",
+      "${aws_s3_bucket.vault_storage.arn}/*",
+    ]
   }
 }

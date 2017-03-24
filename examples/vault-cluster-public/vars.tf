@@ -15,6 +15,10 @@ variable "ami_id" {
   description = "The ID of the AMI to run in the cluster. This should be an AMI built from the Packer template under examples/vault-consul-ami/vault-consul.json."
 }
 
+variable "s3_bucket_name" {
+  description = "The name of an S3 bucket to create and use as a storage backend. Note: S3 bucket names must be *globally* unique."
+}
+
 variable "hosted_zone_domain_name" {
   description = "The domain name of the Route 53 Hosted Zone in which to add a DNS entry for Vault (e.g. example.com)."
 }
@@ -34,12 +38,12 @@ variable "aws_region" {
 }
 
 variable "vault_cluster_name" {
-  description = "What to name the Nomad cluster and all of its associated resources"
+  description = "What to name the Vault server cluster and all of its associated resources"
   default     = "vault-example"
 }
 
 variable "consul_cluster_name" {
-  description = "What to name the Consul cluster and all of its associated resources"
+  description = "What to name the Consul server cluster and all of its associated resources"
   default     = "consul-example"
 }
 
@@ -53,7 +57,17 @@ variable "consul_cluster_size" {
   default     = 3
 }
 
-variable "cluster_tag_key" {
+variable "vault_instance_type" {
+  description = "The type of EC2 Instance to run in the Vault ASG"
+  default     = "t2.micro"
+}
+
+variable "consul_instance_type" {
+  description = "The type of EC2 Instance to run in the Consul ASG"
+  default     = "t2.micro"
+}
+
+variable "consul_cluster_tag_key" {
   description = "The tag the Consul EC2 Instances will look for to automatically discover each other and form a cluster."
   default     = "consul-servers"
 }
@@ -61,4 +75,9 @@ variable "cluster_tag_key" {
 variable "ssh_key_name" {
   description = "The name of an EC2 Key Pair that can be used to SSH to the EC2 Instances in this cluster. Set to an empty string to not associate a Key Pair."
   default     = ""
+}
+
+variable "force_destroy_s3_bucket" {
+  description = "If you set this to true, when you run terraform destroy, this tells Terraform to delete all the objects in the S3 bucket used for backend storage. You should NOT set this to true in production or you risk losing all your data! This property is only here so automated tests of this blueprint can clean up after themselves."
+  default     = false
 }

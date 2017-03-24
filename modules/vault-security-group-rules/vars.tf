@@ -12,6 +12,11 @@ variable "allowed_inbound_cidr_blocks" {
   type        = "list"
 }
 
+variable "allowed_inbound_security_group_ids" {
+  description = "A list of security group IDs that will be allowed to connect to Vault"
+  type        = "list"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # OPTIONAL PARAMETERS
 # These parameters have reasonable defaults.
@@ -19,10 +24,10 @@ variable "allowed_inbound_cidr_blocks" {
 
 variable "api_port" {
   description = "The port to use for Vault API calls"
-  default = 8200
+  default     = 8200
 }
 
 variable "cluster_port" {
   description = "The port to use for Vault server-to-server communication"
-  default = 8201
+  default     = 8201
 }

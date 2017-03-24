@@ -2,14 +2,15 @@
 
 This folder shows an example of Terraform code to deploy a [Vault](https://www.vaultproject.io/) cluster in 
 [AWS](https://aws.amazon.com/) using the [vault-cluster module](/modules/vault-cluster). The Vault cluster uses 
-[Consul](https://www.consul.io/) as a storage backend, so this example also deploys a separate Consul cluster using
-the [consul-cluster module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/consul-cluster) 
+[Consul](https://www.consul.io/) as a storage backend, so this example also deploys a separate Consul server cluster 
+using the [consul-cluster module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/consul-cluster) 
 from the Consul AWS Blueprint.
 
 This example creates a private Vault cluster that is only accessible from servers within the AWS account. Each of the
 servers in this example has [Dnsmasq](http://www.thekelleys.org.uk/dnsmasq/doc.html) installed (via the 
 [install-dnsmasq module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-dnsmasq)) 
-which allows it to access Vault via DNS using the domain name `vault.service.consul`. For an example of a Vault cluster
+which allows it to use the Consul server cluster for service discovery and thereby access Vault via DNS using the 
+domain name `vault.service.consul`. For an example of a Vault cluster
 that is publicly accessible, see [vault-cluster-public](/examples/vault-cluster-public).
 
 ![Vault architecture](/_docs/architecture.png)
@@ -36,7 +37,8 @@ To deploy a Vault Cluster:
 1. Run `terraform plan`.
 1. If the plan looks good, run `terraform apply`.
 
-After the `apply` command finishes, a Vault and Consul cluster will boot up and discover each other.
+After the `apply` command finishes, a Vault server cluster and Consul server cluster will boot up and discover each 
+other.
  
 To see how to connect to the Vault cluster, initialize it, and start reading and writing secrets, head over to the 
 [How do you use the Vault cluster?](/modules/vault-cluster#how-do-you-use-the-vault-cluster) docs.

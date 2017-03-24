@@ -35,80 +35,80 @@ variable "availability_zones" {
 
 variable "create_dns_entry" {
   description = "If set to true, this module will create a Route 53 DNS A record for the ELB in the var.hosted_zone_id hosted zone with the domain name in var.domain_name."
-  default = false
+  default     = false
 }
 
 variable "hosted_zone_id" {
   description = "The Route 53 hosted zone ID in which to create a DNS A record. Only used if var.create_dns_entry is true."
-  default = "replace-me"
+  default     = "replace-me"
 }
 
 variable "domain_name" {
   description = "The domain name to use in the DNS A record for the ELB (e.g. vault.example.com). Only used if var.create_dns_entry is true."
-  default = "replace-me"
+  default     = "replace-me"
 }
 
 variable "lb_port" {
   description = "The port the load balancer should listen on for API requests."
-  default = 443
+  default     = 443
 }
 
 variable "vault_api_port" {
   description = "The port to listen on for API requests."
-  default = 8200
+  default     = 8200
 }
 
 variable "internal" {
   description = "If set to true, this will be an internal ELB, accessible only within the VPC. The main reason to use an ELB with Vault is to make it publicly accessible, so this should typically be set to false."
-  default = false
+  default     = false
 }
 
 variable "cross_zone_load_balancing" {
   description = "Set to true to enable cross-zone load balancing"
-  default = true
+  default     = true
 }
 
 variable "idle_timeout" {
   description = "The time, in seconds, that the connection is allowed to be idle."
-  default = 60
+  default     = 60
 }
 
 variable "connection_draining" {
   description = "Set to true to enable connection draining."
-  default = true
+  default     = true
 }
 
 variable "connection_draining_timeout" {
   description = "The time, in seconds, to allow for connections to drain."
-  default = 300
+  default     = 300
 }
 
 variable "health_check_protocol" {
   description = "The protocol to use for health checks. Must be one of: HTTP, HTTPS, TCP, SSL."
-  default = "HTTPS"
+  default     = "HTTPS"
 }
 
 variable "health_check_path" {
   description = "The path to use for health checks. Must return a 200 OK when the service is ready to receive requests from the ELB."
-  default = "/v1/sys/health?standbyok=true"
+  default     = "/v1/sys/health?standbyok=true"
 }
 
 variable "health_check_interval" {
   description = "The amount of time, in seconds, between health checks."
-  default = 15
+  default     = 15
 }
 
 variable "health_check_healthy_threshold" {
   description = "The number of health checks that must pass before the instance is declared healthy."
-  default = 2
+  default     = 2
 }
 
 variable "health_check_unhealthy_threshold" {
   description = "The number of health checks that must fail before the instance is declared unhealthy."
-  default = 2
+  default     = 2
 }
 
 variable "health_check_timeout" {
   description = "The amount of time, in seconds, before a health check times out."
-  default = 5
+  default     = 5
 }

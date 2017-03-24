@@ -24,12 +24,21 @@ variable "allowed_inbound_cidr_blocks" {
   type        = "list"
 }
 
+variable "allowed_inbound_security_group_ids" {
+  description = "A list of security group IDs that will be allowed to connect to Vault"
+  type        = "list"
+}
+
 variable "user_data" {
   description = "A User Data script to execute while the server is booting. We remmend passing in a bash script that executes the run-vault script, which should have been installed in the AMI by the install-vault module."
 }
 
 variable "cluster_size" {
   description = "The number of nodes to have in the cluster. We strongly recommend setting this to 3 or 5."
+}
+
+variable "s3_bucket_name" {
+  description = "The name of the S3 bucket to create and use as a storage backend."
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -56,6 +65,12 @@ variable "ssh_key_name" {
 
 variable "allowed_ssh_cidr_blocks" {
   description = "A list of CIDR-formatted IP address ranges from which the EC2 Instances will allow SSH connections"
+  type        = "list"
+  default     = []
+}
+
+variable "allowed_ssh_security_group_ids" {
+  description = "A list of security group IDs from which the EC2 Instances will allow SSH connections"
   type        = "list"
   default     = []
 }
@@ -129,15 +144,20 @@ variable "instance_profile_path" {
 
 variable "api_port" {
   description = "The port to use for Vault API calls"
-  default = 8200
+  default     = 8200
 }
 
 variable "cluster_port" {
   description = "The port to use for Vault server-to-server communication"
-  default = 8201
+  default     = 8201
 }
 
 variable "ssh_port" {
   description = "The port used for SSH connections"
   default     = 22
+}
+
+variable "force_destroy_s3_bucket" {
+  description = "If you set this to true, when you run terraform destroy, this tells Terraform to delete all the objects in the S3 bucket used for backend storage. You should NOT set this to true in production or you risk losing all your data! This property is only here so automated tests of this blueprint can clean up after themselves."
+  default     = false
 }

@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY A VAULT CLUSTER AND A CONSUL CLUSTER IN AWS
+# DEPLOY A VAULT SERVER CLUSTER AND A CONSUL SERVER CLUSTER IN AWS
 # This is an example of how to use the vault-cluster module to deploy a Vault cluster in AWS. This cluster uses Consul,
 # running in a separate cluster, as its storage backend.
 # ---------------------------------------------------------------------------------------------------------------------
@@ -9,7 +9,7 @@ provider "aws" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY THE VAULT CLUSTER
+# DEPLOY THE VAULT SERVER CLUSTER
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "vault_cluster" {
@@ -20,19 +20,24 @@ module "vault_cluster" {
 
   cluster_name  = "${var.vault_cluster_name}"
   cluster_size  = "${var.vault_cluster_size}"
-  instance_type = "t2.micro"
+  instance_type = "${var.vault_instance_type}"
 
   ami_id    = "${var.ami_id}"
   user_data = "${data.template_file.user_data_vault_cluster.rendered}"
+
+  s3_bucket_name          = "${var.s3_bucket_name}"
+  force_destroy_s3_bucket = "${var.force_destroy_s3_bucket}"
 
   vpc_id             = "${data.aws_vpc.default.id}"
   availability_zones = ["${data.aws_availability_zones.all.names}"]
 
   # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
   # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
-  allowed_ssh_cidr_blocks     = ["0.0.0.0/0"]
-  allowed_inbound_cidr_blocks = ["0.0.0.0/0"]
-  ssh_key_name                = "${var.ssh_key_name}"
+
+  allowed_ssh_cidr_blocks            = ["0.0.0.0/0"]
+  allowed_inbound_cidr_blocks        = ["0.0.0.0/0"]
+  allowed_inbound_security_group_ids = []
+  ssh_key_name                       = "${var.ssh_key_name}"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -56,13 +61,15 @@ data "template_file" "user_data_vault_cluster" {
   template = "${file("${path.module}/user-data-vault.sh")}"
 
   vars {
-    cluster_tag_key    = "${var.cluster_tag_key}"
-    cluster_tag_value  = "${var.consul_cluster_name}"
+    aws_region               = "${var.aws_region}"
+    s3_bucket_name           = "${var.s3_bucket_name}"
+    consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
+    consul_cluster_tag_value = "${var.consul_cluster_name}"
   }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY THE CONSUL CLUSTER
+# DEPLOY THE CONSUL SERVER CLUSTER
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_cluster" {
@@ -70,10 +77,10 @@ module "consul_cluster" {
 
   cluster_name  = "${var.consul_cluster_name}"
   cluster_size  = "${var.consul_cluster_size}"
-  instance_type = "t2.micro"
+  instance_type = "${var.consul_instance_type}"
 
   # The EC2 Instances will use these tags to automatically discover each other and form a cluster
-  cluster_tag_key   = "${var.cluster_tag_key}"
+  cluster_tag_key   = "${var.consul_cluster_tag_key}"
   cluster_tag_value = "${var.consul_cluster_name}"
 
   ami_id    = "${var.ami_id}"
@@ -84,6 +91,7 @@ module "consul_cluster" {
 
   # To make testing easier, we allow Consul and SSH requests from any IP address here but in a production
   # deployment, we strongly recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
+
   allowed_ssh_cidr_blocks     = ["0.0.0.0/0"]
   allowed_inbound_cidr_blocks = ["0.0.0.0/0"]
   ssh_key_name                = "${var.ssh_key_name}"
@@ -98,8 +106,8 @@ data "template_file" "user_data_consul" {
   template = "${file("${path.module}/user-data-consul.sh")}"
 
   vars {
-    cluster_tag_key   = "${var.cluster_tag_key}"
-    cluster_tag_value = "${var.consul_cluster_name}"
+    consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
+    consul_cluster_tag_value = "${var.consul_cluster_name}"
   }
 }
 

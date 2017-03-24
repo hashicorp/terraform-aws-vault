@@ -22,10 +22,13 @@ module "vault_cluster" {
   # Specify the ID of the Vault AMI. You should build this using the scripts in the install-vault module.
   ami_id = "ami-abcd1234"
   
+  # This module uses S3 as a storage backend
+  s3_bucket_name   = "${var.vault_s3_bucket}"
+  
   # Configure and start Vault during boot. 
   user_data = <<-EOF
               #!/bin/bash
-              /opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
+              /opt/vault/bin/run-vault --s3-bucket ${var.vault_s3_bucket} --s3-bucket-region ${var.aws_region} --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
               EOF
   
   # ... See vars.tf for the other parameters you must define for the vault-cluster module
@@ -44,6 +47,8 @@ Note the following parameters:
   (AMI)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) to deploy on each server in the cluster. You
   should install Vault in this AMI using the scripts in the [install-vault](/modules/install-vault) module.
   
+* `s3_bucket_name`: This module creates an [S3](https://aws.amazon.com/s3/) to use as a storage backend for Vault.
+ 
 * `user_data`: Use this parameter to specify a [User 
   Data](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html#user-data-shell-scripts) script that each
   server will run during boot. This is where you can use the [run-vault script](/modules/run-vault) to configure and 
@@ -241,6 +246,7 @@ This module creates the following architecture:
 This architecture consists of the following resources:
 
 * [Auto Scaling Group](#auto-scaling-group)
+* [S3 bucket](#s3-bucket)
 * [Security Group](#security-group)
 * [IAM Role and Permissions](#iam-role-and-permissions)
 
@@ -252,6 +258,14 @@ should run the ASG with 3 or 5 EC2 Instances spread across multiple [Availabilit
 Zones](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html). Each of the EC2
 Instances should be running an AMI that has had Vault installed via the [install-vault](/modules/install-vault)
 module. You pass in the ID of the AMI to run using the `ami_id` input parameter.
+
+
+### S3 Bucket
+
+This module creates an [S3 bucket](https://aws.amazon.com/s3/) that Vault can use as a storage backend. S3 is a good
+choice for storage because it provides outstanding durability (99.999999999%) and availability (99.99%).  Unfortunately,
+S3 cannot be used for Vault High Availability coordination, so this module expects a separate Consul server cluster to 
+be deployed as a high availability backend.
 
 
 ### Security Group
@@ -270,8 +284,9 @@ Check out the [Security section](#security) for more details.
 
 ### IAM Role and Permissions
 
-Each EC2 Instance in the ASG has an [IAM Role](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html) attached. 
-The IAM Role ARN is exported as an output variable so you can add permissions. 
+Each EC2 Instance in the ASG has an [IAM Role](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html) attached
+with permissions to access its S3 bucket. The IAM Role ARN is exported as an output variable so you can add custom
+permissions. 
 
 
 
@@ -382,7 +397,8 @@ If you wish to use dedicated instances, you can set the `tenancy` parameter to `
 This module attaches a security group to each EC2 Instance that allows inbound requests as follows:
 
 * **Vault**: For the Vault API port (default: 8200), you can use the `allowed_inbound_cidr_blocks` parameter to control 
-  the list of [CIDR blocks](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) that will be allowed access.  
+  the list of [CIDR blocks](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) that will be allowed access
+  and the `allowed_inbound_security_group_ids` parameter to control the security groups that will be allowed access.  
 
 * **SSH**: For the SSH port (default: 22), you can use the `allowed_ssh_cidr_blocks` parameter to control the list of   
   [CIDR blocks](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) that will be allowed access. 
@@ -413,26 +429,29 @@ This module does NOT handle the following items, which you may want to provide o
 
 ### Consul
 
-This module assumes you already have Consul deployed in a separate cluster. We do not recommend co-locating Vault and
-Consul in the same cluster because:
+This blueprint configures Vault to use Consul as a high availability storage backend. This module assumes you already 
+have Consul servers deployed in a separate cluster. We do not recommend co-locating Vault and Consul servers in the 
+same cluster because:
 
 1. Vault is a tool built specifically for security, and running any other software on the same server increases its
    surface area to attackers.
-1. This Vault Blueprint uses Consul as a storage backend and both Vault and Consul keep their working set in memory. 
-   That means for every 1 byte of data in Vault, you'd also have 1 byte of data in Consul, doubling your memory
-   consumption on the server.
+1. This Vault Blueprint uses Consul as a high availability storage backend and both Vault and Consul keep their working 
+   set in memory. That means for every 1 byte of data in Vault, you'd also have 1 byte of data in Consul, doubling 
+   your memory consumption on each server.
 
 Check out the [Consul AWS Blueprint](https://github.com/gruntwork-io/consul-aws-blueprint) for how to deploy a Consul 
-cluster in AWS. See the [vault-cluster-public](/examples/vault-cluster-public) and 
+server cluster in AWS. See the [vault-cluster-public](/examples/vault-cluster-public) and 
 [vault-cluster-private](/examples/vault-cluster-private) examples for sample code that shows how to run both a
-Vault and Consul cluster.
+Vault server cluster and Consul server cluster.
 
 
 ### Monitoring, alerting, log aggregation
 
 This module does not include anything for monitoring, alerting, or log aggregation. All ASGs and EC2 Instances come 
 with limited [CloudWatch](https://aws.amazon.com/cloudwatch/) metrics built-in, but beyond that, you will have to 
-provide your own solutions. 
+provide your own solutions. We especially recommend looking into Vault's [Audit 
+backends](https://www.vaultproject.io/docs/audit/index.html) for how you can capture detailed logging and audit 
+information.
 
 Given that any time Vault crashes, reboots, or restarts, you have to have the Vault admins manually unseal it (see
 [What happens if a node crashes?](#what-happens-if-a_node-crashes)), we **strongly** recommend configuring alerts that

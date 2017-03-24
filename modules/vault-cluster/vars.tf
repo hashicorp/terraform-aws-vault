@@ -24,6 +24,11 @@ variable "allowed_inbound_cidr_blocks" {
   type        = "list"
 }
 
+variable "allowed_inbound_security_group_ids" {
+  description = "A list of security group IDs that will be allowed to connect to Vault"
+  type        = "list"
+}
+
 variable "user_data" {
   description = "A User Data script to execute while the server is booting. We remmend passing in a bash script that executes the run-vault script, which should have been installed in the AMI by the install-vault module."
 }
@@ -60,6 +65,12 @@ variable "ssh_key_name" {
 
 variable "allowed_ssh_cidr_blocks" {
   description = "A list of CIDR-formatted IP address ranges from which the EC2 Instances will allow SSH connections"
+  type        = "list"
+  default     = []
+}
+
+variable "allowed_ssh_security_group_ids" {
+  description = "A list of security group IDs from which the EC2 Instances will allow SSH connections"
   type        = "list"
   default     = []
 }

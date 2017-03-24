@@ -397,7 +397,8 @@ If you wish to use dedicated instances, you can set the `tenancy` parameter to `
 This module attaches a security group to each EC2 Instance that allows inbound requests as follows:
 
 * **Vault**: For the Vault API port (default: 8200), you can use the `allowed_inbound_cidr_blocks` parameter to control 
-  the list of [CIDR blocks](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) that will be allowed access.  
+  the list of [CIDR blocks](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) that will be allowed access
+  and the `allowed_inbound_security_group_ids` parameter to control the security groups that will be allowed access.  
 
 * **SSH**: For the SSH port (default: 22), you can use the `allowed_ssh_cidr_blocks` parameter to control the list of   
   [CIDR blocks](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) that will be allowed access. 

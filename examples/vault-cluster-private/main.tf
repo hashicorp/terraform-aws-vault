@@ -25,6 +25,9 @@ module "vault_cluster" {
   ami_id    = "${var.ami_id}"
   user_data = "${data.template_file.user_data_vault_cluster.rendered}"
 
+  s3_bucket_name          = "${var.s3_bucket_name}"
+  force_destroy_s3_bucket = "${var.force_destroy_s3_bucket}"
+
   vpc_id             = "${data.aws_vpc.default.id}"
   availability_zones = ["${data.aws_availability_zones.all.names}"]
 
@@ -56,8 +59,10 @@ data "template_file" "user_data_vault_cluster" {
   template = "${file("${path.module}/user-data-vault.sh")}"
 
   vars {
-    cluster_tag_key    = "${var.consul_cluster_tag_key}"
-    cluster_tag_value  = "${var.consul_cluster_name}"
+    aws_region                = "${var.aws_region}"
+    s3_bucket_name            = "${var.s3_bucket_name}"
+    consul_cluster_tag_key    = "${var.consul_cluster_tag_key}"
+    consul_cluster_tag_value  = "${var.consul_cluster_name}"
   }
 }
 
@@ -98,8 +103,8 @@ data "template_file" "user_data_consul" {
   template = "${file("${path.module}/user-data-consul.sh")}"
 
   vars {
-    cluster_tag_key   = "${var.consul_cluster_tag_key}"
-    cluster_tag_value = "${var.consul_cluster_name}"
+    consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
+    consul_cluster_tag_value = "${var.consul_cluster_name}"
   }
 }
 

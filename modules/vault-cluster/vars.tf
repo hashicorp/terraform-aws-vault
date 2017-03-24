@@ -32,6 +32,10 @@ variable "cluster_size" {
   description = "The number of nodes to have in the cluster. We strongly recommend setting this to 3 or 5."
 }
 
+variable "s3_bucket_name" {
+  description = "The name of the S3 bucket to create and use as a storage backend."
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # OPTIONAL PARAMETERS
 # These parameters have reasonable defaults.
@@ -140,4 +144,9 @@ variable "cluster_port" {
 variable "ssh_port" {
   description = "The port used for SSH connections"
   default     = 22
+}
+
+variable "force_destroy_s3_bucket" {
+  description = "If you set this to true, when you run terraform destroy, this tells Terraform to delete all the objects in the S3 bucket used for backend storage. You should NOT set this to true in production or you risk losing all your data! This property is only here so automated tests of this blueprint can clean up after themselves."
+  default = false
 }

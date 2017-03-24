@@ -32,13 +32,16 @@ module "vault_cluster" {
   vpc_id             = "${data.aws_vpc.default.id}"
   availability_zones = ["${data.aws_availability_zones.all.names}"]
 
-  # Tell each Vault server to register in the ELB. However, do NOT use the ELB for the ASG health check, or the ASG
-  # will assume all sealed instances are unhealthy and repeatedly try to redeploy them.
-  load_balancers    = ["${module.vault_elb.load_balancer_name}"]
+  # Tell each Vault server to register in the ELB.
+  load_balancers = ["${module.vault_elb.load_balancer_name}"]
+
+  # Do NOT use the ELB for the ASG health check, or the ASG will assume all sealed instances are unhealthy and
+  # repeatedly try to redeploy them.
   health_check_type = "EC2"
 
   # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
   # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
+
   allowed_ssh_cidr_blocks            = ["0.0.0.0/0"]
   allowed_inbound_cidr_blocks        = ["0.0.0.0/0"]
   allowed_inbound_security_group_ids = []
@@ -66,10 +69,10 @@ data "template_file" "user_data_vault_cluster" {
   template = "${file("${path.module}/user-data-vault.sh")}"
 
   vars {
-    aws_region                = "${var.aws_region}"
-    s3_bucket_name            = "${var.s3_bucket_name}"
-    consul_cluster_tag_key    = "${var.consul_cluster_tag_key}"
-    consul_cluster_tag_value  = "${var.consul_cluster_name}"
+    aws_region               = "${var.aws_region}"
+    s3_bucket_name           = "${var.s3_bucket_name}"
+    consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
+    consul_cluster_tag_value = "${var.consul_cluster_name}"
   }
 }
 
@@ -126,6 +129,7 @@ module "consul_cluster" {
 
   # To make testing easier, we allow Consul and SSH requests from any IP address here but in a production
   # deployment, we strongly recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
+
   allowed_ssh_cidr_blocks     = ["0.0.0.0/0"]
   allowed_inbound_cidr_blocks = ["0.0.0.0/0"]
   ssh_key_name                = "${var.ssh_key_name}"
@@ -157,4 +161,3 @@ data "aws_vpc" "default" {
 }
 
 data "aws_availability_zones" "all" {}
-

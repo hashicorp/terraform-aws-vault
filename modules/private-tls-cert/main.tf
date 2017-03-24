@@ -34,4 +34,3 @@ resource "tls_self_signed_cert" "cert" {
     command = "echo '${tls_self_signed_cert.cert.cert_pem}' > '${var.public_key_file_path}' && chmod ${var.permissions} '${var.public_key_file_path}' && chown ${var.owner} '${var.public_key_file_path}'"
   }
 }
-

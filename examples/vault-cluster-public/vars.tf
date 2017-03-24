@@ -59,12 +59,12 @@ variable "consul_cluster_size" {
 
 variable "vault_instance_type" {
   description = "The type of EC2 Instance to run in the Vault ASG"
-  default = "t2.micro"
+  default     = "t2.micro"
 }
 
 variable "consul_instance_type" {
   description = "The type of EC2 Instance to run in the Consul ASG"
-  default = "t2.micro"
+  default     = "t2.micro"
 }
 
 variable "consul_cluster_tag_key" {
@@ -79,5 +79,5 @@ variable "ssh_key_name" {
 
 variable "force_destroy_s3_bucket" {
   description = "If you set this to true, when you run terraform destroy, this tells Terraform to delete all the objects in the S3 bucket used for backend storage. You should NOT set this to true in production or you risk losing all your data! This property is only here so automated tests of this blueprint can clean up after themselves."
-  default = false
+  default     = false
 }

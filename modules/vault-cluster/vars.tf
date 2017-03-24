@@ -144,12 +144,12 @@ variable "instance_profile_path" {
 
 variable "api_port" {
   description = "The port to use for Vault API calls"
-  default = 8200
+  default     = 8200
 }
 
 variable "cluster_port" {
   description = "The port to use for Vault server-to-server communication"
-  default = 8201
+  default     = 8201
 }
 
 variable "ssh_port" {
@@ -159,5 +159,5 @@ variable "ssh_port" {
 
 variable "force_destroy_s3_bucket" {
   description = "If you set this to true, when you run terraform destroy, this tells Terraform to delete all the objects in the S3 bucket used for backend storage. You should NOT set this to true in production or you risk losing all your data! This property is only here so automated tests of this blueprint can clean up after themselves."
-  default = false
+  default     = false
 }

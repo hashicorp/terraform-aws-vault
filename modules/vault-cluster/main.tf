@@ -192,18 +192,19 @@ resource "aws_s3_bucket" "vault_storage" {
 }
 
 resource "aws_iam_role_policy" "vault_s3" {
-  name = "vault_s3"
-  role = "${aws_iam_role.instance_role.id}"
+  name   = "vault_s3"
+  role   = "${aws_iam_role.instance_role.id}"
   policy = "${data.aws_iam_policy_document.vault_s3.json}"
 }
 
 data "aws_iam_policy_document" "vault_s3" {
   statement {
-    effect = "Allow"
+    effect  = "Allow"
     actions = ["s3:*"]
+
     resources = [
       "${aws_s3_bucket.vault_storage.arn}",
-      "${aws_s3_bucket.vault_storage.arn}/*"
+      "${aws_s3_bucket.vault_storage.arn}/*",
     ]
   }
 }

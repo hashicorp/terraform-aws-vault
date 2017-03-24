@@ -37,4 +37,3 @@ output "iam_role_id_consul_cluster" {
 output "security_group_id_consul_cluster" {
   value = "${module.consul_cluster.security_group_id}"
 }
-

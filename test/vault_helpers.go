@@ -86,7 +86,7 @@ func runVaultPrivateClusterTest(t *testing.T, testName string, packerBuildName s
 	terratestOptions.Vars = map[string]interface{} {
 		VAR_AMI_ID: amiId,
 		VAR_AWS_REGION: resourceCollection.AwsRegion,
-		VAR_S3_BUCKET_NAME: fmt.Sprintf("vault-blueprint-test-%s", resourceCollection.UniqueId),
+		VAR_S3_BUCKET_NAME: s3BucketName(resourceCollection),
 		VAR_VAULT_CLUSTER_NAME: fmt.Sprintf("vault-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_NAME: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
@@ -126,7 +126,7 @@ func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName st
 	terratestOptions.Vars = map[string]interface{} {
 		VAR_AMI_ID: amiId,
 		VAR_AWS_REGION: resourceCollection.AwsRegion,
-		VAR_S3_BUCKET_NAME: fmt.Sprintf("vault-blueprint-test-%s", resourceCollection.UniqueId),
+		VAR_S3_BUCKET_NAME: s3BucketName(resourceCollection),
 		VAR_VAULT_CLUSTER_NAME: fmt.Sprintf("vault-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_NAME: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
@@ -138,7 +138,7 @@ func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName st
 
 	deploy(t, terratestOptions)
 	initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terratestOptions, resourceCollection, logger)
-	testVaultViaElb(t, VAULT_CLUSTER_PUBLIC_OUTPUT_FQDN, terratestOptions)
+	testVaultViaElb(t, VAULT_CLUSTER_PUBLIC_OUTPUT_FQDN, terratestOptions, logger)
 }
 
 // Initialize the Vault cluster and unseal each of the nodes by connecting to them over SSH and executing Vault
@@ -270,6 +270,12 @@ func parseUnsealKeysFromVaultInitResponse(t *testing.T, vaultInitResponse string
 	return []string{unsealKey1, unsealKey2, unsealKey3}
 }
 
+// Generate a unique name for an S3 bucket. Note that S3 bucket names must be globally unique and that only lowercase
+// alphanumeric characters and hyphens are allowed.
+func s3BucketName(resourceCollection *terratest.RandomResourceCollection) string {
+	return strings.ToLower(fmt.Sprintf("vault-blueprint-test-%s", resourceCollection.UniqueId))
+}
+
 // SSH to a Vault node and make sure that is properly configured to use Consul for DNS so that the vault.service.consul
 // domain name works.
 func testVaultUsesConsulForDns(t *testing.T, cluster VaultCluster, logger *log.Logger) {
@@ -286,7 +292,7 @@ func testVaultUsesConsulForDns(t *testing.T, cluster VaultCluster, logger *log.L
 
 // Use the Vault client to connect to the Vault via the ELB, via the public DNS entry, and make sure it works without
 // Vault or TLS errors
-func testVaultViaElb(t *testing.T, domainNameOutput string, terratestOptions *terratest.TerratestOptions) {
+func testVaultViaElb(t *testing.T, domainNameOutput string, terratestOptions *terratest.TerratestOptions, logger *log.Logger) {
 	domainName, err := terratest.Output(terratestOptions, domainNameOutput)
 	if err != nil {
 		t.Fatalf("Failed to read output %s: %v", domainNameOutput, err)
@@ -294,6 +300,8 @@ func testVaultViaElb(t *testing.T, domainNameOutput string, terratestOptions *te
 	if domainNameOutput == "" {
 		t.Fatalf("Domain name output %s was empty", domainNameOutput)
 	}
+
+	logger.Printf("Testing Vault via ELB at domain name %s", domainName)
 
 	vaultClient := createVaultClient(t, domainName)
 	isInitialized, err := vaultClient.Sys().InitStatus()
@@ -305,6 +313,7 @@ func testVaultViaElb(t *testing.T, domainNameOutput string, terratestOptions *te
 	}
 }
 
+// Create a Vault client configured to talk to Vault running at the given domain name
 func createVaultClient(t *testing.T, domainName string) *api.Client {
 	config := api.DefaultConfig()
 	config.Address = fmt.Sprintf("https://%s:8200", domainName)

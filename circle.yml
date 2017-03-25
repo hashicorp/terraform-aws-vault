@@ -1,1 +1,22 @@
-VAULT_HOSTED_ZONE_DOMAIN_NAME
+machine:
+  environment:
+    PATH: $PATH:$HOME/terraform:$HOME/packer:$HOME/glide/linux-amd64
+    VAULT_HOSTED_ZONE_DOMAIN_NAME: gruntwork.in # Domain name of Route 53 hosted zone to use at test time
+
+dependencies:
+  override:
+    # Install the gruntwork-module-circleci-helpers and use it to configure the build environment and run tests.
+    - curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version v0.0.14
+    - gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.3.6"
+    # Stick with Terraform 0.8.x until we update this blueprint and terratest to support 0.9.x
+    - configure-environment-for-gruntwork-module --terraform-version 0.8.8 --go-src-path test
+
+  cache_directories:
+    - ~/terraform
+    - ~/packer
+    - ~/glide
+
+test:
+  override:
+    - run-go-tests --path test
+

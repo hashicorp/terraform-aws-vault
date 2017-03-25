@@ -154,7 +154,7 @@ func initializeAndUnsealVaultCluster(t *testing.T, asgNameOutputVar string, sshU
 	cluster := findVaultClusterNodes(t, asgNameOutputVar, sshUserName, terratestOptions, resourceCollection)
 
 	// It takes state changes a little while to propagate within Vault, so sleep a little between updates
-	timeToWaitForUpdatesToPropagate := 2 * time.Second
+	timeToWaitForUpdatesToPropagate := 5 * time.Second
 
 	establishConnectionToCluster(t, cluster, logger)
 	waitForVaultToBoot(t, cluster, logger)

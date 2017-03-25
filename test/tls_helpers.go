@@ -22,6 +22,7 @@ const VAR_PUBLIC_KEY_FILE_PATH = "public_key_file_path"
 const VAR_PRIVATE_KEY_FILE_PATH = "private_key_file_path"
 const VAR_OWNER = "owner"
 const VAR_ORGANIZATION_NAME = "organization_name"
+const VAR_CA_COMMON_NAME = "ca_common_name"
 const VAR_COMMON_NAME = "common_name"
 const VAR_DNS_NAMES = "dns_names"
 const VAR_IP_ADDRESSES = "ip_addresses"
@@ -62,6 +63,7 @@ func generateSelfSignedTlsCert(t *testing.T, testName string, domainNames []stri
 		VAR_PRIVATE_KEY_FILE_PATH: privateKeyFilePath.Name(),
 		VAR_OWNER: currentUser.Username,
 		VAR_ORGANIZATION_NAME: "Gruntwork",
+		VAR_CA_COMMON_NAME: "Vault Blueprint Test CA",
 		VAR_COMMON_NAME: "Vault Blueprint Test",
 		VAR_DNS_NAMES: domainNames,
 		VAR_IP_ADDRESSES: []string{"127.0.0.1"},

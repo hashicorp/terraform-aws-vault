@@ -23,6 +23,10 @@ variable "organization_name" {
   description = "The name of the organization to associate with the certificates (e.g. Acme Co)."
 }
 
+variable "ca_common_name" {
+  description = "The common name to use in the subject of the CA certificate (e.g. acme.co cert)."
+}
+
 variable "common_name" {
   description = "The common name to use in the subject of the certificate (e.g. acme.co cert)."
 }

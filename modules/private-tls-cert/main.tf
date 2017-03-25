@@ -17,7 +17,7 @@ resource "tls_self_signed_cert" "ca" {
   allowed_uses          = ["${var.ca_allowed_uses}"]
 
   subject {
-    common_name  = "${var.common_name}"
+    common_name  = "${var.ca_common_name}"
     organization = "${var.organization_name}"
   }
 

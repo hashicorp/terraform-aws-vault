@@ -97,7 +97,9 @@ module "vault_elb" {
 
   # In order to access Vault over HTTPS, we need a domain name that matches the TLS cert
   create_dns_entry = "${var.create_dns_entry}"
-  hosted_zone_id   = "${var.create_dns_entry ? data.aws_route53_zone.selected.zone_id : ""}"
+  # Terraform conditionals are not short-circuiting, so we use join as a workaround to avoid errors when the
+  # aws_route53_zone data source isn't actually set: https://github.com/hashicorp/hil/issues/50
+  hosted_zone_id   = "${var.create_dns_entry ? join("", data.aws_route53_zone.selected.*.zone_id) : ""}"
   domain_name      = "${var.vault_domain_name}"
 }
 

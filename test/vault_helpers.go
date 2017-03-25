@@ -50,6 +50,10 @@ type VaultCluster struct {
 	UnsealKeys	[]string
 }
 
+func (cluster VaultCluster) Nodes() []ssh.Host {
+	return []ssh.Host{cluster.Leader, cluster.Standby1, cluster.Standby2}
+}
+
 // From: https://www.vaultproject.io/api/system/health.html
 type VaultStatus int
 const (
@@ -151,6 +155,7 @@ func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName st
 // get errors about the certificate being signed by an unknown party.
 func initializeAndUnsealVaultCluster(t *testing.T, asgNameOutputVar string, sshUserName string, terratestOptions *terratest.TerratestOptions, resourceCollection *terratest.RandomResourceCollection, logger *log.Logger) VaultCluster {
 	cluster := findVaultClusterNodes(t, asgNameOutputVar, sshUserName, terratestOptions, resourceCollection)
+	timeToWaitForUpdatesToPropagate := 2 * time.Second
 
 	establishConnectionToCluster(t, cluster, logger)
 	waitForVaultToBoot(t, cluster, logger)
@@ -158,14 +163,17 @@ func initializeAndUnsealVaultCluster(t *testing.T, asgNameOutputVar string, sshU
 
 	assertStatus(t, cluster.Leader, Sealed, logger)
 	unsealVaultNode(t, cluster.Leader, cluster.UnsealKeys, logger)
+	time.Sleep(timeToWaitForUpdatesToPropagate)
 	assertStatus(t, cluster.Leader, Leader, logger)
 
 	assertStatus(t, cluster.Standby1, Sealed, logger)
 	unsealVaultNode(t, cluster.Standby1, cluster.UnsealKeys, logger)
+	time.Sleep(timeToWaitForUpdatesToPropagate)
 	assertStatus(t, cluster.Standby1, Standby, logger)
 
 	assertStatus(t, cluster.Standby2, Sealed, logger)
 	unsealVaultNode(t, cluster.Standby2, cluster.UnsealKeys, logger)
+	time.Sleep(timeToWaitForUpdatesToPropagate)
 	assertStatus(t, cluster.Standby2, Standby, logger)
 
 	return cluster
@@ -204,39 +212,42 @@ func findVaultClusterNodes(t *testing.T, asgNameOutputVar string, sshUserName st
 	}
 }
 
-// Wait until we can connect to the Vault cluster EC2 Instances. As a simplifying solution, we just connect to the
-// leader and assume once the leader is up, the other nodes will soon follow.
-func establishConnectionToCluster(t *testing.T, vaultCluster VaultCluster, logger *log.Logger) {
-	description := fmt.Sprintf("Trying to establish SSH connection to %s", vaultCluster.Leader.Hostname)
-	logger.Println(description)
+// Wait until we can connect to each of the Vault cluster EC2 Instances
+func establishConnectionToCluster(t *testing.T, cluster VaultCluster, logger *log.Logger) {
+	for _, node := range cluster.Nodes() {
+		description := fmt.Sprintf("Trying to establish SSH connection to %s", node.Hostname)
+		logger.Println(description)
 
-	maxRetries := 30
-	sleepBetweenRetries := 10 * time.Second
+		maxRetries := 30
+		sleepBetweenRetries := 10 * time.Second
 
-	_, err := util.DoWithRetry(description, maxRetries, sleepBetweenRetries, logger, func() (string, error) {
-		return "", ssh.CheckSshConnection(vaultCluster.Leader, logger)
-	})
+		_, err := util.DoWithRetry(description, maxRetries, sleepBetweenRetries, logger, func() (string, error) {
+			return "", ssh.CheckSshConnection(node, logger)
+		})
 
-	if err != nil {
-		t.Fatalf("Failed to establish connection to host %s: %v", vaultCluster.Leader.Hostname, err)
+		if err != nil {
+			t.Fatalf("Failed to establish connection to host %s: %v", node.Hostname, err)
+		}
 	}
 }
 
 // Wait until the Vault servers are booted the very first time on the EC2 Instance. As a simple solution, we simply
 // wait for the leader to boot and assume if it's up, the other nodes will be too.
-func waitForVaultToBoot(t *testing.T, vaultCluster VaultCluster, logger *log.Logger) {
-	description := fmt.Sprintf("Waiting for Vault to boot the first time on host %s. Expecting it to be in uninitialized status (%d).", vaultCluster.Leader.Hostname, int(Uninitialized))
-	logger.Println(description)
+func waitForVaultToBoot(t *testing.T, cluster VaultCluster, logger *log.Logger) {
+	for _, node := range cluster.Nodes() {
+		description := fmt.Sprintf("Waiting for Vault to boot the first time on host %s. Expecting it to be in uninitialized status (%d).", node.Hostname, int(Uninitialized))
+		logger.Println(description)
 
-	maxRetries := 6
-	sleepBetweenRetries := 10 * time.Second
+		maxRetries := 6
+		sleepBetweenRetries := 10 * time.Second
 
-	_, err := util.DoWithRetry(description, maxRetries, sleepBetweenRetries, logger, func() (string, error) {
-		return "", checkStatus(vaultCluster.Leader, Uninitialized, logger)
-	})
+		_, err := util.DoWithRetry(description, maxRetries, sleepBetweenRetries, logger, func() (string, error) {
+			return "", checkStatus(node, Uninitialized, logger)
+		})
 
-	if err != nil {
-		t.Fatalf("Vault node does not seem to be in uninitialized state: %v", err)
+		if err != nil {
+			t.Fatalf("Vault node %s does not seem to be in uninitialized state: %v", node.Hostname, err)
+		}
 	}
 }
 

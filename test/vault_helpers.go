@@ -79,8 +79,6 @@ const (
 // 5. SSH to each Vault node and unseal it
 // 5. SSH to a Vault node and make sure you can communicate with the nodes via Consul-managed DNS
 func runVaultPrivateClusterTest(t *testing.T, testName string, packerBuildName string, sshUserName string) {
-	catchInterrupts()
-
 	rootTempPath := copyRepoToTempFolder(t, REPO_ROOT)
 	defer os.RemoveAll(rootTempPath)
 
@@ -103,7 +101,7 @@ func runVaultPrivateClusterTest(t *testing.T, testName string, packerBuildName s
 		VAR_CONSUL_CLUSTER_NAME: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_SSH_KEY_NAME: resourceCollection.KeyPair.Name,
-		VAR_FORCE_DESTROY_S3_BUCKET: true,
+		VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
 	}
 
 	deploy(t, terratestOptions)
@@ -121,8 +119,6 @@ func runVaultPrivateClusterTest(t *testing.T, testName string, packerBuildName s
 // 5. SSH to each Vault node and unseal it
 // 6. Connect to the Vault cluster via the ELB
 func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName string, sshUserName string) {
-	catchInterrupts()
-
 	rootTempPath := copyRepoToTempFolder(t, REPO_ROOT)
 	defer os.RemoveAll(rootTempPath)
 
@@ -146,8 +142,8 @@ func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName st
 		VAR_CONSUL_CLUSTER_NAME: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_SSH_KEY_NAME: resourceCollection.KeyPair.Name,
-		VAR_FORCE_DESTROY_S3_BUCKET: true,
-		VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY: hasRoute53DomainName,
+		VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
+		VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY: boolToTerraformVar(hasRoute53DomainName),
 		VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME: DEFAULT_VAULT_HOSTED_ZONE_DOMAIN_NAME,
 		VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME: vaultDomainName,
 	}
@@ -178,11 +174,14 @@ func getDomainNameForTest(logger *log.Logger) (string, bool) {
 // get errors about the certificate being signed by an unknown party.
 func initializeAndUnsealVaultCluster(t *testing.T, asgNameOutputVar string, sshUserName string, terratestOptions *terratest.TerratestOptions, resourceCollection *terratest.RandomResourceCollection, logger *log.Logger) VaultCluster {
 	cluster := findVaultClusterNodes(t, asgNameOutputVar, sshUserName, terratestOptions, resourceCollection)
+
+	// It takes state changes a little while to propagate within Vault, so sleep a little between updates
 	timeToWaitForUpdatesToPropagate := 2 * time.Second
 
 	establishConnectionToCluster(t, cluster, logger)
 	waitForVaultToBoot(t, cluster, logger)
 	initializeVault(t, &cluster, logger)
+	time.Sleep(timeToWaitForUpdatesToPropagate)
 
 	assertStatus(t, cluster.Leader, Sealed, logger)
 	unsealVaultNode(t, cluster.Leader, cluster.UnsealKeys, logger)
@@ -408,6 +407,16 @@ func parseUnsealKey(t *testing.T, str string) string {
 		t.Fatalf("Unexpected format for unseal key: %s", str)
 	}
 	return matches[1]
+}
+
+// There is a bug with Terraform where if you try to pass a boolean as a -var parameter (e.g. -var foo=true), you get
+// a strconv.ParseInt error. To work around it, we convert our booleans to the equivalent int.
+func boolToTerraformVar(val bool) int {
+	if val {
+		return 1
+	} else {
+		return 0
+	}
 }
 
 // Check that the Vault node at the given host has the given

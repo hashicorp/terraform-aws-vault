@@ -5,9 +5,6 @@ import (
 	"github.com/gruntwork-io/terratest"
 	"log"
 	"testing"
-	"os"
-	"os/signal"
-	"fmt"
 )
 
 const AMI_VAR_AWS_REGION = "aws_region"
@@ -66,15 +63,4 @@ func createBaseTerratestOptions(t *testing.T, testName string, templatePath stri
 	terratestOptions.TestName = testName
 
 	return terratestOptions
-}
-
-// Catch the interrupt signal to give the Go program a chance to call deferred functions before exiting
-func catchInterrupts() {
-	interruptChannel := make(chan os.Signal, 1)
-	signal.Notify(interruptChannel, os.Interrupt)
-	go func(){
-		for sig := range interruptChannel {
-			panic(fmt.Sprintf("Caught signal %v. Calling panic so program exits, but still calls all defers.", sig))
-		}
-	}()
 }

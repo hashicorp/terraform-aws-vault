@@ -26,7 +26,7 @@ const VAR_IP_ADDRESSES = "ip_addresses"
 const VAR_VALIDITY_PERIOD_HOURS = "validity_period_hours"
 
 // Use the private-tls-cert module to generate a self-signed TLS certificate
-func generateSelfSignedTlsCert(t *testing.T, testName string, domainName string) TlsCert {
+func generateSelfSignedTlsCert(t *testing.T, testName string, domainNames []string) TlsCert {
 	rootTempPath := copyRepoToTempFolder(t, REPO_ROOT)
 	defer os.RemoveAll(rootTempPath)
 
@@ -55,7 +55,7 @@ func generateSelfSignedTlsCert(t *testing.T, testName string, domainName string)
 		VAR_OWNER: currentUser.Username,
 		VAR_ORGANIZATION_NAME: "Gruntwork",
 		VAR_COMMON_NAME: "Vault Blueprint Test",
-		VAR_DNS_NAMES: []string{domainName},
+		VAR_DNS_NAMES: domainNames,
 		VAR_IP_ADDRESSES: []string{"127.0.0.1"},
 		VAR_VALIDITY_PERIOD_HOURS: 1000,
 	}

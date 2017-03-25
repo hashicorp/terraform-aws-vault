@@ -2,6 +2,10 @@ output "vault_fully_qualified_domain_name" {
   value = "${module.vault_elb.fully_qualified_domain_name}"
 }
 
+output "vault_elb_dns_name" {
+  value = "${module.vault_elb.load_balancer_dns_name}"
+}
+
 output "asg_name_vault_cluster" {
   value = "${module.vault_cluster.asg_name}"
 }

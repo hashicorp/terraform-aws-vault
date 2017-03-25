@@ -314,7 +314,7 @@ func testVaultViaElb(t *testing.T, terratestOptions *terratest.TerratestOptions,
 	description := fmt.Sprintf("Testing Vault via ELB at domain name %s", domainName)
 	logger.Printf(description)
 
-	maxRetries := 12
+	maxRetries := 30
 	sleepBetweenRetries := 10 * time.Second
 
 	vaultClient := createVaultClient(t, domainName)

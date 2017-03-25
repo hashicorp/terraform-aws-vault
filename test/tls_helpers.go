@@ -60,5 +60,9 @@ func generateSelfSignedTlsCert(t *testing.T, testName string, domainName string)
 		VAR_VALIDITY_PERIOD_HOURS: 1000,
 	}
 
+	if _, err := terratest.Apply(terratestOptions); err != nil {
+		t.Fatalf("Failed to create TLS certs: %v", err)
+	}
+
 	return TlsCert{PublicKeyPath: publicKeyFilePath.Name(), PrivateKeyPath: privateKeyFilePath.Name()}
 }

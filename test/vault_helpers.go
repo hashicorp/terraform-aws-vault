@@ -16,6 +16,7 @@ import (
 	"strings"
 	"github.com/hashicorp/vault/api"
 	"net/http"
+	"errors"
 )
 
 const REPO_ROOT = "../"
@@ -333,18 +334,31 @@ func testVaultUsesConsulForDns(t *testing.T, cluster VaultCluster, logger *log.L
 // Vault or TLS errors
 func testVaultViaElb(t *testing.T, hasRoute53DomainName bool, terratestOptions *terratest.TerratestOptions, logger *log.Logger) {
 	domainName := getElbDomainName(t, hasRoute53DomainName, terratestOptions)
-	logger.Printf("Testing Vault via ELB at domain name %s", domainName)
+	description := fmt.Sprintf("Testing Vault via ELB at domain name %s", domainName)
+	logger.Printf(description)
+
+	maxRetries := 12
+	sleepBetweenRetries := 10 * time.Second
 
 	vaultClient := createVaultClient(t, domainName, hasRoute53DomainName, logger)
-	isInitialized, err := vaultClient.Sys().InitStatus()
+
+	out, err := util.DoWithRetry(description, maxRetries, sleepBetweenRetries, logger, func() (string, error) {
+		isInitialized, err := vaultClient.Sys().InitStatus()
+		if err != nil {
+			return "", err
+		}
+		if isInitialized {
+			return "Successfully verified that Vault cluster is initialized via ELB!", nil
+		} else {
+			return "", errors.New("Expected Vault cluster to be initialized, but ELB reports it is not.")
+		}
+	})
+
 	if err != nil {
-		t.Fatalf("Error calling Vault: %v", err)
+		t.Fatalf("Failed to use Vault client with ELB to validate that the cluster is initialized: %v", err)
 	}
-	if isInitialized {
-		logger.Println("Successfully verified that Vault cluster is initialized via ELB!")
-	} else {
-		t.Fatal("Expected Vault cluster to be initialized, but ELB reports it is not.")
-	}
+
+	logger.Printf(out)
 }
 
 // If a route 53 hosted zone was configured, we can use the fully-qualified domain name. Otherwise, we have to talk

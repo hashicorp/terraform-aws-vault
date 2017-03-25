@@ -1,13 +1,16 @@
 # Update Certificate Store
 
-This folder contains a script for adding a trusted, TLS certificate to an OS's certificate store. This allows 
-you to establish TLS connections to services that use that TLS cert without getting x509 certificate errors. This 
-script has been tested on the following operating systems:
+This folder contains a script for adding a trusted, Certificate Authority (CA) certificate to an OS's certificate 
+store. This allows you to establish TLS connections to services that use TLS certs signed by that CA without getting 
+x509 certificate errors. This script has been tested on the following operating systems:
 
 * Ubuntu 16.04
 * Amazon Linux
 
 There is a good chance it will work on other flavors of Debian, CentOS, and RHEL as well.
+
+If you're unfamiliar with how TLS certificates work, check out the [Background 
+section](/modules/private-tls-cert#background).
 
 
 
@@ -24,10 +27,11 @@ vault read secret/foo
 Error initializing Vault: Get https://127.0.0.1:8200/v1/secret/foo: x509: certificate signed by unknown authority
 ```
 
-You can get around this error by explicitly telling the client to trust the TLS cert's public key:
+You can get around this error by explicitly telling the client to trust the public key of the CA that signed that TLS
+certificate:
 
 ```
-vault read -ca-cert=/opt/vault/tls/vault.crt.pem secret/foo
+vault read -ca-cert=/opt/vault/tls/ca.crt.pem secret/foo
 
 Key                 Value
 ---                 -----
@@ -48,12 +52,12 @@ To use the `update-certificate-script`, use `git` to clone this repository at a 
 
 ```
 git clone --branch <VERSION> https://github.com/gruntwork-io/vault-aws-blueprint.git
-vault-aws-blueprint/modules/update-certificate-script/update-certificate-script --cert-file-path /opt/vault/tls/vault.cert.pem
+vault-aws-blueprint/modules/update-certificate-script/update-certificate-script --cert-file-path /opt/vault/tls/ca.cert.pem
 ```
 
 That's it!
 
-Now you can make calls to services that use this TLS cert, and you won't get any errors:
+Now you can make calls to services that use TLS cert signed by this CA, and you won't get any errors:
 
 ```
 vault read secret/foo
@@ -74,7 +78,7 @@ See the [vault-consul-ami example](/examples/vault-consul-ami) for working sampl
 
 The `run-vault` script accepts the following arguments:
 
-* `--cert-file-path` (required): The path to the TLS certificate public key to add to the OS certificate store.
+* `--cert-file-path` (required): The path to the CA certificate public key to add to the OS certificate store.
 * `--dest-file-name` (optional): This script will copy `--cert-file-path` to a file with this name in a shared 
   certificate folder on the OS. The default file name is `custom.crt`, but you can use this parameter to customize 
   it. The extension MUST be `.crt` or the OS will ignore the file.
@@ -82,6 +86,6 @@ The `run-vault` script accepts the following arguments:
 Example:
 
 ```
-vault-aws-blueprint/modules/update-certificate-script/update-certificate-script --cert-file-path /opt/vault/tls/vault.cert.pem
+vault-aws-blueprint/modules/update-certificate-script/update-certificate-script --cert-file-path /opt/vault/tls/ca.cert.pem
 ```
 

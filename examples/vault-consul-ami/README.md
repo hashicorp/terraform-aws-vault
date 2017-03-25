@@ -32,12 +32,15 @@ To build the Vault and Consul AMI:
    SDK](http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html). Usually, the easiest option is to
    set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
 
-1. Use the [private-tls-cert module](/modules/private-tls-cert) to generate public and private keys for a TLS cert: 
+1. Use the [private-tls-cert module](/modules/private-tls-cert) to generate a CA cert and public and private keys for a 
+   TLS cert: 
    
-    1. Set the `dns_names` parameter to `vault.service.consul`, plus a public domain name (e.g. `vault.example.com`) if 
-       you're using the [vault-cluster-public](/examples/vault-cluster-public) example.
+    1. Set the `dns_names` parameter to `vault.service.consul`. If you're using the [vault-cluster-public
+       example](/examples/vault-cluster-public) and want a public domain name (e.g. `vault.example.com`), add that 
+       domain name here too.
     1. Set the `ip_addresses` to `127.0.0.1`. 
-    1. For production usage, you should encrypt the private key (e.g. using  [KMS](https://aws.amazon.com/kms/)). 
+    1. For production usage, you should take care to protect the private key by encrypting it (see [Using TLS 
+       certs](/modules/private-tls-cert#using-tls-certs) for more info). 
 
 1. Update the `variables` section of the `vault-consul.json` Packer template to specify the AWS region, Vault 
    version, Consul version, and the paths to the TLS cert files you just generated. 

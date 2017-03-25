@@ -10,12 +10,14 @@ import (
 )
 
 type TlsCert struct {
-	PublicKeyPath  string
-	PrivateKeyPath string
+	CAPublicKeyPath  string
+	PublicKeyPath    string
+	PrivateKeyPath   string
 }
 
 const PRIVATE_TLS_CERT_PATH = "modules/private-tls-cert"
 
+const VAR_CA_PUBLIC_KEY_FILE_PATH = "ca_public_key_file_path"
 const VAR_PUBLIC_KEY_FILE_PATH = "public_key_file_path"
 const VAR_PRIVATE_KEY_FILE_PATH = "private_key_file_path"
 const VAR_OWNER = "owner"
@@ -39,6 +41,11 @@ func generateSelfSignedTlsCert(t *testing.T, testName string, domainNames []stri
 		t.Fatalf("Couldn't get current OS user: %v", err)
 	}
 
+	caPublicKeyFilePath, err := ioutil.TempFile("", "ca-public-key")
+	if err != nil {
+		t.Fatalf("Couldn't create temp file: %v", err)
+	}
+
 	publicKeyFilePath, err := ioutil.TempFile("", "tls-public-key")
 	if err != nil {
 		t.Fatalf("Couldn't create temp file: %v", err)
@@ -50,6 +57,7 @@ func generateSelfSignedTlsCert(t *testing.T, testName string, domainNames []stri
 	}
 
 	terratestOptions.Vars = map[string]interface{}{
+		VAR_CA_PUBLIC_KEY_FILE_PATH: caPublicKeyFilePath.Name(),
 		VAR_PUBLIC_KEY_FILE_PATH: publicKeyFilePath.Name(),
 		VAR_PRIVATE_KEY_FILE_PATH: privateKeyFilePath.Name(),
 		VAR_OWNER: currentUser.Username,
@@ -64,5 +72,9 @@ func generateSelfSignedTlsCert(t *testing.T, testName string, domainNames []stri
 		t.Fatalf("Failed to create TLS certs: %v", err)
 	}
 
-	return TlsCert{PublicKeyPath: publicKeyFilePath.Name(), PrivateKeyPath: privateKeyFilePath.Name()}
+	return TlsCert{
+		CAPublicKeyPath: caPublicKeyFilePath.Name(),
+		PublicKeyPath: publicKeyFilePath.Name(),
+		PrivateKeyPath: privateKeyFilePath.Name(),
+	}
 }

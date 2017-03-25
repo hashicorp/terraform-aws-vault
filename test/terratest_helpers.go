@@ -8,8 +8,9 @@ import (
 )
 
 const AMI_VAR_AWS_REGION = "aws_region"
-const AMI_VAR_TLS_PRIVATE_KEY = "tls_private_key_path"
+const AMI_VAR_CA_PUBLIC_KEY = "ca_public_key_path"
 const AMI_VAR_TLS_PUBLIC_KEY = "tls_public_key_path"
+const AMI_VAR_TLS_PRIVATE_KEY = "tls_private_key_path"
 
 // Deploy the given terraform code
 func deploy(t *testing.T, terratestOptions *terratest.TerratestOptions) {
@@ -26,8 +27,9 @@ func buildAmi(t *testing.T, packerTemplatePath string, packerBuildName string, t
 		Only: packerBuildName,
 		Vars: map[string]string{
 			AMI_VAR_AWS_REGION: resourceCollection.AwsRegion,
-			AMI_VAR_TLS_PRIVATE_KEY: tlsCert.PrivateKeyPath,
+			AMI_VAR_CA_PUBLIC_KEY: tlsCert.CAPublicKeyPath,
 			AMI_VAR_TLS_PUBLIC_KEY: tlsCert.PublicKeyPath,
+			AMI_VAR_TLS_PRIVATE_KEY: tlsCert.PrivateKeyPath,
 		},
 	}
 

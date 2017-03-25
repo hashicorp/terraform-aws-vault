@@ -6,6 +6,7 @@
     "consul_blueprint_version": "v0.0.3",
     "consul_version": "0.7.5",
     "github_oauth_token": "{{env `GITHUB_OAUTH_TOKEN`}}",
+    "ca_public_key_path": null,
     "tls_public_key_path": null,
     "tls_private_key_path": null
   },
@@ -60,6 +61,10 @@
     ]
   },{
     "type": "file",
+    "source": "{{user `ca_public_key_path`}}",
+    "destination": "/tmp/ca.crt.pem"
+  },{
+    "type": "file",
     "source": "{{user `tls_public_key_path`}}",
     "destination": "/tmp/vault.crt.pem"
   },{
@@ -69,11 +74,12 @@
   },{
     "type": "shell",
     "inline": [
+      "sudo mv /tmp/ca.crt.pem /opt/vault/tls/",
       "sudo mv /tmp/vault.crt.pem /opt/vault/tls/",
       "sudo mv /tmp/vault.key.pem /opt/vault/tls/",
       "sudo chown vault:vault /opt/vault/tls/*",
       "sudo chmod 600 /opt/vault/tls/*",
-      "sudo /tmp/vault-aws-blueprint/modules/update-certificate-store/update-certificate-store --cert-file-path /opt/vault/tls/vault.crt.pem"
+      "sudo /tmp/vault-aws-blueprint/modules/update-certificate-store/update-certificate-store --cert-file-path /opt/vault/tls/ca.crt.pem"
     ]
   },{
     "type": "shell",

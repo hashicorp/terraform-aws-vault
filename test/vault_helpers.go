@@ -69,6 +69,8 @@ const (
 // 5. SSH to each Vault node and unseal it
 // 5. SSH to a Vault node and make sure you can communicate with the nodes via Consul-managed DNS
 func runVaultPrivateClusterTest(t *testing.T, testName string, packerBuildName string, sshUserName string) {
+	catchInterrupts()
+
 	rootTempPath := copyRepoToTempFolder(t, REPO_ROOT)
 	defer os.RemoveAll(rootTempPath)
 
@@ -109,6 +111,8 @@ func runVaultPrivateClusterTest(t *testing.T, testName string, packerBuildName s
 // 5. SSH to each Vault node and unseal it
 // 6. Connect to the Vault cluster via the ELB
 func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName string, sshUserName string) {
+	catchInterrupts()
+
 	rootTempPath := copyRepoToTempFolder(t, REPO_ROOT)
 	defer os.RemoveAll(rootTempPath)
 

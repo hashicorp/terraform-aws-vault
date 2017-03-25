@@ -216,14 +216,14 @@ module](/modules/vault-elb) to deploy an [Elastic Load Balancer
 access Vault via this ELB:
 
 ```
-vault -address=https://<ELB_DNS_NAME>:8200 read secret/foo
+vault -address=https://<ELB_DNS_NAME> read secret/foo
 ```
 
 Where `ELB_DNS_NAME` is the DNS name for your ELB, such as `vault.example.com`. You can configure the Vault address as 
 an environment variable:
 
 ```
-export VAULT_ADDR=https://vault.example.com:8200
+export VAULT_ADDR=https://vault.example.com
 ```
 
 That way, you don't have to remember to pass the Vault address every time:

@@ -29,8 +29,8 @@ func copyFolderContents(t *testing.T, source string, destination string) {
 	}
 
 	for _, file := range files {
-		if strings.HasPrefix(file.Name(), ".") {
-			// Don't copy any hidden files and folders, such as a local .terraform folder
+		if strings.HasPrefix(file.Name(), ".") || strings.HasSuffix(file.Name(), ".tfstate") || strings.HasSuffix(file.Name(), ".tfvars") {
+			// Don't copy any hidden files and folders (e.g. .terraform), Terraform state (.tfstate), or local Terraform vars (.tfvars)
 			continue
 		}
 

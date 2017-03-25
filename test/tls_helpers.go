@@ -52,7 +52,7 @@ func generateSelfSignedTlsCert(t *testing.T, testName string, domainName string)
 	terratestOptions.Vars = map[string]interface{}{
 		VAR_PUBLIC_KEY_FILE_PATH: publicKeyFilePath.Name(),
 		VAR_PRIVATE_KEY_FILE_PATH: privateKeyFilePath.Name(),
-		VAR_OWNER: currentUser.Name,
+		VAR_OWNER: currentUser.Username,
 		VAR_ORGANIZATION_NAME: "Gruntwork",
 		VAR_COMMON_NAME: "Vault Blueprint Test",
 		VAR_DNS_NAMES: []string{domainName},

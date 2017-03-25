@@ -340,8 +340,10 @@ func testVaultViaElb(t *testing.T, hasRoute53DomainName bool, terratestOptions *
 	if err != nil {
 		t.Fatalf("Error calling Vault: %v", err)
 	}
-	if !isInitialized {
-		t.Fatal("Expected Vault cluster to be initialized")
+	if isInitialized {
+		logger.Println("Successfully verified that Vault cluster is initialized via ELB!")
+	} else {
+		t.Fatal("Expected Vault cluster to be initialized, but ELB reports it is not.")
 	}
 }
 

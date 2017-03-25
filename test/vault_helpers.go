@@ -43,11 +43,6 @@ const VAULT_CLUSTER_PUBLIC_OUTPUT_ELB_DNS_NAME = "vault_elb_dns_name"
 
 const AMI_EXAMPLE_PATH = "../examples/vault-consul-ami/vault-consul.json"
 
-const VAULT_HOSTED_ZONE_DOMAIN_NAME_ENV_VAR = "VAULT_HOSTED_ZONE_DOMAIN_NAME"
-const DEFAULT_VAULT_HOSTED_ZONE_DOMAIN_NAME = "gruntwork.in"
-
-const VAULT_CONSUL_DOMAIN_NAME = "vault.service.consul"
-
 var UnsealKeyRegex = regexp.MustCompile("^Unseal Key \\d: (.+)$")
 
 type VaultCluster struct {
@@ -87,8 +82,7 @@ func runVaultPrivateClusterTest(t *testing.T, testName string, packerBuildName s
 	terratestOptions := createBaseTerratestOptions(t, testName, filepath.Join(rootTempPath, VAULT_CLUSTER_PRIVATE_PATH), resourceCollection)
 	defer terratest.Destroy(terratestOptions, resourceCollection)
 
-	vaultDomainName := fmt.Sprintf("vault-%s.%s", resourceCollection.UniqueId, DEFAULT_VAULT_HOSTED_ZONE_DOMAIN_NAME)
-	tlsCert := generateSelfSignedTlsCert(t, testName, []string{vaultDomainName, VAULT_CONSUL_DOMAIN_NAME})
+	tlsCert := generateSelfSignedTlsCert(t, testName)
 	defer cleanupTlsCertFiles(tlsCert)
 
 	logger := terralog.NewLogger(testName)
@@ -128,9 +122,7 @@ func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName st
 	terratestOptions := createBaseTerratestOptions(t, testName, filepath.Join(rootTempPath, VAULT_CLUSTER_PUBLIC_PATH), resourceCollection)
 	defer terratest.Destroy(terratestOptions, resourceCollection)
 
-	domainNameForTest, hasRoute53DomainName := getDomainNameForTest(logger)
-	vaultDomainName := fmt.Sprintf("vault-%s.%s", resourceCollection.UniqueId, domainNameForTest)
-	tlsCert := generateSelfSignedTlsCert(t, testName,  []string{vaultDomainName, VAULT_CONSUL_DOMAIN_NAME})
+	tlsCert := generateSelfSignedTlsCert(t, testName)
 	defer cleanupTlsCertFiles(tlsCert)
 
 	amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, resourceCollection, logger)
@@ -144,29 +136,14 @@ func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName st
 		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_SSH_KEY_NAME: resourceCollection.KeyPair.Name,
 		VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
-		VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY: boolToTerraformVar(hasRoute53DomainName),
-		VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME: DEFAULT_VAULT_HOSTED_ZONE_DOMAIN_NAME,
-		VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME: vaultDomainName,
+		VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY: boolToTerraformVar(false),
+		VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME: "",
+		VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME: "",
 	}
 
 	deploy(t, terratestOptions)
 	initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terratestOptions, resourceCollection, logger)
-	testVaultViaElb(t, hasRoute53DomainName, terratestOptions, logger)
-}
-
-// Get the domain name to use for the test. This must be a domain name that is already configured in a Route 53
-// hosted zone in the current AWS account. The name is read from the environment variable
-// VAULT_HOSTED_ZONE_DOMAIN_NAME_ENV_VAR. If the environment variable is set, it is returned, along with the boolean
-// true. If the environment variable is not set, a default domain name is returned along with the boolean false. This
-// is used to test the ELB/Route53 integration in AWS accounts that have the Route 53 configuration to support it.
-func getDomainNameForTest(logger *log.Logger) (string, bool) {
-	domainName := os.Getenv(VAULT_HOSTED_ZONE_DOMAIN_NAME_ENV_VAR)
-	if domainName == "" {
-		logger.Printf("WARNING: The %s environment variable is not set. That means no Route 53 hosted zone is available to attach to the ELB. Will not be able to the TLS cert works properly with the ELB.", VAULT_HOSTED_ZONE_DOMAIN_NAME_ENV_VAR)
-		return DEFAULT_VAULT_HOSTED_ZONE_DOMAIN_NAME, false
-	} else {
-		return domainName, true
-	}
+	testVaultViaElb(t, terratestOptions, logger)
 }
 
 // Initialize the Vault cluster and unseal each of the nodes by connecting to them over SSH and executing Vault
@@ -332,15 +309,15 @@ func testVaultUsesConsulForDns(t *testing.T, cluster VaultCluster, logger *log.L
 
 // Use the Vault client to connect to the Vault via the ELB, via the public DNS entry, and make sure it works without
 // Vault or TLS errors
-func testVaultViaElb(t *testing.T, hasRoute53DomainName bool, terratestOptions *terratest.TerratestOptions, logger *log.Logger) {
-	domainName := getElbDomainName(t, hasRoute53DomainName, terratestOptions)
+func testVaultViaElb(t *testing.T, terratestOptions *terratest.TerratestOptions, logger *log.Logger) {
+	domainName := getElbDomainName(t, terratestOptions)
 	description := fmt.Sprintf("Testing Vault via ELB at domain name %s", domainName)
 	logger.Printf(description)
 
 	maxRetries := 12
 	sleepBetweenRetries := 10 * time.Second
 
-	vaultClient := createVaultClient(t, domainName, hasRoute53DomainName, logger)
+	vaultClient := createVaultClient(t, domainName)
 
 	out, err := util.DoWithRetry(description, maxRetries, sleepBetweenRetries, logger, func() (string, error) {
 		isInitialized, err := vaultClient.Sys().InitStatus()
@@ -361,34 +338,26 @@ func testVaultViaElb(t *testing.T, hasRoute53DomainName bool, terratestOptions *
 	logger.Printf(out)
 }
 
-// If a route 53 hosted zone was configured, we can use the fully-qualified domain name. Otherwise, we have to talk
-// directly to the ELB.
-func getElbDomainName(t *testing.T, hasRoute53DomainName bool, terratestOptions *terratest.TerratestOptions) string {
-	domainNameOutputName := VAULT_CLUSTER_PUBLIC_OUTPUT_ELB_DNS_NAME
-	if hasRoute53DomainName {
-		domainNameOutputName = VAULT_CLUSTER_PUBLIC_OUTPUT_FQDN
-	}
-
-	domainName, err := terratest.Output(terratestOptions, domainNameOutputName)
+// Get the ELB domain name
+func getElbDomainName(t *testing.T, terratestOptions *terratest.TerratestOptions) string {
+	domainName, err := terratest.Output(terratestOptions, VAULT_CLUSTER_PUBLIC_OUTPUT_ELB_DNS_NAME)
 	if err != nil {
-		t.Fatalf("Failed to read output %s: %v", domainNameOutputName, err)
+		t.Fatalf("Failed to read output %s: %v", VAULT_CLUSTER_PUBLIC_OUTPUT_ELB_DNS_NAME, err)
 	}
 	if domainName == "" {
-		t.Fatalf("Domain name output %s was empty", domainNameOutputName)
+		t.Fatalf("Domain name output %s was empty", VAULT_CLUSTER_PUBLIC_OUTPUT_ELB_DNS_NAME)
 	}
 	return domainName
 }
 
 // Create a Vault client configured to talk to Vault running at the given domain name
-func createVaultClient(t *testing.T, domainName string, hasRoute53DomainName bool, logger *log.Logger) *api.Client {
+func createVaultClient(t *testing.T, domainName string) *api.Client {
 	config := api.DefaultConfig()
 	config.Address = fmt.Sprintf("https://%s", domainName)
 
-	if !hasRoute53DomainName {
-		logger.Println("No Route 53 Hosted Zone is available, so disabling TLS cert verification check in Vault client, as our TLS cert does not contain the ELB's domain name.")
-		clientTLSConfig := config.HttpClient.Transport.(*http.Transport).TLSClientConfig
-		clientTLSConfig.InsecureSkipVerify = true
-	}
+	// The TLS cert we are using in this test does not have the ELB DNS name in it, so disable the TLS check
+	clientTLSConfig := config.HttpClient.Transport.(*http.Transport).TLSClientConfig
+	clientTLSConfig.InsecureSkipVerify = true
 
 	client, err := api.NewClient(config)
 	if err != nil {

@@ -60,5 +60,21 @@ cd test
 go test -v -timeout 60m -run TestFoo
 ```
 
+### Special note on the vault-cluster-public test
+
+As part of the tests for the [vault-cluster-public example](/examples/vault-cluster-public), we try to connect to the
+Vault cluster via its ELB. If you've configure the test to set up a Route 53 domain name for the ELB, the tests will
+try to talk to Vault via this domain name; otherwise, they will talk directly to the ELB's domain name, albeit with
+the TLS check disabled, as the TLS cert will not include the ELB's domain name (since that's generated dynamically).
+
+To tell the tests to use a Route 53 domain name for the ELB, specify the domain to use (which must already be 
+configured with a Route 53 hosted zone in your AWS account!) using the `VAULT_HOSTED_ZONE_DOMAIN_NAME` environment
+variable:
+
+```bash
+cd test
+export VAULT_HOSTED_ZONE_DOMAIN_NAME="gruntwork.in"
+go test -v -timeout 60m
+```
 
   

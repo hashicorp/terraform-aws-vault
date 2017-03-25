@@ -96,7 +96,7 @@ module "vault_elb" {
   allowed_inbound_cidr_blocks = ["0.0.0.0/0"]
 
   # In order to access Vault over HTTPS, we need a domain name that matches the TLS cert
-  create_dns_entry = true
+  create_dns_entry = "${var.create_dns_entry}"
   hosted_zone_id   = "${data.aws_route53_zone.selected.zone_id}"
   domain_name      = "${var.vault_domain_name}"
 }

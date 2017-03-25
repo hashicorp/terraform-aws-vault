@@ -33,6 +33,7 @@ const OUTPUT_VAULT_CLUSTER_ASG_NAME = "asg_name_vault_cluster"
 const VAULT_CLUSTER_PRIVATE_PATH = "examples/vault-cluster-private"
 const VAULT_CLUSTER_PUBLIC_PATH = "examples/vault-cluster-public"
 
+const VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY = "create_dns_entry"
 const VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME = "hosted_zone_domain_name"
 const VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME = "vault_domain_name"
 
@@ -102,7 +103,7 @@ func runVaultPrivateClusterTest(t *testing.T, testName string, packerBuildName s
 		VAR_CONSUL_CLUSTER_NAME: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_SSH_KEY_NAME: resourceCollection.KeyPair.Name,
-		VAR_FORCE_DESTROY_S3_BUCKET: 1,
+		VAR_FORCE_DESTROY_S3_BUCKET: true,
 	}
 
 	deploy(t, terratestOptions)
@@ -145,7 +146,8 @@ func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName st
 		VAR_CONSUL_CLUSTER_NAME: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_SSH_KEY_NAME: resourceCollection.KeyPair.Name,
-		VAR_FORCE_DESTROY_S3_BUCKET: 1,
+		VAR_FORCE_DESTROY_S3_BUCKET: true,
+		VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY: hasRoute53DomainName,
 		VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME: DEFAULT_VAULT_HOSTED_ZONE_DOMAIN_NAME,
 		VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME: vaultDomainName,
 	}

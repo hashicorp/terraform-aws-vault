@@ -382,7 +382,7 @@ func getElbDomainName(t *testing.T, hasRoute53DomainName bool, terratestOptions 
 // Create a Vault client configured to talk to Vault running at the given domain name
 func createVaultClient(t *testing.T, domainName string, hasRoute53DomainName bool, logger *log.Logger) *api.Client {
 	config := api.DefaultConfig()
-	config.Address = fmt.Sprintf("https://%s:8200", domainName)
+	config.Address = fmt.Sprintf("https://%s", domainName)
 
 	if !hasRoute53DomainName {
 		logger.Println("No Route 53 Hosted Zone is available, so disabling TLS cert verification check in Vault client, as our TLS cert does not contain the ELB's domain name.")

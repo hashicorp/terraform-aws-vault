@@ -420,6 +420,7 @@ func assertStatus(t *testing.T, host ssh.Host, expectedStatus VaultStatus, logge
 
 // Delete the temporary self-signed cert files we created
 func cleanupTlsCertFiles(tlsCert TlsCert) {
+	os.Remove(tlsCert.CAPublicKeyPath)
 	os.Remove(tlsCert.PrivateKeyPath)
 	os.Remove(tlsCert.PublicKeyPath)
 }

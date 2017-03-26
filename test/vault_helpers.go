@@ -153,27 +153,20 @@ func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName st
 func initializeAndUnsealVaultCluster(t *testing.T, asgNameOutputVar string, sshUserName string, terratestOptions *terratest.TerratestOptions, resourceCollection *terratest.RandomResourceCollection, logger *log.Logger) VaultCluster {
 	cluster := findVaultClusterNodes(t, asgNameOutputVar, sshUserName, terratestOptions, resourceCollection)
 
-	// It takes state changes a little while to propagate within Vault, so sleep a little between updates
-	timeToWaitForUpdatesToPropagate := 5 * time.Second
-
 	establishConnectionToCluster(t, cluster, logger)
 	waitForVaultToBoot(t, cluster, logger)
 	initializeVault(t, &cluster, logger)
-	time.Sleep(timeToWaitForUpdatesToPropagate)
 
 	assertStatus(t, cluster.Leader, Sealed, logger)
 	unsealVaultNode(t, cluster.Leader, cluster.UnsealKeys, logger)
-	time.Sleep(timeToWaitForUpdatesToPropagate)
 	assertStatus(t, cluster.Leader, Leader, logger)
 
 	assertStatus(t, cluster.Standby1, Sealed, logger)
 	unsealVaultNode(t, cluster.Standby1, cluster.UnsealKeys, logger)
-	time.Sleep(timeToWaitForUpdatesToPropagate)
 	assertStatus(t, cluster.Standby1, Standby, logger)
 
 	assertStatus(t, cluster.Standby2, Sealed, logger)
 	unsealVaultNode(t, cluster.Standby2, cluster.UnsealKeys, logger)
-	time.Sleep(timeToWaitForUpdatesToPropagate)
 	assertStatus(t, cluster.Standby2, Standby, logger)
 
 	return cluster
@@ -235,19 +228,8 @@ func establishConnectionToCluster(t *testing.T, cluster VaultCluster, logger *lo
 // wait for the leader to boot and assume if it's up, the other nodes will be too.
 func waitForVaultToBoot(t *testing.T, cluster VaultCluster, logger *log.Logger) {
 	for _, node := range cluster.Nodes() {
-		description := fmt.Sprintf("Waiting for Vault to boot the first time on host %s. Expecting it to be in uninitialized status (%d).", node.Hostname, int(Uninitialized))
-		logger.Println(description)
-
-		maxRetries := 6
-		sleepBetweenRetries := 10 * time.Second
-
-		_, err := util.DoWithRetry(description, maxRetries, sleepBetweenRetries, logger, func() (string, error) {
-			return "", checkStatus(node, Uninitialized, logger)
-		})
-
-		if err != nil {
-			t.Fatalf("Vault node %s does not seem to be in uninitialized state: %v", node.Hostname, err)
-		}
+		logger.Printf("Waiting for Vault to boot the first time on host %s. Expecting it to be in uninitialized status (%d).", node.Hostname, int(Uninitialized))
+		assertStatus(t, node, Uninitialized, logger)
 	}
 }
 
@@ -298,10 +280,18 @@ func testVaultUsesConsulForDns(t *testing.T, cluster VaultCluster, logger *log.L
 	host := cluster.Standby1
 
 	command := "vault status -address=https://vault.service.consul:8200"
-	logger.Printf("Checking that the Vault server at %s is properly configured to use Consul for DNS: %s", host.Hostname, command)
+	description := fmt.Sprintf("Checking that the Vault server at %s is properly configured to use Consul for DNS: %s", host.Hostname, command)
+	logger.Println(description)
 
-	output, err := ssh.CheckSshCommand(host, command, logger)
-	logger.Printf("Output from command vault status call to vault.service.consul: %s", output)
+
+	maxRetries := 30
+	sleepBetweenRetries := 10 * time.Second
+
+	out, err := util.DoWithRetry(description, maxRetries, sleepBetweenRetries, logger, func() (string, error) {
+		return ssh.CheckSshCommand(host, command, logger)
+	})
+
+	logger.Printf("Output from command vault status call to vault.service.consul: %s", out)
 	if err != nil {
 		t.Fatalf("Failed to run vault command with vault.service.consul URL due to error: %v", err)
 	}
@@ -406,36 +396,48 @@ func boolToTerraformVar(val bool) int {
 
 // Check that the Vault node at the given host has the given
 func assertStatus(t *testing.T, host ssh.Host, expectedStatus VaultStatus, logger *log.Logger) {
-	if err := checkStatus(host, expectedStatus, logger); err != nil {
-		t.Fatalf("Host %s did not have expected status %d", host.Hostname, expectedStatus)
+	description := fmt.Sprintf("Check that the Vault node %s has status %d", host.Hostname, int(expectedStatus))
+	logger.Println(description)
+
+	maxRetries := 30
+	sleepBetweenRetries := 10 * time.Second
+
+	out, err := util.DoWithRetry(description, maxRetries, sleepBetweenRetries, logger, func() (string, error) {
+		return checkStatus(host, expectedStatus, logger)
+	})
+
+	if err != nil {
+		t.Fatal(err)
 	}
+
+	logger.Printf(out)
 }
 
 // Delete the temporary self-signed cert files we created
 func cleanupTlsCertFiles(tlsCert TlsCert) {
+	os.Remove(tlsCert.CAPublicKeyPath)
 	os.Remove(tlsCert.PrivateKeyPath)
 	os.Remove(tlsCert.PublicKeyPath)
 }
 
 // Check the status of the given Vault node and ensure it matches the expected status. Note that we use curl to do the
 // status check so we can ensure that TLS certificates work for curl (and not just the Vault client).
-func checkStatus(host ssh.Host, expectedStatus VaultStatus, logger *log.Logger) error {
+func checkStatus(host ssh.Host, expectedStatus VaultStatus, logger *log.Logger) (string, error) {
 	curlCommand := "curl -s -o /dev/null -w '%{http_code}' https://127.0.0.1:8200/v1/sys/health"
 	logger.Printf("Using curl to check status of Vault server %s: %s", host.Hostname, curlCommand)
 
 	output, err := ssh.CheckSshCommand(host, curlCommand, logger)
 	if err != nil {
-		return err
+		return "", err
 	}
 	status, err := strconv.Atoi(output)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if status == int(expectedStatus) {
-		logger.Printf("Got expected status code %d", status)
-		return nil
+		return fmt.Sprintf("Got expected status code %d", status), nil
 	} else {
-		return fmt.Errorf("Expected status code %d, but got %d", int(expectedStatus), status)
+		return "", fmt.Errorf("Expected status code %d for host %s, but got %d", int(expectedStatus), host.Hostname, status)
 	}
 }

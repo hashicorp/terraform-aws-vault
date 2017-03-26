@@ -186,11 +186,11 @@ value               bar
 ```
 
 Note that if you're using a self-signed TLS cert (e.g. generated from the [private-tls-cert 
-module](/modules/private-tls-cert)), you'll need to have the certificate's public key or you'll get an 
-"x509: certificate signed by unknown authority" error. You could pass the certificate manually:
+module](/modules/private-tls-cert)), you'll need to have the public key of the CA that signed that cert or you'll get 
+an "x509: certificate signed by unknown authority" error. You could pass the certificate manually:
  
 ```
-vault read -ca-cert=/opt/vault/tls/vault.crt.pem secret/foo
+vault read -ca-cert=/opt/vault/tls/ca.crt.pem secret/foo
 
 Key                 Value
 ---                 -----
@@ -199,7 +199,7 @@ value               bar
 ```
 
 However, to avoid having to add the `-ca-cert` argument to every single call, you can use the [update-certificate-store 
-module](/modules/update-certificate-store) to configure the server to trust this certificate.
+module](/modules/update-certificate-store) to configure the server to trust the CA.
 
 Check out the [vault-cluster-private example](/examples/vault-cluster-private) for working sample code.
 
@@ -216,14 +216,14 @@ module](/modules/vault-elb) to deploy an [Elastic Load Balancer
 access Vault via this ELB:
 
 ```
-vault -address=https://<ELB_DNS_NAME>:8200 read secret/foo
+vault -address=https://<ELB_DNS_NAME> read secret/foo
 ```
 
 Where `ELB_DNS_NAME` is the DNS name for your ELB, such as `vault.example.com`. You can configure the Vault address as 
 an environment variable:
 
 ```
-export VAULT_ADDR=https://vault.example.com:8200
+export VAULT_ADDR=https://vault.example.com
 ```
 
 That way, you don't have to remember to pass the Vault address every time:

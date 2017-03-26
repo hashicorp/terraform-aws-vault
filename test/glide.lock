@@ -1,0 +1,114 @@
+hash: 9087ec49fbe1cff92f86dbda13f38dddb4840c8c572878705c9dbab024550f26
+updated: 2017-03-24T23:53:50.56145117-04:00
+imports:
+- name: github.com/aws/aws-sdk-go
+  version: 00fb2125993965df739fa3398b03bef3eb2e198f
+  subpackages:
+  - aws
+  - aws/awserr
+  - aws/awsutil
+  - aws/client
+  - aws/client/metadata
+  - aws/corehandlers
+  - aws/credentials
+  - aws/credentials/ec2rolecreds
+  - aws/credentials/endpointcreds
+  - aws/credentials/stscreds
+  - aws/defaults
+  - aws/ec2metadata
+  - aws/endpoints
+  - aws/request
+  - aws/service/autoscaling
+  - aws/service/ec2
+  - aws/session
+  - aws/signer/v4
+  - private/protocol
+  - private/protocol/ec2query
+  - private/protocol/json/jsonutil
+  - private/protocol/jsonrpc
+  - private/protocol/query
+  - private/protocol/query/queryutil
+  - private/protocol/rest
+  - private/protocol/restxml
+  - private/protocol/xml/xmlutil
+  - private/waiter
+  - service/autoscaling
+  - service/cloudwatchlogs
+  - service/ec2
+  - service/iam
+  - service/s3
+  - service/sns
+  - service/sts
+- name: github.com/fatih/structs
+  version: a720dfa8df582c51dee1b36feabb906bde1588bd
+- name: github.com/go-ini/ini
+  version: 1730955e3146956d6a087861380f9b4667ed5071
+- name: github.com/gruntwork-io/terratest
+  version: 7f2c0724c5a784f507416ee4bd471b10c3237338
+  repo: git@github.com:gruntwork-io/terratest
+  vcs: git
+  subpackages:
+  - aws
+  - http
+  - log
+  - packer
+  - parallel
+  - shell
+  - ssh
+  - terraform
+  - util
+- name: github.com/hashicorp/errwrap
+  version: 7554cd9344cec97297fa6649b055a8c98c2a1e55
+- name: github.com/hashicorp/go-cleanhttp
+  version: 3573b8b52aa7b37b9358d966a898feb387f62437
+- name: github.com/hashicorp/go-multierror
+  version: ed905158d87462226a13fe39ddf685ea65f1c11f
+- name: github.com/hashicorp/go-rootcerts
+  version: 6bb64b370b90e7ef1fa532be9e591a81c3493e00
+- name: github.com/hashicorp/hcl
+  version: 630949a3c5fa3c613328e1b8256052cbc2327c9b
+  subpackages:
+  - hcl/ast
+  - hcl/parser
+  - hcl/scanner
+  - hcl/strconv
+  - hcl/token
+  - json/parser
+  - json/scanner
+  - json/token
+- name: github.com/hashicorp/vault
+  version: 614deacfca3f3b7162bbf30a36d6fc7362cd47f0
+  subpackages:
+  - api
+  - helper/compressutil
+  - helper/jsonutil
+- name: github.com/jmespath/go-jmespath
+  version: bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d
+- name: github.com/mitchellh/go-homedir
+  version: b8bc1bf767474819792c23f32d8286a45736f1c6
+- name: github.com/mitchellh/mapstructure
+  version: 53818660ed4955e899c0bcafa97299a388bd7c8e
+- name: github.com/sethgrid/pester
+  version: 2c5fb962da6113d0968907fd81dba3ca35151d1c
+- name: golang.org/x/crypto
+  version: 459e26527287adbc2adcc5d0d49abff9a5f315a7
+  subpackages:
+  - curve25519
+  - ed25519
+  - ed25519/internal/edwards25519
+  - ssh
+- name: golang.org/x/net
+  version: 6c23252515492caf9b228a9d5cabcdbde29f7f82
+  subpackages:
+  - http2
+  - http2/hpack
+  - idna
+  - lex/httplex
+- name: golang.org/x/text
+  version: fc7fa097411d30e6708badff276c4c164425590c
+  subpackages:
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/norm
+testImports: []

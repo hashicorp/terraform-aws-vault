@@ -1,7 +1,7 @@
 #!/bin/bash
-# This script is used to add a trusted, private TLS certificate to an OS's certificate store. This allows you to
-# establish TLS connections to services that use that TLS cert without getting x509 certificate errors. This script
-# has been tested with the following operating systems:
+# This script is used to add a trusted, private CA certificate to an OS's certificate store. This allows you to
+# establish TLS connections to services that use TLS certs signed by that CA without getting x509 certificate errors.
+# This script has been tested with the following operating systems:
 #
 # 1. Ubuntu 16.04
 # 2. Amazon Linux
@@ -17,16 +17,16 @@ function print_usage {
   echo
   echo "Usage: update-certificate-store [OPTIONS]"
   echo
-  echo "Add a trusted, private TLS certificate to an OS's certificate store. This script has been tested with Ubuntu 16.04 and Amazon Linux."
+  echo "Add a trusted, private CA certificate to an OS's certificate store. This script has been tested with Ubuntu 16.04 and Amazon Linux."
   echo
   echo "Options:"
   echo
-  echo -e "  --cert-file-path\tThe path to the TLS certificate public key to add to the OS certificate store. Required."
+  echo -e "  --cert-file-path\tThe path to the CA certificate public key to add to the OS certificate store. Required."
   echo -e "  --dest-file-name\tCopy --cert-file-path to a file with this name in a shared cert folder. The extension MUST be .crt. Optional. Default: $DEFAULT_DEST_FILE_NAME."
   echo
   echo "Example:"
   echo
-  echo "  update-certificate-store --cert-file /opt/vault/tls/vault.crt.pem"
+  echo "  update-certificate-store --cert-file /opt/vault/tls/ca.crt.pem"
 }
 
 function log {
@@ -60,7 +60,7 @@ function update_certificate_store {
   local readonly cert_file_path="$1"
   local readonly dest_file_name="$2"
 
-  log_info "Adding cert file $cert_file_path to OS certificate store"
+  log_info "Adding CA public key $cert_file_path to OS certificate store"
 
   if $(command_exists "update-ca-certificates"); then
     cp "$cert_file_path" "$UPDATE_CA_CERTS_PATH/$dest_file_name"

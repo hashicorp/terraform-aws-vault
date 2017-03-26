@@ -28,9 +28,9 @@ This Blueprint includes:
 * [private-tls-cert](/modules/private-tls-cert): Generate a private TLS certificate for use with a private Vault 
   cluster.
    
-* [update-certificate-store](/modules/update-certificate-store): Add a trusted, TLS public key to an OS's 
-  certificate store. This allows you to establish TLS connections to services that use this TLS cert without getting 
-  x509 certificate errors.
+* [update-certificate-store](/modules/update-certificate-store): Add a trusted, CA public key to an OS's 
+  certificate store. This allows you to establish TLS connections to services that use this TLS certs signed by this
+  CA without getting x509 certificate errors.
    
 
 

@@ -280,10 +280,18 @@ func testVaultUsesConsulForDns(t *testing.T, cluster VaultCluster, logger *log.L
 	host := cluster.Standby1
 
 	command := "vault status -address=https://vault.service.consul:8200"
-	logger.Printf("Checking that the Vault server at %s is properly configured to use Consul for DNS: %s", host.Hostname, command)
+	description := fmt.Sprintf("Checking that the Vault server at %s is properly configured to use Consul for DNS: %s", host.Hostname, command)
+	logger.Println(description)
 
-	output, err := ssh.CheckSshCommand(host, command, logger)
-	logger.Printf("Output from command vault status call to vault.service.consul: %s", output)
+
+	maxRetries := 30
+	sleepBetweenRetries := 10 * time.Second
+
+	out, err := util.DoWithRetry(description, maxRetries, sleepBetweenRetries, logger, func() (string, error) {
+		return ssh.CheckSshCommand(host, command, logger)
+	})
+
+	logger.Printf("Output from command vault status call to vault.service.consul: %s", out)
 	if err != nil {
 		t.Fatalf("Failed to run vault command with vault.service.consul URL due to error: %v", err)
 	}

@@ -228,21 +228,8 @@ func establishConnectionToCluster(t *testing.T, cluster VaultCluster, logger *lo
 // wait for the leader to boot and assume if it's up, the other nodes will be too.
 func waitForVaultToBoot(t *testing.T, cluster VaultCluster, logger *log.Logger) {
 	for _, node := range cluster.Nodes() {
-		description := fmt.Sprintf("Waiting for Vault to boot the first time on host %s. Expecting it to be in uninitialized status (%d).", node.Hostname, int(Uninitialized))
-		logger.Println(description)
-
-		maxRetries := 6
-		sleepBetweenRetries := 10 * time.Second
-
-		out, err := util.DoWithRetry(description, maxRetries, sleepBetweenRetries, logger, func() (string, error) {
-			return checkStatus(node, Uninitialized, logger)
-		})
-
-		if err != nil {
-			t.Fatalf("Vault node %s does not seem to be in uninitialized state: %v", node.Hostname, err)
-		}
-
-		logger.Println(out)
+		logger.Printf("Waiting for Vault to boot the first time on host %s. Expecting it to be in uninitialized status (%d).", node.Hostname, int(Uninitialized))
+		assertStatus(t, node, Uninitialized, logger)
 	}
 }
 

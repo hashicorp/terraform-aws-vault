@@ -51,9 +51,11 @@ a version number bump.
  
 ## Who maintains this Blueprint?
 
-This Blueprint is maintained by [Gruntwork](http://www.gruntwork.io/). If you need help or support, send an email to 
-[blueprints@gruntwork.io](mailto:blueprints@gruntwork.io?Subject=Vault%20Blueprint). Gruntwork can help with:
+This Blueprint is maintained by [Gruntwork](http://www.gruntwork.io/). If you're looking for help or commercial 
+support, send an email to [blueprints@gruntwork.io](mailto:blueprints@gruntwork.io?Subject=Vault%20Blueprint). 
+Gruntwork can help with:
 
+* Setup, customization, and support for this Blueprint.
 * Blueprints for other types of infrastructure, such as VPCs, Docker clusters, databases, and continuous integration.
 * Blueprints that meet compliance requirements, such as HIPAA.
 * Consulting & Training on AWS, Terraform, and DevOps.

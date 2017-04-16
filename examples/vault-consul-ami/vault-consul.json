@@ -3,8 +3,8 @@
   "variables": {
     "aws_region": "us-east-1",
     "vault_version": "0.7.0",
-    "consul_blueprint_version": "v0.0.4",
-    "consul_version": "0.7.5",
+    "consul_blueprint_version": "v0.0.5",
+    "consul_version": "0.8.0",
     "github_oauth_token": "{{env `GITHUB_OAUTH_TOKEN`}}",
     "ca_public_key_path": null,
     "tls_public_key_path": null,

@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 terraform {
-  required_version = "~> 0.8.0"
+  required_version = ">= 0.9.3"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -143,7 +143,7 @@ module "security_group_rules" {
 resource "aws_iam_instance_profile" "instance_profile" {
   name_prefix = "${var.cluster_name}"
   path        = "${var.instance_profile_path}"
-  roles       = ["${aws_iam_role.instance_role.name}"]
+  role        = "${aws_iam_role.instance_role.name}"
 
   # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
   # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors

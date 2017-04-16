@@ -13,6 +13,8 @@ readonly DEFAULT_DEST_FILE_NAME="custom.crt"
 readonly UPDATE_CA_CERTS_PATH="/usr/local/share/ca-certificates"
 readonly UPDATE_CA_TRUST_PATH="/etc/pki/ca-trust/source/anchors"
 
+readonly SCRIPT_NAME="$(basename "$0")"
+
 function print_usage {
   echo
   echo "Usage: update-certificate-store [OPTIONS]"
@@ -33,7 +35,7 @@ function log {
   local readonly level="$1"
   local readonly message="$2"
   local readonly timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-  >&2 echo -e "${timestamp} [${level}] [run-vault] ${message}"
+  >&2 echo -e "${timestamp} [${level}] [$SCRIPT_NAME] ${message}"
 }
 
 function log_info {

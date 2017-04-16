@@ -29,7 +29,7 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   wait_for_capacity_timeout = "${var.wait_for_capacity_timeout}"
 
   tag {
-    key                 = "Name"
+    key                 = "${var.cluster_tag_key}"
     value               = "${var.cluster_name}"
     propagate_at_launch = true
   }

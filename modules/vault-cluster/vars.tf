@@ -75,6 +75,11 @@ variable "allowed_ssh_security_group_ids" {
   default     = []
 }
 
+variable "cluster_tag_key" {
+  description = "Add a tag with this key and the value var.cluster_name to each Instance in the ASG."
+  default     = "Name"
+}
+
 variable "termination_policies" {
   description = "A list of policies to decide how the instances in the auto scale group should be terminated. The allowed values are OldestInstance, NewestInstance, OldestLaunchConfiguration, ClosestToNextInstanceHour, Default."
   default     = "Default"

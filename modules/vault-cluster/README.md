@@ -66,6 +66,21 @@ Check out the [vault-cluster-public](/examples/vault-cluster-public) and
 
 ## How do you use the Vault cluster?
 
+To use the Vault cluster, you will typically need to SSH to each of the Vault servers. If you deployed the
+[vault-cluster-private](/examples/vault-cluster-private) or [vault-cluster-public](/examples/vault-cluster-public) 
+examples, the [vault-examples-helper.sh script](/examples/vault-examples-helper/vault-examples-helper.sh) will do the 
+tag lookup for you automatically (note, you must have the [AWS CLI](https://aws.amazon.com/cli/) and 
+[jq](https://stedolan.github.io/jq/) installed locally):
+
+```
+> ../vault-examples-helper/vault-examples-helper.sh
+
+Your Vault servers are running at the following IP addresses:
+
+11.22.33.44
+11.22.33.55
+11.22.33.66
+```
 
 ### Initializing the Vault cluster
 

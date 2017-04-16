@@ -2,6 +2,14 @@ output "asg_name" {
   value = "${aws_autoscaling_group.autoscaling_group.name}"
 }
 
+output "cluster_tag_key" {
+  value = "${var.cluster_tag_key}"
+}
+
+output "cluster_tag_value" {
+  value = "${var.cluster_name}"
+}
+
 output "cluster_size" {
   value = "${aws_autoscaling_group.autoscaling_group.desired_capacity}"
 }

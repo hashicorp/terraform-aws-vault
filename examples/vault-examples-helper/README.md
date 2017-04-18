@@ -9,4 +9,6 @@ automatically:
 1. Print out the IP addresses of the Vault servers.
 1. Print out some example commands you can run against your Vault servers.
 
-
+Please note that this helper script only works because the examples deploy into your default VPC and default subnets.
+As a result, Vault is publicly accessible. This is OK for testing and learning, but for production usage, we strongly 
+recommend running Vault in private subnets of a custom VPC.

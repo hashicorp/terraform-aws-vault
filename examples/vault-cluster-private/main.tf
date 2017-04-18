@@ -119,7 +119,7 @@ data "template_file" "user_data_consul" {
 # DEPLOY THE CLUSTERS IN THE DEFAULT VPC AND AVAILABILITY ZONES
 # Using the default VPC and subnets makes this example easy to run and test, but it means Consul and Vault are
 # accessible from the public Internet. In a production deployment, we strongly recommend deploying into a custom VPC
-# and private subnets. Only the ELB should run in the public subnets.
+# and private subnets.
 # ---------------------------------------------------------------------------------------------------------------------
 
 data "aws_vpc" "default" {

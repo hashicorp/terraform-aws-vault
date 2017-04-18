@@ -18,6 +18,10 @@ that has Vault and Consul installed, which you can do using the [vault-consul-am
 
 For more info on how the Vault cluster works, check out the [vault-cluster](/modules/vault-cluster) documentation.
 
+**Note**: To keep this example as simple to deploy and test as possible, it deploys the Vault cluster into your default 
+VPC and default subnets, all of which are publicly accessible. This is OK for learning and experimenting, but for 
+production usage, we strongly recommend deploying the Vault cluster into the private subnets of a custom VPC.
+
 
 
 

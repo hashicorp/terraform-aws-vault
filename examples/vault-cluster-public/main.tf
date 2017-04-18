@@ -9,6 +9,10 @@ provider "aws" {
   region = "${var.aws_region}"
 }
 
+terraform {
+  required_version = ">= 0.9.3"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY THE VAULT SERVER CLUSTER
 # ---------------------------------------------------------------------------------------------------------------------
@@ -29,8 +33,8 @@ module "vault_cluster" {
   s3_bucket_name          = "${var.s3_bucket_name}"
   force_destroy_s3_bucket = "${var.force_destroy_s3_bucket}"
 
-  vpc_id             = "${data.aws_vpc.default.id}"
-  availability_zones = ["${data.aws_availability_zones.all.names}"]
+  vpc_id     = "${data.aws_vpc.default.id}"
+  subnet_ids = "${data.aws_subnet_ids.default.ids}"
 
   # Tell each Vault server to register in the ELB.
   load_balancers = ["${module.vault_elb.load_balancer_name}"]
@@ -55,7 +59,7 @@ module "vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_iam_policies_servers" {
-  source = "git::git@github.com:gruntwork-io/consul-aws-blueprint.git//modules/consul-iam-policies?ref=v0.0.3"
+  source = "git::git@github.com:gruntwork-io/consul-aws-blueprint.git//modules/consul-iam-policies?ref=v0.0.5"
 
   iam_role_id = "${module.vault_cluster.iam_role_id}"
 }
@@ -88,8 +92,8 @@ module "vault_elb" {
 
   name = "${var.vault_cluster_name}"
 
-  vpc_id             = "${data.aws_vpc.default.id}"
-  availability_zones = ["${data.aws_availability_zones.all.names}"]
+  vpc_id     = "${data.aws_vpc.default.id}"
+  subnet_ids = "${data.aws_subnet_ids.default.ids}"
 
   # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
   # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
@@ -114,7 +118,7 @@ data "aws_route53_zone" "selected" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_cluster" {
-  source = "git::git@github.com:gruntwork-io/consul-aws-blueprint.git//modules/consul-cluster?ref=v0.0.3"
+  source = "git::git@github.com:gruntwork-io/consul-aws-blueprint.git//modules/consul-cluster?ref=v0.0.5"
 
   cluster_name  = "${var.consul_cluster_name}"
   cluster_size  = "${var.consul_cluster_size}"
@@ -127,8 +131,8 @@ module "consul_cluster" {
   ami_id    = "${var.ami_id}"
   user_data = "${data.template_file.user_data_consul.rendered}"
 
-  vpc_id             = "${data.aws_vpc.default.id}"
-  availability_zones = ["${data.aws_availability_zones.all.names}"]
+  vpc_id     = "${data.aws_vpc.default.id}"
+  subnet_ids = "${data.aws_subnet_ids.default.ids}"
 
   # To make testing easier, we allow Consul and SSH requests from any IP address here but in a production
   # deployment, we strongly recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
@@ -154,13 +158,15 @@ data "template_file" "user_data_consul" {
 
 # ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY THE CLUSTERS IN THE DEFAULT VPC AND AVAILABILITY ZONES
-# Using the default VPC and all availability zones makes this example easy to run and test, but in a production
-# deployment, we strongly recommend deploying into a custom VPC and private subnets (the latter specified via the
-# subnet_ids parameter in the consul-cluster module). Only the ELB should run in the public subnets.
+# Using the default VPC and subnets makes this example easy to run and test, but it means Consul and Vault are
+# accessible from the public Internet. In a production deployment, we strongly recommend deploying into a custom VPC
+# and private subnets. Only the ELB should run in the public subnets.
 # ---------------------------------------------------------------------------------------------------------------------
 
 data "aws_vpc" "default" {
   default = true
 }
 
-data "aws_availability_zones" "all" {}
+data "aws_subnet_ids" "default" {
+  vpc_id = "${data.aws_vpc.default.id}"
+}

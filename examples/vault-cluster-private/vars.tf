@@ -19,6 +19,10 @@ variable "s3_bucket_name" {
   description = "The name of an S3 bucket to create and use as a storage backend. Note: S3 bucket names must be *globally* unique."
 }
 
+variable "ssh_key_name" {
+  description = "The name of an EC2 Key Pair that can be used to SSH to the EC2 Instances in this cluster. Set to an empty string to not associate a Key Pair."
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # OPTIONAL PARAMETERS
 # These parameters have reasonable defaults.
@@ -62,11 +66,6 @@ variable "consul_instance_type" {
 variable "consul_cluster_tag_key" {
   description = "The tag the Consul EC2 Instances will look for to automatically discover each other and form a cluster."
   default     = "consul-servers"
-}
-
-variable "ssh_key_name" {
-  description = "The name of an EC2 Key Pair that can be used to SSH to the EC2 Instances in this cluster. Set to an empty string to not associate a Key Pair."
-  default     = ""
 }
 
 variable "force_destroy_s3_bucket" {

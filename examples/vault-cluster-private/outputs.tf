@@ -37,3 +37,23 @@ output "iam_role_id_consul_cluster" {
 output "security_group_id_consul_cluster" {
   value = "${module.consul_cluster.security_group_id}"
 }
+
+output "aws_region" {
+  value = "${var.aws_region}"
+}
+
+output "vault_servers_cluster_tag_key" {
+  value = "${module.vault_cluster.cluster_tag_key}"
+}
+
+output "vault_servers_cluster_tag_value" {
+  value = "${module.vault_cluster.cluster_tag_value}"
+}
+
+output "ssh_key_name" {
+  value = "${var.ssh_key_name}"
+}
+
+output "vault_cluster_size" {
+  value = "${var.vault_cluster_size}"
+}

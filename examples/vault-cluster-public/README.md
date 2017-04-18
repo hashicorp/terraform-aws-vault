@@ -18,6 +18,10 @@ that has Vault and Consul installed, which you can do using the [vault-consul-am
 
 For more info on how the Vault cluster works, check out the [vault-cluster](/modules/vault-cluster) documentation.
 
+**Note**: To keep this example as simple to deploy and test as possible, it deploys the Vault cluster into your default 
+VPC and default subnets, all of which are publicly accessible. This is OK for learning and experimenting, but for 
+production usage, we strongly recommend deploying the Vault cluster into the private subnets of a custom VPC.
+
 
 
 
@@ -34,9 +38,9 @@ To deploy a Vault Cluster:
 1. Run `terraform get`.
 1. Run `terraform plan`.
 1. If the plan looks good, run `terraform apply`.
-
-After the `apply` command finishes, a Vault server cluster and Consul server cluster will boot up and discover each 
-other.
- 
+1. Run the [vault-examples-helper.sh script](/examples/vault-examples-helper/vault-examples-helper.sh) to 
+   print out the IP addresses of the Vault servers and some example commands you can run to interact with the cluster:
+   `../vault-examples-helper/vault-examples-helper.sh`.
+   
 To see how to connect to the Vault cluster, initialize it, and start reading and writing secrets, head over to the 
 [How do you use the Vault cluster?](/modules/vault-cluster#how-do-you-use-the-vault-cluster) docs.

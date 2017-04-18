@@ -131,7 +131,7 @@ function wait_for_vault_server_to_come_up {
     local status
     local body
 
-    response=$(curl --insecure --silent --write-out "HTTPSTATUS:%{http_code}" "$vault_health_url" || true)
+    response=$(curl --show-error --location --insecure --silent --write-out "HTTPSTATUS:%{http_code}" "$vault_health_url" || true)
     status=$(echo "$response" | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
     body=$(echo "$response" | sed -e 's/HTTPSTATUS\:.*//g')
 

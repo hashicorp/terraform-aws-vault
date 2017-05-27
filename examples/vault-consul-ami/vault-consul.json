@@ -14,7 +14,7 @@
     "ami_name": "vault-consul-ubuntu-{{isotime | clean_ami_name}}",
     "ami_description": "An Ubuntu 16.04 AMI that has Vault and Consul installed.",
     "instance_type": "t2.micro",
-    "name": "ubuntu-16-ami",
+    "name": "ubuntu16-ami",
     "region": "{{user `aws_region`}}",
     "type": "amazon-ebs",
     "source_ami_filter": {
@@ -86,7 +86,7 @@
     "inline": [
       "sudo apt-get install -y git"
     ],
-    "only": ["ubuntu-16-ami"]
+    "only": ["ubuntu16-ami"]
   },{
     "type": "shell",
     "inline": [

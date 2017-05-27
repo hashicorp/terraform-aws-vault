@@ -21,11 +21,15 @@ readonly BRANCH_NAME="${CIRCLE_BRANCH:-master}"
 
 readonly PACKER_BUILD_NAME="$1"
 
-# Build the example AMI
+# Build the example AMI. Note that we pass in the example TLS files. In a production setting, you would more likely
+# decrypt or fetch secrets like this when the AMI boots versus embedding them statically into the AMI.
 build-packer-artifact \
   --packer-template-path "$PACKER_TEMPLATE_PATH" \
   --build-name "$PACKER_BUILD_NAME" \
-  --output-properties-file "$AMI_PROPERTIES_FILE"
+  --output-properties-file "$AMI_PROPERTIES_FILE" \
+  --var ca_public_key_path=~/$CIRCLE_PROJECT_REPONAME/examples/vault-consul-ami/tls/ca.crt.pem \
+  --var tls_public_key_path=~/$CIRCLE_PROJECT_REPONAME/examples/vault-consul-ami/tls/vault.crt.pem \
+  --var tls_private_key_path=~/$CIRCLE_PROJECT_REPONAME/examples/vault-consul-ami/tls/vault.key.pem
 
 # Copy the AMI to all regions and make it public in each
 source "$AMI_PROPERTIES_FILE"

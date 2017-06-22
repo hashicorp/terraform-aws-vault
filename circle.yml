@@ -21,7 +21,7 @@ test:
   override:
     # To create AMIs for the first time in a new AWS account, make the code changes (e.g. updating AWS account number)
     # in the appropriate .tf files) in a branch named "publish-amis". This will bypass tests but still build the AMIs.
-    - if [[ $CIRCLE_BRANCH != "publish-amis" ]]; then run-go-tests --path test; fi
+    - if [[ "$CIRCLE_BRANCH" != "publish-amis" ]]; then run-go-tests --path test; fi
 
 deployment:
   release:

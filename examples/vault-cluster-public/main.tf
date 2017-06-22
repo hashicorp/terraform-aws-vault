@@ -21,8 +21,12 @@ terraform {
 # template at /examples/vault-consul-ami upon every new release. The Terraform data source below automatically looks up
 # the latest AMI so that a simple "terraform apply" will just work without the user needing to manually build an AMI and
 # fill in the right value.
+
+# !! WARNING !! These exmaple AMIs are meant only convenience when initially testing this repo. Do NOT use these example
+# AMIs in a production setting as those TLS certificate files are publicly available from the Blueprint repo containing
+# this code.
 #
-# WARNING: This Terraform data source must return at least one AMI result or the entire template will fail. See
+# NOTE: This Terraform data source must return at least one AMI result or the entire template will fail. See
 # /_ci/publish-amis-in-new-account.md for more information.
 # ---------------------------------------------------------------------------------------------------------------------
 data "aws_ami" "vault_consul" {

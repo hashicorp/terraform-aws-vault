@@ -26,7 +26,7 @@ if [[ -z "$PACKER_BUILD_NAME" ]]; then
   exit 1
 fi
 
-# Build the example AMI. Note that we pass in the example TLS files. In a production setting, you would more likely
+# Build the example AMI. Note that we pass in the example TLS files. WARNING! In a production setting, you should
 # decrypt or fetch secrets like this when the AMI boots versus embedding them statically into the AMI.
 build-packer-artifact \
   --packer-template-path "$PACKER_TEMPLATE_PATH" \

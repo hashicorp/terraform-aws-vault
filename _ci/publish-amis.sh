@@ -21,6 +21,11 @@ readonly BRANCH_NAME="${CIRCLE_BRANCH:-master}"
 
 readonly PACKER_BUILD_NAME="$1"
 
+if [[ -z "$PACKER_BUILD_NAME" ]]; then
+  echo "ERROR: You must pass in the Packer build name as the first argument to this function."
+  exit 1
+fi
+
 # Build the example AMI. Note that we pass in the example TLS files. In a production setting, you would more likely
 # decrypt or fetch secrets like this when the AMI boots versus embedding them statically into the AMI.
 build-packer-artifact \

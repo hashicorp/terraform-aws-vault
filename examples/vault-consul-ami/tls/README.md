@@ -1,5 +1,13 @@
 # Example TLS Certificate Files
 
+### Do NOT use these files in production!
+
+In a production setting, your TLS private key represents a critical secret. If it were stolen, its possessor could 
+impersonate your Vault server! For that reason, do NOT use these TLS certificate files in a public setting. They are 
+here only for convenience when building examples.
+
+### Files
+
 The files in this folder are needed by Vault to accept HTTPS requests. They are:
 
 - **ca.crt.pem**: The public certificate of the Certificate Authority used to create these files.
@@ -10,8 +18,3 @@ The TLS files are configured as follows:
 
 - The Vault Server may be reached via TLS at `vault.service.consul`, `vault.example.com`, or `127.0.0.1`.
 - The TLS certificate is valid until May 26, 2042.
-
-### For Quick Start Purposes Only
-
-These TLS certificate files are here solely to facilitate a quick start with this blueprint. **In a production setting, 
-you should generate these files on your own** according to your organization's standards for issueing TLS certificates.  

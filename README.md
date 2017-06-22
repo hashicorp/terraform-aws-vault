@@ -89,7 +89,7 @@ To deploy the Vault cluster:
    - [Latest Ubuntu 16 AMIs](/_docs/ubuntu16-ami-list.md).
    - [Latest Amazon Linux AMIs](/_docs/amazon-linux-ami-list.md).
    
-   **WARNING! Do NOT use these AMIs for your production setup. In production, you should build your own AMIs in your 
+   **WARNING! Do NOT use these AMIs in your production setup. In production, you should build your own AMIs in your 
      own AWS account.**
 
 1. Deploy that AMI across an Auto Scaling Group in a private subnet using the Terraform [vault-cluster 

@@ -83,9 +83,14 @@ To deploy the Vault cluster:
 1. Create an AMI that has Vault installed (using the [install-vault module](/modules/install-vault)) and the Consul
    agent installed (using the [install-consul 
    module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-consul)). Here is an 
-   [example Packer template](/examples/vault-consul-ami). Or just use our official public AMIs:
+   [example Packer template](/examples/vault-consul-ami). 
+   
+   If you are just experimenting with this Blueprint, you may find it more convenient to use one of our official public AMIs:
    - [Latest Ubuntu 16 AMIs](/_docs/ubuntu16-ami-list.md).
    - [Latest Amazon Linux AMIs](/_docs/amazon-linux-ami-list.md).
+   
+   **WARNING! Do NOT use these AMIs for your production setup. In production, you should build your own AMIs in your 
+     own AWS account.**
 
 1. Deploy that AMI across an Auto Scaling Group in a private subnet using the Terraform [vault-cluster 
    module](/modules/vault-cluster). 

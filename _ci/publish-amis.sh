@@ -38,7 +38,8 @@ publish-ami \
   --source-ami-id "$ARTIFACT_ID" \
   --source-ami-region "$PACKER_TEMPLATE_DEFAULT_REGION" \
   --output-markdown > "$AMI_LIST_MARKDOWN_DIR/$PACKER_BUILD_NAME-list.md" \
-  --markdown-title-text "$PACKER_BUILD_NAME: Latest Public AMIs"
+  --markdown-title-text "$PACKER_BUILD_NAME: Latest Public AMIs" \
+  --markdown-description-text "**WARNING! Do NOT use these AMIs in a production setting.** They contain TLS certificate files that are publicly available through this repo and using these AMIs in production would represent a serious security risk. The AMIs are meant only to make initial experiments with this blueprint more convenient."
 
 # Git add, commit, and push the newly created AMI IDs as a markdown doc to the repo
 git-add-commit-push \

@@ -6,10 +6,10 @@ machine:
 dependencies:
   override:
     # Install the gruntwork-module-circleci-helpers and use it to configure the build environment and run tests.
-    - curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version v0.0.14
-    - gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.3.16"
-    - gruntwork-install --module-name "build-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.3.16"
-    - gruntwork-install --module-name "aws-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.3.16"
+    - curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version v0.0.16
+    - gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.3.17"
+    - gruntwork-install --module-name "build-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.3.17"
+    - gruntwork-install --module-name "aws-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.3.17"
     - configure-environment-for-gruntwork-module --go-src-path test
 
   cache_directories:

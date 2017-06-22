@@ -1,5 +1,5 @@
-hash: 9adc4a4ecd50afa479ae92907f6d0876e8dcb447b191540f4dedf9be947d359e
-updated: 2017-04-17T00:48:47.942221157+01:00
+hash: 043527bf84dd17791593b9511281027748e4831fddb8c0fa3825a6467c5cea34
+updated: 2017-05-26T20:30:11.960531838-07:00
 imports:
 - name: github.com/aws/aws-sdk-go
   version: 00fb2125993965df739fa3398b03bef3eb2e198f
@@ -40,11 +40,11 @@ imports:
   - service/sns
   - service/sts
 - name: github.com/fatih/structs
-  version: a720dfa8df582c51dee1b36feabb906bde1588bd
+  version: 74a29b9fac7397d933f47e33eba94d2d83a464a2
 - name: github.com/go-ini/ini
-  version: e7fea39b01aea8d5671f6858f0532f56e8bff3a5
+  version: 6e4869b434bd001f6983749881c7ead3545887d8
 - name: github.com/gruntwork-io/terratest
-  version: 31ad80a56e0e8e6d1caa5e6c16345b8c1b1fac69
+  version: ed788d28c4e7f797af1113f34ae386a5409594de
   repo: git@github.com:gruntwork-io/terratest
   vcs: git
   subpackages:
@@ -66,7 +66,7 @@ imports:
 - name: github.com/hashicorp/go-rootcerts
   version: 6bb64b370b90e7ef1fa532be9e591a81c3493e00
 - name: github.com/hashicorp/hcl
-  version: 630949a3c5fa3c613328e1b8256052cbc2327c9b
+  version: 9a905a34e6280ce905da1a32344b25e81011197a
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -87,25 +87,25 @@ imports:
 - name: github.com/mitchellh/go-homedir
   version: b8bc1bf767474819792c23f32d8286a45736f1c6
 - name: github.com/mitchellh/mapstructure
-  version: 53818660ed4955e899c0bcafa97299a388bd7c8e
+  version: f3009df150dadf309fdee4a54ed65c124afad715
 - name: github.com/sethgrid/pester
   version: 4f4c0a67b6496764028e1ab9fd8dfb630282ed2f
 - name: golang.org/x/crypto
-  version: cbc3d0884eac986df6e78a039b8792e869bff863
+  version: 05d11b2ca14108dfc7f74f4f66b28c7fe92e1fd0
   subpackages:
   - curve25519
   - ed25519
   - ed25519/internal/edwards25519
   - ssh
 - name: golang.org/x/net
-  version: 5602c733f70afc6dcec6766be0d5034d4c4f14de
+  version: 3470a06c1357df533e251f14d3a181f67396fe35
   subpackages:
   - http2
   - http2/hpack
   - idna
   - lex/httplex
 - name: golang.org/x/text
-  version: f4b4367115ec2de254587813edaa901bc1c723a8
+  version: 19e51611da83d6be54ddafce4a4af510cb3e9ea4
   subpackages:
   - secure/bidirule
   - transform

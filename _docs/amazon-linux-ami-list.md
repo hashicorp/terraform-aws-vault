@@ -1,6 +1,6 @@
 # amazon-linux-ami: Latest Public AMIs
 
-**WARNING! Do NOT use these AMIs in a production setting.** They contain TLS certificate files that are publicly available through this repo and using these AMIs in production would represent a serious security risk. The AMIs are meant only to make initial experiments with this blueprint more convenient.
+**WARNING! Do NOT use these AMIs in a production setting.** Dummy change that will be replaced anyway.
 
 | AWS Region | AMI ID |
 | ---------- | ------ |

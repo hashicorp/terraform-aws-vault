@@ -20,7 +20,7 @@ To install Vault, use `git` to clone this repository at a specific tag (see the 
 for all available tags) and run the `install-vault` script:
 
 ```
-git clone --branch <VERSION> https://github.com/gruntwork-io/vault-aws-blueprint.git
+git clone --branch <VERSION> https://github.com/hashicorp/terraform-aws-vault.git
 vault-aws-blueprint/modules/install-vault/install-vault --version 0.5.4
 ```
 

@@ -83,7 +83,7 @@ Your code should look more like this:
   "provisioners": [{
     "type": "shell",
     "inline": [
-      "git clone --branch <BLUEPRINT_VERSION> https://github.com/gruntwork-io/vault-aws-blueprint.git /tmp/vault-aws-blueprint",
+      "git clone --branch <BLUEPRINT_VERSION> https://github.com/hashicorp/terraform-aws-vault.git /tmp/vault-aws-blueprint",
       "/tmp/vault-aws-blueprint/modules/install-vault/install-vault --version {{user `vault_version`}}"
     ],
     "pause_before": "30s"

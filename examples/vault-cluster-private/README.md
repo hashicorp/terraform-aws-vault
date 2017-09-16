@@ -3,12 +3,12 @@
 This folder shows an example of Terraform code to deploy a [Vault](https://www.vaultproject.io/) cluster in 
 [AWS](https://aws.amazon.com/) using the [vault-cluster module](/modules/vault-cluster). The Vault cluster uses 
 [Consul](https://www.consul.io/) as a storage backend, so this example also deploys a separate Consul server cluster 
-using the [consul-cluster module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/consul-cluster) 
+using the [consul-cluster module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/consul-cluster) 
 from the Consul AWS Blueprint.
 
 This example creates a private Vault cluster that is only accessible from servers within the AWS account. Each of the
 servers in this example has [Dnsmasq](http://www.thekelleys.org.uk/dnsmasq/doc.html) installed (via the 
-[install-dnsmasq module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-dnsmasq)) 
+[install-dnsmasq module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq)) 
 which allows it to use the Consul server cluster for service discovery and thereby access Vault via DNS using the 
 domain name `vault.service.consul`. For an example of a Vault cluster
 that is publicly accessible, see [vault-cluster-public](/examples/vault-cluster-public).

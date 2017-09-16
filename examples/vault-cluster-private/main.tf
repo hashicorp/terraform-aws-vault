@@ -51,7 +51,7 @@ module "vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_iam_policies_servers" {
-  source = "git::git@github.com:gruntwork-io/consul-aws-blueprint.git//modules/consul-iam-policies?ref=v0.0.5"
+  source = "git::git@github.com:hashicorp/terraform-aws-consul.git//modules/consul-iam-policies?ref=v0.0.2"
 
   iam_role_id = "${module.vault_cluster.iam_role_id}"
 }
@@ -77,7 +77,7 @@ data "template_file" "user_data_vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_cluster" {
-  source = "git::git@github.com:gruntwork-io/consul-aws-blueprint.git//modules/consul-cluster?ref=v0.0.5"
+  source = "git::git@github.com:hashicorp/terraform-aws-consul.git//modules/consul-cluster?ref=v0.0.2"
 
   cluster_name  = "${var.consul_cluster_name}"
   cluster_size  = "${var.consul_cluster_size}"

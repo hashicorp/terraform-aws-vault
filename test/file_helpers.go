@@ -11,7 +11,7 @@ import (
 // Copy the files in the given path to a temp folder and return the path to that temp folder. We do this so
 // we can run tests in parallel on the same Terraform code without their state files overwriting each other.
 func copyRepoToTempFolder(t *testing.T, path string) string {
-	tmpPath, err := ioutil.TempDir("", "consul-aws-blueprint-test")
+	tmpPath, err := ioutil.TempDir("", "terraform-aws-consul-test")
 	if err != nil {
 		t.Fatalf("Failed to create temp folder due to error: %v", err)
 	}

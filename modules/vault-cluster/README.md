@@ -3,7 +3,7 @@
 This folder contains a [Terraform](https://www.terraform.io/) module that can be used to deploy a 
 [Vault](https://www.vaultproject.io/) cluster in [AWS](https://aws.amazon.com/) on top of an Auto Scaling Group. This 
 module is designed to deploy an [Amazon Machine Image (AMI)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) 
-that had Vault installed via the [install-vault](/modules/install-vault) module in this Blueprint.
+that had Vault installed via the [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault) module in this Blueprint.
 
 
 
@@ -17,7 +17,7 @@ code by adding a `module` configuration and setting its `source` parameter to UR
 module "vault_cluster" {
   # TODO: update this to the final URL
   # Use version v0.0.1 of the vault-cluster module
-  source = "github.com/gruntwork-io/vault-aws-blueprint//modules/vault-cluster?ref=v0.0.1"
+  source = "github.com/hashicorp/terraform-aws-vault//modules/vault-cluster?ref=v0.0.1"
 
   # Specify the ID of the Vault AMI. You should build this using the scripts in the install-vault module.
   ami_id = "ami-abcd1234"
@@ -45,20 +45,20 @@ Note the following parameters:
 
 * `ami_id`: Use this parameter to specify the ID of a Vault [Amazon Machine Image 
   (AMI)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) to deploy on each server in the cluster. You
-  should install Vault in this AMI using the scripts in the [install-vault](/modules/install-vault) module.
+  should install Vault in this AMI using the scripts in the [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault) module.
   
 * `s3_bucket_name`: This module creates an [S3](https://aws.amazon.com/s3/) to use as a storage backend for Vault.
  
 * `user_data`: Use this parameter to specify a [User 
   Data](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html#user-data-shell-scripts) script that each
-  server will run during boot. This is where you can use the [run-vault script](/modules/run-vault) to configure and 
-  run Vault. The `run-vault` script is one of the scripts installed by the [install-vault](/modules/install-vault) 
+  server will run during boot. This is where you can use the [run-vault script](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/run-vault) to configure and 
+  run Vault. The `run-vault` script is one of the scripts installed by the [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault) 
   module. 
 
 You can find the other parameters in [vars.tf](vars.tf).
 
-Check out the [vault-cluster-public](/examples/vault-cluster-public) and 
-[vault-cluster-private](/examples/vault-cluster-private) examples for working sample code.
+Check out the [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) and 
+[vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) examples for working sample code.
 
 
 
@@ -67,8 +67,8 @@ Check out the [vault-cluster-public](/examples/vault-cluster-public) and
 ## How do you use the Vault cluster?
 
 To use the Vault cluster, you will typically need to SSH to each of the Vault servers. If you deployed the
-[vault-cluster-private](/examples/vault-cluster-private) or [vault-cluster-public](/examples/vault-cluster-public) 
-examples, the [vault-examples-helper.sh script](/examples/vault-examples-helper/vault-examples-helper.sh) will do the 
+[vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) or [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) 
+examples, the [vault-examples-helper.sh script](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-examples-helper/vault-examples-helper.sh) will do the 
 tag lookup for you automatically (note, you must have the [AWS CLI](https://aws.amazon.com/cli/) and 
 [jq](https://stedolan.github.io/jq/) installed locally):
 
@@ -171,7 +171,7 @@ entries](https://www.consul.io/docs/guides/forwarding.html), you can access Vaul
 using a nice domain name instead, such as `vault.service.consul`.
 
 To set this up, use the [install-dnsmasq 
-module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-dnsmasq) on each server that 
+module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq) on each server that 
 needs to access Vault. This allows you to access Vault from your EC2 Instances as follows:
 
 ```
@@ -201,7 +201,7 @@ value               bar
 ```
 
 Note that if you're using a self-signed TLS cert (e.g. generated from the [private-tls-cert 
-module](/modules/private-tls-cert)), you'll need to have the public key of the CA that signed that cert or you'll get 
+module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/private-tls-cert)), you'll need to have the public key of the CA that signed that cert or you'll get 
 an "x509: certificate signed by unknown authority" error. You could pass the certificate manually:
  
 ```
@@ -214,9 +214,9 @@ value               bar
 ```
 
 However, to avoid having to add the `-ca-cert` argument to every single call, you can use the [update-certificate-store 
-module](/modules/update-certificate-store) to configure the server to trust the CA.
+module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/update-certificate-store) to configure the server to trust the CA.
 
-Check out the [vault-cluster-private example](/examples/vault-cluster-private) for working sample code.
+Check out the [vault-cluster-private example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) for working sample code.
 
 
 #### Access Vault from the public Internet
@@ -226,7 +226,7 @@ public Internet, which reduces your surface area to attackers. If you need users
 outside of AWS, we recommend using VPN to connect to AWS. 
  
 If VPN is not an option, and Vault must be accessible from the public Internet, you can use the [vault-elb 
-module](/modules/vault-elb) to deploy an [Elastic Load Balancer 
+module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-elb) to deploy an [Elastic Load Balancer 
 (ELB)](https://aws.amazon.com/elasticloadbalancing/classicloadbalancer/) in your public subnets, and have all your users
 access Vault via this ELB:
 
@@ -256,7 +256,7 @@ vault read secret/foo
 
 This module creates the following architecture:
 
-![Vault architecture](/_docs/architecture.png)
+![Vault architecture](https://github.com/hashicorp/terraform-aws-vault/blob/master/_docs/architecture.png?raw=true)
 
 This architecture consists of the following resources:
 
@@ -271,7 +271,7 @@ This architecture consists of the following resources:
 This module runs Vault on top of an [Auto Scaling Group (ASG)](https://aws.amazon.com/autoscaling/). Typically, you
 should run the ASG with 3 or 5 EC2 Instances spread across multiple [Availability 
 Zones](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html). Each of the EC2
-Instances should be running an AMI that has had Vault installed via the [install-vault](/modules/install-vault)
+Instances should be running an AMI that has had Vault installed via the [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault)
 module. You pass in the ID of the AMI to run using the `ami_id` input parameter.
 
 
@@ -383,7 +383,7 @@ Here are some of the main security considerations to keep in mind when using thi
 ### Encryption in transit
 
 Vault uses TLS to encrypt its network traffic. For instructions on configuring TLS, have a look at the
-[How do you handle encryption documentation](/modules/run-vault#how-do-you-handle-encryption).
+[How do you handle encryption documentation](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/run-vault#how-do-you-handle-encryption).
 
 
 ### Encryption at rest
@@ -393,12 +393,12 @@ encrypts it, and sends it off to its storage backends, so no matter how the back
 encrypted. By default, this Blueprint uses Consul as a storage backend, so if you want an additional layer of 
 protection, you can check out the [official Consul encryption docs](https://www.consul.io/docs/agent/encryption.html) 
 and the Consul AWS Blueprint [How do you handle encryption 
-docs](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/run-consul#how-do-you-handle-encryption)
+docs](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/run-consul#how-do-you-handle-encryption)
 for more info.
 
 Note that if you want to enable encryption for the root EBS Volume for your Vault Instances (despite the fact that 
 Vault itself doesn't write anything to this volume), you need to enable that in your AMI. If you're creating the AMI 
-using Packer (e.g. as shown in the [vault-consul-ami example](/examples/vault-consul-ami)), you need to set the [encrypt_boot 
+using Packer (e.g. as shown in the [vault-consul-ami example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-consul-ami)), you need to set the [encrypt_boot 
 parameter](https://www.packer.io/docs/builders/amazon-ebs.html#encrypt_boot) to `true`.  
 
 
@@ -454,9 +454,9 @@ same cluster because:
    set in memory. That means for every 1 byte of data in Vault, you'd also have 1 byte of data in Consul, doubling 
    your memory consumption on each server.
 
-Check out the [Consul AWS Blueprint](https://github.com/gruntwork-io/consul-aws-blueprint) for how to deploy a Consul 
-server cluster in AWS. See the [vault-cluster-public](/examples/vault-cluster-public) and 
-[vault-cluster-private](/examples/vault-cluster-private) examples for sample code that shows how to run both a
+Check out the [Consul AWS Blueprint](https://github.com/hashicorp/terraform-aws-consul) for how to deploy a Consul 
+server cluster in AWS. See the [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) and 
+[vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) examples for sample code that shows how to run both a
 Vault server cluster and Consul server cluster.
 
 

@@ -1,9 +1,9 @@
 # Vault Install Script
 
 This folder contains a script for installing Vault and its dependencies. You can use this script, along with the
-[run-vault script](/modules/run-vault) it installs, to create a Vault [Amazon Machine Image 
+[run-vault script](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/run-vault) it installs, to create a Vault [Amazon Machine Image 
 (AMI)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) that can be deployed in 
-[AWS](https://aws.amazon.com/) across an Auto Scaling Group using the [vault-cluster module](/modules/vault-cluster).
+[AWS](https://aws.amazon.com/) across an Auto Scaling Group using the [vault-cluster module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster).
 
 This script has been tested on the following operating systems:
 
@@ -20,18 +20,18 @@ To install Vault, use `git` to clone this repository at a specific tag (see the 
 for all available tags) and run the `install-vault` script:
 
 ```
-git clone --branch <VERSION> https://github.com/gruntwork-io/vault-aws-blueprint.git
-vault-aws-blueprint/modules/install-vault/install-vault --version 0.5.4
+git clone --branch <VERSION> https://github.com/hashicorp/terraform-aws-vault.git
+terraform-aws-vault/modules/install-vault/install-vault --version 0.5.4
 ```
 
-The `install-vault` script will install Vault, its dependencies, and the [run-vault script](/modules/run-vault).
+The `install-vault` script will install Vault, its dependencies, and the [run-vault script](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/run-vault).
 You can then run the `run-vault` script when the server is booting to start Vault.
 
 We recommend running the `install-vault` script as part of a [Packer](https://www.packer.io/) template to create a
 Vault [Amazon Machine Image (AMI)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) (see the 
-[vault-consul-ami example](/examples/vault-consul-ami) for sample code). You can then deploy the AMI across an Auto 
-Scaling Group using the [vault-cluster module](/modules/vault-cluster) (see the 
-[vault-cluster-public](/examples/vault-cluster-public) and [vault-cluster-private](/examples/vault-cluster-private) 
+[vault-consul-ami example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-consul-ami) for sample code). You can then deploy the AMI across an Auto 
+Scaling Group using the [vault-cluster module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster) (see the 
+[vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) and [vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) 
 examples for fully-working sample code).
 
 
@@ -83,7 +83,7 @@ Install the following:
 * `vault`: Download the Vault zip file from the [downloads page](https://www.vaultproject.io/downloads.html) (the 
   version number is configurable via the `--version` argument), and extract the `vault` binary into 
   `/opt/vault/bin`. Add a symlink to the `vault` binary in `/usr/local/bin`.
-* `run-vault`: Copy the [run-vault script](/modules/run-vault) into `/opt/vault/bin`. 
+* `run-vault`: Copy the [run-vault script](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/run-vault) into `/opt/vault/bin`. 
 
 
 ### Configure mlock
@@ -115,5 +115,5 @@ After the `install-vault` script finishes running, you may wish to do the follow
 
 We needed an easy way to install these scripts that satisfied a number of requirements, including working on a variety 
 of operating systems and supported versioning. Our current solution is to use `git`, but this may change in the future.
-See [Package Managers](https://github.com/gruntwork-io/consul-aws-blueprint/blob/master/_docs/package-managers.md) for 
+See [Package Managers](https://github.com/hashicorp/terraform-aws-consul/blob/master/_docs/package-managers.md) for 
 a full discussion of the requirements, trade-offs, and why we picked `git`.

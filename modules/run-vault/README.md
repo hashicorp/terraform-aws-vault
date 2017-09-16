@@ -14,7 +14,7 @@ There is a good chance it will work on other flavors of Debian, CentOS, and RHEL
 ## Quick start
 
 This script assumes you installed it, plus all of its dependencies (including Vault itself), using the [install-vault 
-module](/modules/install-vault). The default install path is `/opt/vault/bin`, so to start Vault in server mode, you 
+module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault). The default install path is `/opt/vault/bin`, so to start Vault in server mode, you 
 run:
 
 ```
@@ -38,8 +38,8 @@ Data](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html#user-dat
 when the EC2 Instance is first booting. After running `run-vault` on that initial boot, the `supervisord` configuration 
 will automatically restart Vault if it crashes or the EC2 instance reboots.
 
-See the [vault-cluster-public](/examples/vault-cluster-public) and 
-[vault-cluster-private](/examples/vault-cluster-private) examples for fully-working sample code.
+See the [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) and 
+[vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) examples for fully-working sample code.
 
 
 
@@ -166,7 +166,7 @@ certificate:
 /opt/vault/bin/run-vault --s3-bucket my-vault-bucket --s3-bucket-region us-east-1 --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
 ```
 
-See the [private-tls-cert module](/modules/private-tls-cert) for information on how to generate a TLS certificate.
+See the [private-tls-cert module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/private-tls-cert) for information on how to generate a TLS certificate.
 
 
 ### Consul encryption
@@ -178,7 +178,7 @@ necessary, but may be a good extra layer of security.
 By default, the Vault server nodes communicate with a local Consul agent running on the same server over (unencrypted) 
 HTTP. However, you can configure those agents to talk to the Consul servers using TLS. Check out the [official Consul 
 encryption docs](https://www.consul.io/docs/agent/encryption.html) and the Consul AWS Blueprint [How do you handle 
-encryption docs](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/run-consul#how-do-you-handle-encryption)
+encryption docs](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/run-consul#how-do-you-handle-encryption)
 for more info.
 
 

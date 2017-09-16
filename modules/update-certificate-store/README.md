@@ -10,7 +10,7 @@ x509 certificate errors. This script has been tested on the following operating 
 There is a good chance it will work on other flavors of Debian, CentOS, and RHEL as well.
 
 If you're unfamiliar with how TLS certificates work, check out the [Background 
-section](/modules/private-tls-cert#background).
+section](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/private-tls-cert#background).
 
 
 
@@ -51,8 +51,8 @@ To use the `update-certificate-script`, use `git` to clone this repository at a 
 [releases page](../../../../releases) for all available tags) and run the `update-certificate-script` script:
 
 ```
-git clone --branch <VERSION> https://github.com/gruntwork-io/vault-aws-blueprint.git
-vault-aws-blueprint/modules/update-certificate-script/update-certificate-script --cert-file-path /opt/vault/tls/ca.cert.pem
+git clone --branch <VERSION> https://github.com/hashicorp/terraform-aws-vault.git
+terraform-aws-vault/modules/update-certificate-script/update-certificate-script --cert-file-path /opt/vault/tls/ca.cert.pem
 ```
 
 That's it!
@@ -68,7 +68,7 @@ refresh_interval    768h0m0s
 value               bar
 ```
 
-See the [vault-consul-ami example](/examples/vault-consul-ami) for working sample code.
+See the [vault-consul-ami example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-consul-ami) for working sample code.
 
 
 
@@ -86,6 +86,6 @@ The `run-vault` script accepts the following arguments:
 Example:
 
 ```
-vault-aws-blueprint/modules/update-certificate-script/update-certificate-script --cert-file-path /opt/vault/tls/ca.cert.pem
+terraform-aws-vault/modules/update-certificate-script/update-certificate-script --cert-file-path /opt/vault/tls/ca.cert.pem
 ```
 

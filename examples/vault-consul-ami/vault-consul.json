@@ -2,9 +2,9 @@
   "min_packer_version": "0.12.0",
   "variables": {
     "aws_region": "us-east-1",
-    "vault_version": "0.7.0",
-    "consul_blueprint_version": "v0.0.2",
-    "consul_version": "0.8.0",
+    "vault_version": "0.8.2",
+    "consul_module_version": "v0.0.2",
+    "consul_version": "0.9.3",
     "github_oauth_token": "{{env `GITHUB_OAUTH_TOKEN`}}",
     "ca_public_key_path": null,
     "tls_public_key_path": null,
@@ -51,13 +51,13 @@
   }],
   "provisioners": [{
     "type": "file",
-    "source": "{{template_dir}}/../../../vault-aws-blueprint",
+    "source": "{{template_dir}}/../../../terraform-aws-vault",
     "destination": "/tmp",
     "pause_before": "30s"
   },{
     "type": "shell",
     "inline": [
-      "/tmp/vault-aws-blueprint/modules/install-vault/install-vault --version {{user `vault_version`}}"
+      "/tmp/terraform-aws-vault/modules/install-vault/install-vault --version {{user `vault_version`}}"
     ]
   },{
     "type": "file",
@@ -79,7 +79,7 @@
       "sudo mv /tmp/vault.key.pem /opt/vault/tls/",
       "sudo chown vault:vault /opt/vault/tls/*",
       "sudo chmod 600 /opt/vault/tls/*",
-      "sudo /tmp/vault-aws-blueprint/modules/update-certificate-store/update-certificate-store --cert-file-path /opt/vault/tls/ca.crt.pem"
+      "sudo /tmp/terraform-aws-vault/modules/update-certificate-store/update-certificate-store --cert-file-path /opt/vault/tls/ca.crt.pem"
     ]
   },{
     "type": "shell",
@@ -96,9 +96,9 @@
   },{
     "type": "shell",
     "inline": [
-      "git clone --branch {{user `consul_blueprint_version`}} https://{{user `github_oauth_token`}}@github.com/hashicorp/terraform-aws-consul.git /tmp/consul-aws-blueprint",
-      "/tmp/consul-aws-blueprint/modules/install-consul/install-consul --version {{user `consul_version`}}",
-      "/tmp/consul-aws-blueprint/modules/install-dnsmasq/install-dnsmasq"
+      "git clone --branch {{user `consul_module_version`}} https://{{user `github_oauth_token`}}@github.com/hashicorp/terraform-aws-consul.git /tmp/terraform-aws-consul",
+      "/tmp/terraform-aws-consul/modules/install-consul/install-consul --version {{user `consul_version`}}",
+      "/tmp/terraform-aws-consul/modules/install-dnsmasq/install-dnsmasq"
     ]
   }]
 }

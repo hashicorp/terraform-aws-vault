@@ -52,7 +52,7 @@ To use the `update-certificate-script`, use `git` to clone this repository at a 
 
 ```
 git clone --branch <VERSION> https://github.com/hashicorp/terraform-aws-vault.git
-vault-aws-blueprint/modules/update-certificate-script/update-certificate-script --cert-file-path /opt/vault/tls/ca.cert.pem
+terraform-aws-vault/modules/update-certificate-script/update-certificate-script --cert-file-path /opt/vault/tls/ca.cert.pem
 ```
 
 That's it!
@@ -86,6 +86,6 @@ The `run-vault` script accepts the following arguments:
 Example:
 
 ```
-vault-aws-blueprint/modules/update-certificate-script/update-certificate-script --cert-file-path /opt/vault/tls/ca.cert.pem
+terraform-aws-vault/modules/update-certificate-script/update-certificate-script --cert-file-path /opt/vault/tls/ca.cert.pem
 ```
 

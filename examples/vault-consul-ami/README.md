@@ -64,12 +64,12 @@ provisioner. Instead of:
 {
   "provisioners": [{
     "type": "file",
-    "source": "{{template_dir}}/../../../vault-aws-blueprint",
+    "source": "{{template_dir}}/../../../terraform-aws-vault",
     "destination": "/tmp"
   },{
     "type": "shell",
     "inline": [
-      "/tmp/vault-aws-blueprint/modules/install-vault/install-vault --version {{user `vault_version`}}"
+      "/tmp/terraform-aws-vault/modules/install-vault/install-vault --version {{user `vault_version`}}"
     ],
     "pause_before": "30s"
   }]
@@ -83,8 +83,8 @@ Your code should look more like this:
   "provisioners": [{
     "type": "shell",
     "inline": [
-      "git clone --branch <BLUEPRINT_VERSION> https://github.com/hashicorp/terraform-aws-vault.git /tmp/vault-aws-blueprint",
-      "/tmp/vault-aws-blueprint/modules/install-vault/install-vault --version {{user `vault_version`}}"
+      "git clone --branch <BLUEPRINT_VERSION> https://github.com/hashicorp/terraform-aws-vault.git /tmp/terraform-aws-vault",
+      "/tmp/terraform-aws-vault/modules/install-vault/install-vault --version {{user `vault_version`}}"
     ],
     "pause_before": "30s"
   }]

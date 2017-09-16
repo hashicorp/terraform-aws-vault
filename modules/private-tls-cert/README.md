@@ -56,7 +56,7 @@ Now that you have your TLS certs, check out the next section for how to use them
 
 Distribute the private and public keys (the files at `private_key_file_path` and `public_key_file_path`) to the 
 servers that will use them to handle TLS connections (e.g. Vault). For example, to run Vault with the [run-vault 
-module](/modules/run-vault), you need to pass it the TLS certs: 
+module](https://github.com/hashicorp/terraform-aws-vault/tree/refine/modules/run-vault), you need to pass it the TLS certs: 
 
 ```
 /opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
@@ -97,7 +97,7 @@ value               bar
 ```
 
 As an alternative, you can configure the certificate trust on your server so that all TLS clients trust your CA
-public key by running the [update-certificate-store module](/modules/update-certificate-store) on your server. Once 
+public key by running the [update-certificate-store module](https://github.com/hashicorp/terraform-aws-vault/tree/refine/modules/update-certificate-store) on your server. Once 
 you do that, your system will trust the public key without having to pass it in explicitly:
 
 ```

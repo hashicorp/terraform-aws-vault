@@ -1,6 +1,6 @@
 # Vault and Consul AMI
 
-This folder shows an example of how to use the [install-vault module](/modules/install-vault) from this Blueprint and 
+This folder shows an example of how to use the [install-vault module](https://github.com/hashicorp/terraform-aws-vault/tree/refine/modules/install-vault) from this Blueprint and 
 the [install-consul](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-consul)
 and [install-dnsmasq](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-dnsmasq) modules
 from the Consul AWS Blueprint with [Packer](https://www.packer.io/) to create [Amazon Machine Images 
@@ -10,13 +10,13 @@ from the Consul AWS Blueprint with [Packer](https://www.packer.io/) to create [A
 1. Amazon Linux
 
 You can use this AMI to deploy a [Vault cluster](https://www.vaultproject.io/) by using the [vault-cluster
-module](/modules/vault-cluster). This Vault cluster will use Consul as its storage backend, so you can also use the 
+module](https://github.com/hashicorp/terraform-aws-vault/tree/refine/modules/vault-cluster). This Vault cluster will use Consul as its storage backend, so you can also use the 
 same AMI to deploy a separate [Consul server cluster](https://www.consul.io/) by using the [consul-cluster 
 module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/consul-cluster). 
 
-Check out the [vault-cluster-private](/examples/vault-cluster-private) and 
-[vault-cluster-public](/examples/vault-cluster-public) examples for working sample code. For more info on Vault 
-installation and configuration, check out the [install-vault](/modules/install-vault) documentation.
+Check out the [vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/refine/examples/vault-cluster-private) and 
+[vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/refine/examples/vault-cluster-public) examples for working sample code. For more info on Vault 
+installation and configuration, check out the [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/refine/modules/install-vault) documentation.
 
 
 
@@ -32,15 +32,15 @@ To build the Vault and Consul AMI:
    SDK](http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html). Usually, the easiest option is to
    set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
 
-1. Use the [private-tls-cert module](/modules/private-tls-cert) to generate a CA cert and public and private keys for a 
+1. Use the [private-tls-cert module](https://github.com/hashicorp/terraform-aws-vault/tree/refine/modules/private-tls-cert) to generate a CA cert and public and private keys for a 
    TLS cert: 
    
     1. Set the `dns_names` parameter to `vault.service.consul`. If you're using the [vault-cluster-public
-       example](/examples/vault-cluster-public) and want a public domain name (e.g. `vault.example.com`), add that 
+       example](https://github.com/hashicorp/terraform-aws-vault/tree/refine/examples/vault-cluster-public) and want a public domain name (e.g. `vault.example.com`), add that 
        domain name here too.
     1. Set the `ip_addresses` to `127.0.0.1`. 
     1. For production usage, you should take care to protect the private key by encrypting it (see [Using TLS 
-       certs](/modules/private-tls-cert#using-tls-certs) for more info). 
+       certs](https://github.com/hashicorp/terraform-aws-vault/tree/refine/modules/private-tls-cert#using-tls-certs) for more info). 
 
 1. Update the `variables` section of the `vault-consul.json` Packer template to specify the AWS region, Vault 
    version, Consul version, and the paths to the TLS cert files you just generated. 
@@ -48,7 +48,7 @@ To build the Vault and Consul AMI:
 1. Run `packer build vault-consul.json`.
 
 When the build finishes, it will output the IDs of the new AMIs. To see how to deploy one of these AMIs, check out the 
-[vault-cluster-private](/examples/vault-cluster-private) and [vault-cluster-public](/examples/vault-cluster-public) 
+[vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/refine/examples/vault-cluster-private) and [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/refine/examples/vault-cluster-public) 
 examples.
 
 

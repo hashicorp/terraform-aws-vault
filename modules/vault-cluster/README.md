@@ -171,7 +171,7 @@ entries](https://www.consul.io/docs/guides/forwarding.html), you can access Vaul
 using a nice domain name instead, such as `vault.service.consul`.
 
 To set this up, use the [install-dnsmasq 
-module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/install-dnsmasq) on each server that 
+module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq) on each server that 
 needs to access Vault. This allows you to access Vault from your EC2 Instances as follows:
 
 ```
@@ -393,7 +393,7 @@ encrypts it, and sends it off to its storage backends, so no matter how the back
 encrypted. By default, this Blueprint uses Consul as a storage backend, so if you want an additional layer of 
 protection, you can check out the [official Consul encryption docs](https://www.consul.io/docs/agent/encryption.html) 
 and the Consul AWS Blueprint [How do you handle encryption 
-docs](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/run-consul#how-do-you-handle-encryption)
+docs](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/run-consul#how-do-you-handle-encryption)
 for more info.
 
 Note that if you want to enable encryption for the root EBS Volume for your Vault Instances (despite the fact that 
@@ -454,7 +454,7 @@ same cluster because:
    set in memory. That means for every 1 byte of data in Vault, you'd also have 1 byte of data in Consul, doubling 
    your memory consumption on each server.
 
-Check out the [Consul AWS Blueprint](https://github.com/gruntwork-io/consul-aws-blueprint) for how to deploy a Consul 
+Check out the [Consul AWS Blueprint](https://github.com/hashicorp/terraform-aws-consul) for how to deploy a Consul 
 server cluster in AWS. See the [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/refine/examples/vault-cluster-public) and 
 [vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/refine/examples/vault-cluster-private) examples for sample code that shows how to run both a
 Vault server cluster and Consul server cluster.

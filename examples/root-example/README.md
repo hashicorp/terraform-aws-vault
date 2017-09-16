@@ -4,7 +4,7 @@ This folder shows an example of Terraform code to deploy a [Vault](https://www.v
 [AWS](https://aws.amazon.com/) using the [vault-cluster](https://github.com/hashicorp/terraform-aws-vault/tree/refine/modules/vault-cluster) and [vault-elb](https://github.com/hashicorp/terraform-aws-vault/tree/refine/modules/vault-elb) 
 modules. The Vault cluster uses [Consul](https://www.consul.io/) as a storage backend, so this example also deploys a 
 separate Consul server cluster using the [consul-cluster 
-module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/consul-cluster) from the Consul AWS 
+module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/consul-cluster) from the Consul AWS 
 Blueprint.
 
 This example creates a public Vault cluster that is accessible from the public Internet via an [Elastic Load Balancer 

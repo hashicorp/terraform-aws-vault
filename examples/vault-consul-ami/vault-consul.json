@@ -96,7 +96,7 @@
   },{
     "type": "shell",
     "inline": [
-      "git clone --branch {{user `consul_blueprint_version`}} https://{{user `github_oauth_token`}}@github.com/gruntwork-io/consul-aws-blueprint.git /tmp/consul-aws-blueprint",
+      "git clone --branch {{user `consul_blueprint_version`}} https://{{user `github_oauth_token`}}@github.com/hashicorp/terraform-aws-consul.git /tmp/consul-aws-blueprint",
       "/tmp/consul-aws-blueprint/modules/install-consul/install-consul --version {{user `consul_version`}}",
       "/tmp/consul-aws-blueprint/modules/install-dnsmasq/install-dnsmasq"
     ]

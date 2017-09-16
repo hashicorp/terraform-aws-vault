@@ -6,12 +6,12 @@ This folder contains a [Terraform](https://www.terraform.io/) module that define
 Normally, you'd get these rules by default if you're using the [vault-cluster module](https://github.com/hashicorp/terraform-aws-vault/tree/refine/modules/vault-cluster), but if 
 you're running Vault on top of a different cluster, then you can use this module to add the necessary security group 
 rules to that cluster. For example, imagine you were using the [consul-cluster 
-module](https://github.com/gruntwork-io/consul-aws-blueprint/tree/master/modules/consul-cluster) to run a cluster of 
+module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/consul-cluster) to run a cluster of 
 servers that have both Vault and Consul on each node:
 
 ```hcl
 module "cluster" {
-  source = "git::git@github.com:gruntwork-io/consul-aws-blueprint.git//modules/consul-cluster?ref=v0.0.1"
+  source = "git::git@github.com:hashicorp/terraform-aws-consul.git//modules/consul-cluster?ref=v0.0.1"
   
   # This AMI has both Vault and Consul installed
   ami_id = "ami-1234abcd"

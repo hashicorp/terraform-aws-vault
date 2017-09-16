@@ -1,7 +1,7 @@
 # Vault Examples Helper
 
 This folder contains a helper script called `vault-examples-helper.sh` for working with the 
-[vault-cluster-private](/examples/vault-cluster-private) and [vault-clsuter-public](/examples/vault-cluster-public) 
+[vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) and [vault-clsuter-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) 
 examples. After running `terraform apply` on one of the examples, if you run  `vault-examples-helper.sh`, it will 
 automatically:
 

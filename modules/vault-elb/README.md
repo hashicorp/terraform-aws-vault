@@ -2,7 +2,7 @@
 
 This folder contains a [Terraform](https://www.terraform.io/) module that can be used to deploy an [Elastic Load 
 Balancer (ELB)](https://aws.amazon.com/elasticloadbalancing/classicloadbalancer/) in front of the Vault cluster
-from the [vault-cluster module](/modules/vault-cluster). This is useful if you need to access Vault from the public
+from the [vault-cluster module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster). This is useful if you need to access Vault from the public
 Internet. Note that for most users, we recommend NOT making Vault accessible from the public Internet and using
 DNS to access your Vault cluster instead (see the [install-dnsmasq 
 module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq) for details).
@@ -44,12 +44,12 @@ Note the following parameters:
   this repo. That way, instead of using the latest version of this module from the `master` branch, which 
   will change every time you run Terraform, you're using a fixed version of the repo.
 
-* `load_balancers`: Setting this parameter in the [vault-cluster module](/modules/vault-cluster) tells it to register
+* `load_balancers`: Setting this parameter in the [vault-cluster module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster) tells it to register
   each server with the ELB when it is booting.
 
 You can find the other parameters in [vars.tf](vars.tf).
 
-Check out the [vault-cluster-public example](/examples/vault-cluster-public) for working sample code.
+Check out the [vault-cluster-public example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) for working sample code.
 
 
 

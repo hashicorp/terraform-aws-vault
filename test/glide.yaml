@@ -1,4 +1,4 @@
-package: github.com/gruntwork-io/vault-aws-blueprint/test
+package: github.com/hashicorp/terraform-aws-vault/test
 owners:
 - name: Gruntwork
   homepage: http://www.gruntwork.io

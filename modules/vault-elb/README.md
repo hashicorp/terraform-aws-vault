@@ -19,7 +19,7 @@ code by adding a `module` configuration and setting its `source` parameter to UR
 module "vault_elb" {
   # TODO: update this to the final URL
   # Use version v0.0.1 of the vault-elb module
-  source = "github.com/gruntwork-io/vault-aws-blueprint//modules/vault-elb?ref=v0.0.1"
+  source = "github.com/hashicorp/terraform-aws-vault//modules/vault-elb?ref=v0.0.1"
   
   # ... See vars.tf for the other parameters you must define for the vault-cluster module
 }
@@ -28,7 +28,7 @@ module "vault_elb" {
 module "vault_cluster" {
   # TODO: update this to the final URL
   # Use version v0.0.1 of the vault-elb module
-  source = "github.com/gruntwork-io/vault-aws-blueprint//modules/vault-cluster?ref=v0.0.1"
+  source = "github.com/hashicorp/terraform-aws-vault//modules/vault-cluster?ref=v0.0.1"
 
   load_balancers = ["${module.vault_elb.load_balancer_name}"]
 

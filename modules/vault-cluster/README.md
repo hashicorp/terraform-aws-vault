@@ -17,7 +17,7 @@ code by adding a `module` configuration and setting its `source` parameter to UR
 module "vault_cluster" {
   # TODO: update this to the final URL
   # Use version v0.0.1 of the vault-cluster module
-  source = "github.com/gruntwork-io/vault-aws-blueprint//modules/vault-cluster?ref=v0.0.1"
+  source = "github.com/hashicorp/terraform-aws-vault//modules/vault-cluster?ref=v0.0.1"
 
   # Specify the ID of the Vault AMI. You should build this using the scripts in the install-vault module.
   ami_id = "ami-abcd1234"

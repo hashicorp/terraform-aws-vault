@@ -1,14 +1,14 @@
-# Vault AWS Blueprint
+# Vault AWS Module
 
-This repo contains a Blueprint for how to deploy a [Vault](https://www.vaultproject.io/) cluster on 
+This repo contains a Module for how to deploy a [Vault](https://www.vaultproject.io/) cluster on 
 [AWS](https://aws.amazon.com/) using [Terraform](https://www.terraform.io/). Vault is an open source tool for managing
-secrets. This Blueprint uses [S3](https://aws.amazon.com/s3/) as a [storage 
+secrets. This Module uses [S3](https://aws.amazon.com/s3/) as a [storage 
 backend](https://www.vaultproject.io/docs/configuration/storage/index.html) and a [Consul](https://www.consul.io) 
 server cluster as a [high availability backend](https://www.vaultproject.io/docs/concepts/ha.html):
 
 ![Vault architecture](https://github.com/hashicorp/terraform-aws-vault/blob/master/_docs/architecture.png?raw=true)
 
-This Blueprint includes:
+This Module includes:
 
 * [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-valut): This module can be used to install Vault. It can be used in a 
   [Packer](https://www.packer.io/) template to create a Vault 
@@ -35,48 +35,48 @@ This Blueprint includes:
 
 
 
-## What's a Blueprint?
+## What's a Module?
 
-A Blueprint is a canonical, reusable, best-practices definition for how to run a single piece of infrastructure, such 
-as a database or server cluster. Each Blueprint is created primarily using [Terraform](https://www.terraform.io/), 
+A Module is a canonical, reusable, best-practices definition for how to run a single piece of infrastructure, such 
+as a database or server cluster. Each Module is created primarily using [Terraform](https://www.terraform.io/), 
 includes automated tests, examples, and documentation, and is maintained both by the open source community and 
 companies that provide commercial support. 
 
 Instead of having to figure out the details of how to run a piece of infrastructure from scratch, you can reuse 
 existing code that has been proven in production. And instead of maintaining all that infrastructure code yourself, 
-you can leverage the work of the Blueprint community and maintainers, and pick up infrastructure improvements through
+you can leverage the work of the Module community and maintainers, and pick up infrastructure improvements through
 a version number bump.
  
  
  
-## Who maintains this Blueprint?
+## Who maintains this Module?
 
-This Blueprint is maintained by [Gruntwork](http://www.gruntwork.io/). If you're looking for help or commercial 
-support, send an email to [blueprints@gruntwork.io](mailto:blueprints@gruntwork.io?Subject=Vault%20Blueprint). 
+This Module is maintained by [Gruntwork](http://www.gruntwork.io/). If you're looking for help or commercial 
+support, send an email to [modules@gruntwork.io](mailto:modules@gruntwork.io?Subject=Vault%20Module). 
 Gruntwork can help with:
 
-* Setup, customization, and support for this Blueprint.
-* Blueprints for other types of infrastructure, such as VPCs, Docker clusters, databases, and continuous integration.
-* Blueprints that meet compliance requirements, such as HIPAA.
+* Setup, customization, and support for this Module.
+* Modules for other types of infrastructure, such as VPCs, Docker clusters, databases, and continuous integration.
+* Modules that meet compliance requirements, such as HIPAA.
 * Consulting & Training on AWS, Terraform, and DevOps.
 
 
 
-## How do you use this Blueprint?
+## How do you use this Module?
 
-Each Blueprint has the following folder structure:
+Each Module has the following folder structure:
 
-* [modules](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules): This folder contains the reusable code for this Blueprint, broken down into one or more modules.
+* [modules](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules): This folder contains the reusable code for this Module, broken down into one or more modules.
 * [examples](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples): This folder contains examples of how to use the modules.
 * [test](https://github.com/hashicorp/terraform-aws-vault/tree/master/test): Automated tests for the modules and examples.
 
 Click on each of the modules above for more details.
 
-To deploy Vault with this Blueprint, you will need to deploy two separate clusters: one to run 
+To deploy Vault with this Module, you will need to deploy two separate clusters: one to run 
 [Consul](https://www.consul.io/) servers (which Vault uses as a [high availability 
 backend](https://www.vaultproject.io/docs/concepts/ha.html)) and one to run Vault servers. 
 
-To deploy the Consul server cluster, use the [Consul AWS Blueprint](https://github.com/hashicorp/terraform-aws-consul). 
+To deploy the Consul server cluster, use the [Consul AWS Module](https://github.com/hashicorp/terraform-aws-consul). 
 
 To deploy the Vault cluster:
 
@@ -85,7 +85,7 @@ To deploy the Vault cluster:
    module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-consul)). Here is an 
    [example Packer template](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-consul-ami). 
    
-   If you are just experimenting with this Blueprint, you may find it more convenient to use one of our official public AMIs:
+   If you are just experimenting with this Module, you may find it more convenient to use one of our official public AMIs:
    - [Latest Ubuntu 16 AMIs](https://github.com/hashicorp/terraform-aws-vault/tree/master/_docs/ubuntu16-ami-list.md).
    - [Latest Amazon Linux AMIs](https://github.com/hashicorp/terraform-aws-vault/tree/master/_docs/amazon-linux-ami-list.md).
    
@@ -118,15 +118,15 @@ To deploy the Vault cluster:
 
 
 
-## How do I contribute to this Blueprint?
+## How do I contribute to this Module?
 
 Contributions are very welcome! Check out the [Contribution Guidelines](https://github.com/hashicorp/terraform-aws-vault/tree/master/CONTRIBUTING.md) for instructions.
 
 
 
-## How is this Blueprint versioned?
+## How is this Module versioned?
 
-This Blueprint follows the principles of [Semantic Versioning](http://semver.org/). You can find each new release, 
+This Module follows the principles of [Semantic Versioning](http://semver.org/). You can find each new release, 
 along with the changelog, in the [Releases Page](../../releases). 
 
 During initial development, the major version will be 0 (e.g., `0.x.y`), which indicates the code does not yet have a 

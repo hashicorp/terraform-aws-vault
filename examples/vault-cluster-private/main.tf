@@ -47,7 +47,7 @@ module "vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 # ATTACH IAM POLICIES FOR CONSUL
 # To allow our Vault servers to automatically discover the Consul servers, we need to give them the IAM permissions from
-# the Consul AWS Blueprint's consul-iam-policies module.
+# the Consul AWS Module's consul-iam-policies module.
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_iam_policies_servers" {

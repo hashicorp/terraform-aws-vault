@@ -4,7 +4,7 @@ This folder shows an example of Terraform code to deploy a [Vault](https://www.v
 [AWS](https://aws.amazon.com/) using the [vault-cluster module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster). The Vault cluster uses 
 [Consul](https://www.consul.io/) as a storage backend, so this example also deploys a separate Consul server cluster 
 using the [consul-cluster module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/consul-cluster) 
-from the Consul AWS Blueprint.
+from the Consul AWS Module.
 
 This example creates a private Vault cluster that is only accessible from servers within the AWS account. Each of the
 servers in this example has [Dnsmasq](http://www.thekelleys.org.uk/dnsmasq/doc.html) installed (via the 

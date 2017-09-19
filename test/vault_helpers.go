@@ -270,7 +270,7 @@ func parseUnsealKeysFromVaultInitResponse(t *testing.T, vaultInitResponse string
 // Generate a unique name for an S3 bucket. Note that S3 bucket names must be globally unique and that only lowercase
 // alphanumeric characters and hyphens are allowed.
 func s3BucketName(resourceCollection *terratest.RandomResourceCollection) string {
-	return strings.ToLower(fmt.Sprintf("vault-blueprint-test-%s", resourceCollection.UniqueId))
+	return strings.ToLower(fmt.Sprintf("vault-module-test-%s", resourceCollection.UniqueId))
 }
 
 // SSH to a Vault node and make sure that is properly configured to use Consul for DNS so that the vault.service.consul

@@ -1,9 +1,9 @@
 # Vault and Consul AMI
 
-This folder shows an example of how to use the [install-vault module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault) from this Blueprint and 
+This folder shows an example of how to use the [install-vault module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault) from this Module and 
 the [install-consul](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-consul)
 and [install-dnsmasq](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq) modules
-from the Consul AWS Blueprint with [Packer](https://www.packer.io/) to create [Amazon Machine Images 
+from the Consul AWS Module with [Packer](https://www.packer.io/) to create [Amazon Machine Images 
 (AMIs)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) that have Vault and Consul installed on top of:
  
 1. Ubuntu 16.04
@@ -83,7 +83,7 @@ Your code should look more like this:
   "provisioners": [{
     "type": "shell",
     "inline": [
-      "git clone --branch <BLUEPRINT_VERSION> https://github.com/hashicorp/terraform-aws-vault.git /tmp/terraform-aws-vault",
+      "git clone --branch <MODULE_VERSION> https://github.com/hashicorp/terraform-aws-vault.git /tmp/terraform-aws-vault",
       "/tmp/terraform-aws-vault/modules/install-vault/install-vault --version {{user `vault_version`}}"
     ],
     "pause_before": "30s"
@@ -91,8 +91,8 @@ Your code should look more like this:
 }
 ```
 
-You should replace `<BLUEPRINT_VERSION>` in the code above with the version of this blueprint that you want to use (see
+You should replace `<MODULE_VERSION>` in the code above with the version of this module that you want to use (see
 the [Releases Page](../../releases) for all available versions). That's because for production usage, you should always
-use a fixed, known version of this Blueprint, downloaded from the official Git repo. On the other hand, when you're 
-just experimenting with the Blueprint, it's OK to use a local checkout of the Blueprint, uploaded from your own 
+use a fixed, known version of this Module, downloaded from the official Git repo. On the other hand, when you're 
+just experimenting with the Module, it's OK to use a local checkout of the Module, uploaded from your own 
 computer.

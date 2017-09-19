@@ -1,6 +1,6 @@
 # Contribution Guidelines
 
-Contributions to this Blueprint are very welcome! We follow a fairly standard [pull request 
+Contributions to this Module are very welcome! We follow a fairly standard [pull request 
 process](https://help.github.com/articles/about-pull-requests/) for contributions, subject to the following guidelines:
  
 1. [File a GitHub issue](#file-a-github-issue)
@@ -28,7 +28,7 @@ coding.
 We also recommend updating the automated tests *before* updating any code (see [Test Driven 
 Development](https://en.wikipedia.org/wiki/Test-driven_development)). That means you add or update a test case, 
 verify that it's failing with a clear error message, and *then* make the code changes to get that test to pass. This 
-ensures the tests stay up to date and verify all the functionality in this Blueprint, including whatever new 
+ensures the tests stay up to date and verify all the functionality in this Module, including whatever new 
 functionality you're adding in your contribution. Check out the [tests](https://github.com/hashicorp/terraform-aws-vault/tree/master/tests) folder for instructions on running the 
 automated tests. 
 
@@ -54,7 +54,7 @@ explaining why the change is absolutely necessary.
 
 ### Downtime
 
-Bear in mind that the Terraform code in this Blueprint is used by real companies to run real infrastructure in 
+Bear in mind that the Terraform code in this Module is used by real companies to run real infrastructure in 
 production, and certain types of changes could cause downtime. For example, consider the following:
 
 1. If you rename a resource (e.g. `aws_instance "foo"` -> `aws_instance "bar"`), Terraform will see that as deleting

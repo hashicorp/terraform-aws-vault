@@ -3,7 +3,7 @@
 This folder contains a [Terraform](https://www.terraform.io/) module that can be used to deploy a 
 [Vault](https://www.vaultproject.io/) cluster in [AWS](https://aws.amazon.com/) on top of an Auto Scaling Group. This 
 module is designed to deploy an [Amazon Machine Image (AMI)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) 
-that had Vault installed via the [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault) module in this Blueprint.
+that had Vault installed via the [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault) module in this Module.
 
 
 
@@ -15,7 +15,6 @@ code by adding a `module` configuration and setting its `source` parameter to UR
 
 ```hcl
 module "vault_cluster" {
-  # TODO: update this to the final URL
   # Use version v0.0.1 of the vault-cluster module
   source = "github.com/hashicorp/terraform-aws-vault//modules/vault-cluster?ref=v0.0.1"
 
@@ -390,9 +389,9 @@ Vault uses TLS to encrypt its network traffic. For instructions on configuring T
 
 Vault servers keep everything in memory and does not write any data to the local hard disk. To persist data, Vault
 encrypts it, and sends it off to its storage backends, so no matter how the backend stores that data, it is already
-encrypted. By default, this Blueprint uses Consul as a storage backend, so if you want an additional layer of 
+encrypted. By default, this Module uses Consul as a storage backend, so if you want an additional layer of 
 protection, you can check out the [official Consul encryption docs](https://www.consul.io/docs/agent/encryption.html) 
-and the Consul AWS Blueprint [How do you handle encryption 
+and the Consul AWS Module [How do you handle encryption 
 docs](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/run-consul#how-do-you-handle-encryption)
 for more info.
 
@@ -444,17 +443,17 @@ This module does NOT handle the following items, which you may want to provide o
 
 ### Consul
 
-This blueprint configures Vault to use Consul as a high availability storage backend. This module assumes you already 
+This module configures Vault to use Consul as a high availability storage backend. This module assumes you already 
 have Consul servers deployed in a separate cluster. We do not recommend co-locating Vault and Consul servers in the 
 same cluster because:
 
 1. Vault is a tool built specifically for security, and running any other software on the same server increases its
    surface area to attackers.
-1. This Vault Blueprint uses Consul as a high availability storage backend and both Vault and Consul keep their working 
+1. This Vault Module uses Consul as a high availability storage backend and both Vault and Consul keep their working 
    set in memory. That means for every 1 byte of data in Vault, you'd also have 1 byte of data in Consul, doubling 
    your memory consumption on each server.
 
-Check out the [Consul AWS Blueprint](https://github.com/hashicorp/terraform-aws-consul) for how to deploy a Consul 
+Check out the [Consul AWS Module](https://github.com/hashicorp/terraform-aws-consul) for how to deploy a Consul 
 server cluster in AWS. See the [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) and 
 [vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) examples for sample code that shows how to run both a
 Vault server cluster and Consul server cluster.

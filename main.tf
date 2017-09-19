@@ -23,7 +23,7 @@ terraform {
 # fill in the right value.
 #
 # !! WARNING !! These example AMIs are meant only convenience when initially testing this repo. Do NOT use these example
-# AMIs in a production setting as those TLS certificate files are publicly available from the Blueprint repo containing
+# AMIs in a production setting as those TLS certificate files are publicly available from the Module repo containing
 # this code.
 #
 # NOTE: This Terraform data source must return at least one AMI result or the entire template will fail. See
@@ -93,7 +93,7 @@ module "vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 # ATTACH IAM POLICIES FOR CONSUL
 # To allow our Vault servers to automatically discover the Consul servers, we need to give them the IAM permissions from
-# the Consul AWS Blueprint's consul-iam-policies module.
+# the Consul AWS Module's consul-iam-policies module.
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_iam_policies_servers" {

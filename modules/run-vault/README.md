@@ -171,13 +171,13 @@ See the [private-tls-cert module](https://github.com/hashicorp/terraform-aws-vau
 
 ### Consul encryption
 
-Since this Vault Blueprint uses Consul as a high availability storage backend, you may want to enable encryption for 
+Since this Vault Module uses Consul as a high availability storage backend, you may want to enable encryption for 
 Consul too. Note that Vault encrypts any data *before* sending it to a storage backend, so this isn't strictly 
 necessary, but may be a good extra layer of security.
 
 By default, the Vault server nodes communicate with a local Consul agent running on the same server over (unencrypted) 
 HTTP. However, you can configure those agents to talk to the Consul servers using TLS. Check out the [official Consul 
-encryption docs](https://www.consul.io/docs/agent/encryption.html) and the Consul AWS Blueprint [How do you handle 
+encryption docs](https://www.consul.io/docs/agent/encryption.html) and the Consul AWS Module [How do you handle 
 encryption docs](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/run-consul#how-do-you-handle-encryption)
 for more info.
 

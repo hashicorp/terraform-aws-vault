@@ -1,6 +1,6 @@
 # Tests
 
-This folder contains automated tests for this Blueprint. All of the tests are written in [Go](https://golang.org/). 
+This folder contains automated tests for this Module. All of the tests are written in [Go](https://golang.org/). 
 Most of these are "integration tests" that deploy real infrastructure using Terraform and verify that infrastructure 
 works as expected using a helper library called [Terratest](https://github.com/gruntwork-io/terratest).  
 

@@ -17,7 +17,6 @@ code by adding a `module` configuration and setting its `source` parameter to UR
 
 ```hcl
 module "vault_elb" {
-  # TODO: update this to the final URL
   # Use version v0.0.1 of the vault-elb module
   source = "github.com/hashicorp/terraform-aws-vault//modules/vault-elb?ref=v0.0.1"
   
@@ -26,7 +25,6 @@ module "vault_elb" {
 
 # Configure the Vault cluster to use the ELB
 module "vault_cluster" {
-  # TODO: update this to the final URL
   # Use version v0.0.1 of the vault-elb module
   source = "github.com/hashicorp/terraform-aws-vault//modules/vault-cluster?ref=v0.0.1"
 

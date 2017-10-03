@@ -104,7 +104,7 @@ func runVaultPrivateClusterTest(t *testing.T, testName string, packerBuildName s
 	testVaultUsesConsulForDns(t, cluster, logger)
 }
 
-// Test the Valut public cluster example by:
+// Test the Vault public cluster example by:
 //
 // 1. Copy the code in this repo to a temp folder so tests on the Terraform code can run in parallel without the
 //    state files overwriting each other.

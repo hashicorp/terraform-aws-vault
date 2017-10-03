@@ -10,7 +10,7 @@ server cluster as a [high availability backend](https://www.vaultproject.io/docs
 
 This Module includes:
 
-* [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-valut): This module can be used to install Vault. It can be used in a 
+* [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault): This module can be used to install Vault. It can be used in a 
   [Packer](https://www.packer.io/) template to create a Vault 
   [Amazon Machine Image (AMI)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html).
 

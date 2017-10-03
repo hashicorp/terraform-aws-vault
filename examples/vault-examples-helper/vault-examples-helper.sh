@@ -1,5 +1,5 @@
 #!/bin/bash
-# A script that is meant to be used with the private Valut cluster examples to:
+# A script that is meant to be used with the private Vault cluster examples to:
 #
 # 1. Wait for the Vault server cluster to come up.
 # 2. Print out the IP addresses of the Vault servers.

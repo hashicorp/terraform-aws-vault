@@ -30,7 +30,7 @@ variable "allowed_inbound_security_group_ids" {
 }
 
 variable "user_data" {
-  description = "A User Data script to execute while the server is booting. We remmend passing in a bash script that executes the run-vault script, which should have been installed in the AMI by the install-vault module."
+  description = "A User Data script to execute while the server is booting. We recommend passing in a bash script that executes the run-vault script, which should have been installed in the AMI by the install-vault module."
 }
 
 variable "cluster_size" {

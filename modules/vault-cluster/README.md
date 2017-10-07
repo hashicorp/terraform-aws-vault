@@ -29,6 +29,23 @@ module "vault_cluster" {
               #!/bin/bash
               /opt/vault/bin/run-vault --s3-bucket ${var.vault_s3_bucket} --s3-bucket-region ${var.aws_region} --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
               EOF
+
+  # Add tag to each node in the cluster with value set to var.cluster_name
+  cluster_tag_key   = "Name"
+
+  # Optionally add extra tags to each node in the cluster
+  cluster_extra_tags = [
+    {
+      key = "Environment"
+      value = "Dev"
+      propagate_at_launch = true
+    },
+    {
+      key = "Department"
+      value = "Ops"
+      propagate_at_launch = true
+    }
+  ]
   
   # ... See vars.tf for the other parameters you must define for the vault-cluster module
 }

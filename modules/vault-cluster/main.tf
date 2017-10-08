@@ -100,12 +100,12 @@ resource "aws_security_group_rule" "allow_ssh_inbound_from_cidr_blocks" {
 }
 
 resource "aws_security_group_rule" "allow_ssh_inbound_from_security_group_ids" {
-  count                    = "${length(var.allowed_inbound_security_group_ids)}"
+  count                    = "${length(var.allowed_ssh_security_group_ids)}"
   type                     = "ingress"
   from_port                = "${var.ssh_port}"
   to_port                  = "${var.ssh_port}"
   protocol                 = "tcp"
-  source_security_group_id = "${element(var.allowed_inbound_security_group_ids, count.index)}"
+  source_security_group_id = "${element(var.allowed_ssh_security_group_ids, count.index)}"
 
   security_group_id = "${aws_security_group.lc_security_group.id}"
 }

@@ -28,11 +28,12 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   health_check_grace_period = "${var.health_check_grace_period}"
   wait_for_capacity_timeout = "${var.wait_for_capacity_timeout}"
 
-  tag {
-    key                 = "${var.cluster_tag_key}"
-    value               = "${var.cluster_name}"
-    propagate_at_launch = true
-  }
+  tags = ["${concat(
+    list(
+      map("key", var.cluster_tag_key, "value", var.cluster_name, "propagate_at_launch", true)
+    ),
+    var.cluster_extra_tags)
+  }"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

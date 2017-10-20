@@ -7,6 +7,17 @@ terraform {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# EXTRACT SUBNET INFORMATION IF availability_zones parameter not specified
+# ---------------------------------------------------------------------------------------------------------------------
+
+data "aws_subnet" "subnet" {
+  id = "${var.subnet_ids[count.index]}"
+
+  # Don't try to extract information about AZs in case they are explicitly specified (for backward compatibility).
+  count = "${length(var.availability_zones) == 0 ? length(var.subnet_ids) : 0}"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # CREATE THE ELB
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -20,7 +31,8 @@ resource "aws_elb" "vault" {
   connection_draining_timeout = "${var.connection_draining_timeout}"
 
   security_groups    = ["${aws_security_group.vault.id}"]
-  availability_zones = ["${var.availability_zones}"]
+  # This split-join hack is a workaround for 'conditional operator cannot be used with list values' typecheck error.
+  availability_zones = ["${split(",", length(var.availability_zones) == 0 ? join(",", data.aws_subnet.subnet.*.availability_zone) : join(",", var.availability_zones))}"]
   subnets            = ["${var.subnet_ids}"]
 
   # Run the ELB in TCP passthrough mode

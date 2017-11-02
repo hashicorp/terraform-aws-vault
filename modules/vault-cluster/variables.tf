@@ -157,7 +157,7 @@ variable "health_check_grace_period" {
 }
 
 variable "iam_role_name" {
-  description = "The name to use for the Vault instances' IAM role. Use this setting to ensure a determensitc IAM role ARN, otherwise the default will see terraform create a unique IAM role name (prefixed by the vault_cluster_name variable)."
+  description = "The name to use for the Vault instances' IAM role. Use this setting to ensure a deterministic IAM role ARN, otherwise the default will see terraform create a unique IAM role name (prefixed by the vault_cluster_name variable)."
   default     = ""
 }
 

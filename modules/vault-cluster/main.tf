@@ -145,7 +145,7 @@ module "security_group_rules" {
 resource "aws_iam_instance_profile" "instance_profile" {
   name_prefix = "${var.cluster_name}"
   path        = "${var.instance_profile_path}"
-  role        = "${aws_iam_role.instance_role.name}"
+  role        = "${data.aws_iam_role.instance_role.name}"
 
   # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
   # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
@@ -155,9 +155,12 @@ resource "aws_iam_instance_profile" "instance_profile" {
   }
 }
 
-resource "aws_iam_role" "instance_role" {
-  name_prefix        = "${var.cluster_name}"
-  assume_role_policy = "${data.aws_iam_policy_document.instance_role.json}"
+resource "aws_iam_role" "prefixed_instance_role" {
+  # If the iam_role_name variable contains an empty string, use the cluster_name variable for this resource's
+  # name_prefix argument.
+  count               = "${var.iam_role_name == "" ? 1 : 0}"
+  name_prefix         = "${var.cluster_name}"
+  assume_role_policy  = "${data.aws_iam_policy_document.instance_role.json}"
 
   # aws_iam_instance_profile.instance_profile in this module sets create_before_destroy to true, which means
   # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
@@ -165,6 +168,26 @@ resource "aws_iam_role" "instance_role" {
   lifecycle {
     create_before_destroy = true
   }
+}
+
+resource "aws_iam_role" "named_instance_role" {
+  # If the iam_role_name variable is set, use its value for this resource's name argument.
+  count               = "${var.iam_role_name != "" ? 1 : 0}"
+  name                = "${var.iam_role_name}"
+  assume_role_policy  = "${data.aws_iam_policy_document.instance_role.json}"
+
+  # aws_iam_instance_profile.instance_profile in this module sets create_before_destroy to true, which means
+  # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
+  # when you try to do a terraform destroy.
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+data "aws_iam_role" "instance_role" {
+  # The join() hack is required because currently the ternary operator evaluates the expressions on both branches of the
+  # condition before returning a value. This is tracked upstream: https://github.com/hashicorp/hil/issues/50
+  name = "${var.iam_role_name == "" ? join(" ", aws_iam_role.prefixed_instance_role.*.name) : var.iam_role_name }"
 }
 
 data "aws_iam_policy_document" "instance_role" {
@@ -195,7 +218,7 @@ resource "aws_s3_bucket" "vault_storage" {
 
 resource "aws_iam_role_policy" "vault_s3" {
   name   = "vault_s3"
-  role   = "${aws_iam_role.instance_role.id}"
+  role   = "${data.aws_iam_role.instance_role.id}"
   policy = "${data.aws_iam_policy_document.vault_s3.json}"
 }
 

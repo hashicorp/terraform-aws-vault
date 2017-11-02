@@ -19,11 +19,11 @@ output "launch_config_name" {
 }
 
 output "iam_role_arn" {
-  value = "${aws_iam_role.instance_role.arn}"
+  value = "${data.aws_iam_role.instance_role.arn}"
 }
 
 output "iam_role_id" {
-  value = "${aws_iam_role.instance_role.id}"
+  value = "${data.aws_iam_role.instance_role.id}"
 }
 
 output "security_group_id" {

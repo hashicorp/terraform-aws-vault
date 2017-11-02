@@ -65,6 +65,8 @@ module "vault_cluster" {
   cluster_size  = "${var.vault_cluster_size}"
   instance_type = "${var.vault_instance_type}"
 
+  iam_role_name = "${var.vault_iam_role_name}"
+
   ami_id    = "${var.ami_id == "" ? data.aws_ami.vault_consul.image_id : var.ami_id}"
   user_data = "${data.template_file.user_data_vault_cluster.rendered}"
 

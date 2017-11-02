@@ -66,6 +66,11 @@ variable "consul_cluster_size" {
   default     = 3
 }
 
+variable "vault_iam_role_name" {
+  description = "The name to use for the Vault cluster instance(s) IAM role. Use this setting to ensure a determensitc IAM role ARN, otherwise the default will see terraform create a unique IAM role name (prefixed by the vault_cluster_name variable)."
+  default     = ""
+}
+
 variable "vault_instance_type" {
   description = "The type of EC2 Instance to run in the Vault ASG"
   default     = "t2.micro"

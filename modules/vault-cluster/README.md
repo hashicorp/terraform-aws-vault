@@ -317,7 +317,7 @@ Check out the [Security section](#security) for more details.
 
 Each EC2 Instance in the ASG has an [IAM Role](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html) attached
 with permissions to access its S3 bucket. The IAM Role ARN is exported as an output variable so you can add custom
-permissions. If you require a deterministic IAM role ARN, the `vault_iam_role_name` variable can be set to your desired
+permissions. If you require a deterministic IAM role ARN, the `iam_role_name` variable can be set to your desired
 role name. 
 
 

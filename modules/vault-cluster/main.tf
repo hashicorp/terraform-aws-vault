@@ -145,7 +145,7 @@ module "security_group_rules" {
 resource "aws_iam_instance_profile" "instance_profile" {
   name_prefix = "${var.cluster_name}"
   path        = "${var.instance_profile_path}"
-  role        = "${data.aws_iam_role.instance_role.name}"
+  role        = "${data.template_file.instance_role_name.rendered}"
 
   # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
   # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
@@ -153,6 +153,10 @@ resource "aws_iam_instance_profile" "instance_profile" {
   lifecycle {
     create_before_destroy = true
   }
+
+  # We must explictly inform terraform of the following dependencies as terraform is unable to resolve them automatically
+  # with a simple string being passed to this resource's role argument (as opposed to an actaul aws_iam_role resource)
+  depends_on = ["aws_iam_role.prefixed_instance_role", "aws_iam_role.named_instance_role"]
 }
 
 resource "aws_iam_role" "prefixed_instance_role" {
@@ -184,10 +188,18 @@ resource "aws_iam_role" "named_instance_role" {
   }
 }
 
-data "aws_iam_role" "instance_role" {
-  # The join() hack is required because currently the ternary operator evaluates the expressions on both branches of the
-  # condition before returning a value. This is tracked upstream: https://github.com/hashicorp/hil/issues/50
-  name = "${var.iam_role_name == "" ? join(" ", aws_iam_role.prefixed_instance_role.*.name) : var.iam_role_name }"
+# The following template_file data sources allow acessing the role actually created out of the two possible aws_iam_role
+# resources defined above.
+data "template_file" "instance_role_arn" {
+  template = "${element(concat(aws_iam_role.prefixed_instance_role.*.arn, aws_iam_role.named_instance_role.*.arn), 0)}"
+}
+
+data "template_file" "instance_role_name" {
+  template = "${element(concat(aws_iam_role.prefixed_instance_role.*.name, aws_iam_role.named_instance_role.*.name), 0)}"
+}
+
+data "template_file" "instance_role_id" {
+  template = "${element(concat(aws_iam_role.prefixed_instance_role.*.id, aws_iam_role.named_instance_role.*.id), 0)}"
 }
 
 data "aws_iam_policy_document" "instance_role" {
@@ -218,8 +230,12 @@ resource "aws_s3_bucket" "vault_storage" {
 
 resource "aws_iam_role_policy" "vault_s3" {
   name   = "vault_s3"
-  role   = "${data.aws_iam_role.instance_role.id}"
+  role   = "${data.template_file.instance_role_name.rendered}"
   policy = "${data.aws_iam_policy_document.vault_s3.json}"
+
+  # We must explictly inform terraform of the following dependencies as terraform is unable to resolve them automatically
+  # with a simple string being passed to this resource's role argument (as opposed to an actaul aws_iam_role resource)
+  depends_on = ["aws_iam_role.prefixed_instance_role", "aws_iam_role.named_instance_role"]
 }
 
 data "aws_iam_policy_document" "vault_s3" {

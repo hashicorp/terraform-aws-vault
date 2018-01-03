@@ -15,5 +15,5 @@ output "load_balancer_security_group_id" {
 }
 
 output "fully_qualified_domain_name" {
-  value = "${aws_route53_record.vault_elb.fqdn}"
+  value = "${aws_route53_record.vault_elb.*.fqdn}"
 }

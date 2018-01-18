@@ -6,6 +6,11 @@ terraform {
   required_version = ">= 0.9.3"
 }
 
+# Discover SSL Cert
+data "aws_acm_certificate" "cert" {
+  domain = "${var.domain_name}"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # CREATE THE ELB
 # ---------------------------------------------------------------------------------------------------------------------
@@ -25,14 +30,15 @@ resource "aws_elb" "vault" {
 
   # Run the ELB in TCP passthrough mode
   listener {
-    lb_port           = "${var.lb_port}"
-    lb_protocol       = "TCP"
+    lb_port           = "443"
+    lb_protocol       = "HTTPS"
     instance_port     = "${var.vault_api_port}"
-    instance_protocol = "TCP"
+    instance_protocol = "HTTP"
+    ssl_certificate_id = "${data.aws_acm_certificate.cert.arn}"
   }
 
   health_check {
-    target              = "${var.health_check_protocol}:${var.vault_api_port}${var.health_check_path}"
+    target              = "HTTP:${var.vault_api_port}${var.health_check_path}"
     interval            = "${var.health_check_interval}"
     healthy_threshold   = "${var.health_check_healthy_threshold}"
     unhealthy_threshold = "${var.health_check_unhealthy_threshold}"

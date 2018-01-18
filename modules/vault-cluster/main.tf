@@ -11,6 +11,8 @@ terraform {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_autoscaling_group" "autoscaling_group" {
+  name = "${var.cluster_name}-asg-vault"
+
   launch_configuration = "${aws_launch_configuration.launch_configuration.name}"
 
   availability_zones  = ["${var.availability_zones}"]
@@ -169,12 +171,16 @@ resource "aws_iam_role" "instance_role" {
 
 data "aws_iam_policy_document" "instance_role" {
   statement {
+    sid = "1"
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
 
     principals {
       type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
+      identifiers = [
+        "ec2.amazonaws.com", 
+        "ssm.amazonaws.com"
+      ]
     }
   }
 }
@@ -209,4 +215,39 @@ data "aws_iam_policy_document" "vault_s3" {
       "${aws_s3_bucket.vault_storage.arn}/*",
     ]
   }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ssm:*",
+      "ec2messages:*"
+    ]
+
+    resources = [
+       "*"
+    ]
+  }
+  
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "kms:CreateAlias",
+      "kms:CreateKey",
+      "kms:DeleteAlias",
+      "kms:Describe*",
+      "kms:GenerateRandom",
+      "kms:Get*",
+      "kms:TagResource",
+      "kms:UntagResource",
+      "kms:List*",
+      "kms:Decrypt",
+      "kms:Encrypt"
+    ]
+  
+    resources = [
+      "${aws_kms_key.vault.arn}"
+      ]
+  }
+
 }

@@ -1,3 +1,3 @@
 data "aws_kms_alias" "vault" {
-    name = "${var.kms_key_alias}"
+    name = "alias/${var.kms_key_alias}"
 }

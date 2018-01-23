@@ -246,7 +246,7 @@ data "aws_iam_policy_document" "vault_s3" {
     ]
   
     resources = [
-      "${aws_kms_key.vault.arn}"
+      "${data.aws_kms_alias.vault.arn}"
       ]
   }
 

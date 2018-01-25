@@ -30,7 +30,6 @@ const VAR_SSH_KEY_NAME = "ssh_key_name"
 const OUTPUT_VAULT_CLUSTER_ASG_NAME = "asg_name_vault_cluster"
 
 const VAULT_CLUSTER_PRIVATE_PATH = "examples/vault-cluster-private"
-const VAULT_CLUSTER_PUBLIC_PATH = REPO_ROOT
 
 const VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY = "create_dns_entry"
 const VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME = "hosted_zone_domain_name"
@@ -115,7 +114,7 @@ func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName st
 
 	logger := terralog.NewLogger(testName)
 	resourceCollection := createBaseRandomResourceCollection(t)
-	terratestOptions := createBaseTerratestOptions(t, testName, filepath.Join(rootTempPath, VAULT_CLUSTER_PUBLIC_PATH), resourceCollection)
+	terratestOptions := createBaseTerratestOptions(t, testName, rootTempPath, resourceCollection)
 	defer terratest.Destroy(terratestOptions, resourceCollection)
 
 	tlsCert := generateSelfSignedTlsCert(t, testName)

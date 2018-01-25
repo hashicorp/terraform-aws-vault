@@ -23,12 +23,10 @@ const REPO_ROOT = "../"
 
 const VAR_AWS_REGION = "aws_region"
 const VAR_AMI_ID = "ami_id"
-const VAR_S3_BUCKET_NAME = "s3_bucket_name"
 const VAR_VAULT_CLUSTER_NAME = "vault_cluster_name"
 const VAR_CONSUL_CLUSTER_NAME = "consul_cluster_name"
 const VAR_CONSUL_CLUSTER_TAG_KEY = "consul_cluster_tag_key"
 const VAR_SSH_KEY_NAME = "ssh_key_name"
-const VAR_FORCE_DESTROY_S3_BUCKET = "force_destroy_s3_bucket"
 const OUTPUT_VAULT_CLUSTER_ASG_NAME = "asg_name_vault_cluster"
 
 const VAULT_CLUSTER_PRIVATE_PATH = "examples/vault-cluster-private"
@@ -91,12 +89,10 @@ func runVaultPrivateClusterTest(t *testing.T, testName string, packerBuildName s
 	terratestOptions.Vars = map[string]interface{} {
 		VAR_AMI_ID: amiId,
 		VAR_AWS_REGION: resourceCollection.AwsRegion,
-		VAR_S3_BUCKET_NAME: s3BucketName(resourceCollection),
 		VAR_VAULT_CLUSTER_NAME: fmt.Sprintf("vault-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_NAME: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_SSH_KEY_NAME: resourceCollection.KeyPair.Name,
-		VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
 	}
 
 	deploy(t, terratestOptions)
@@ -130,12 +126,10 @@ func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName st
 	terratestOptions.Vars = map[string]interface{} {
 		VAR_AMI_ID: amiId,
 		VAR_AWS_REGION: resourceCollection.AwsRegion,
-		VAR_S3_BUCKET_NAME: s3BucketName(resourceCollection),
 		VAR_VAULT_CLUSTER_NAME: fmt.Sprintf("vault-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_NAME: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_SSH_KEY_NAME: resourceCollection.KeyPair.Name,
-		VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
 		VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY: boolToTerraformVar(false),
 		VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME: "",
 		VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME: "",
@@ -265,12 +259,6 @@ func parseUnsealKeysFromVaultInitResponse(t *testing.T, vaultInitResponse string
 	unsealKey3 := parseUnsealKey(t, lines[2])
 
 	return []string{unsealKey1, unsealKey2, unsealKey3}
-}
-
-// Generate a unique name for an S3 bucket. Note that S3 bucket names must be globally unique and that only lowercase
-// alphanumeric characters and hyphens are allowed.
-func s3BucketName(resourceCollection *terratest.RandomResourceCollection) string {
-	return strings.ToLower(fmt.Sprintf("vault-module-test-%s", resourceCollection.UniqueId))
 }
 
 // SSH to a Vault node and make sure that is properly configured to use Consul for DNS so that the vault.service.consul

@@ -68,9 +68,6 @@ module "vault_cluster" {
   ami_id    = "${var.ami_id == "" ? data.aws_ami.vault_consul.image_id : var.ami_id}"
   user_data = "${data.template_file.user_data_vault_cluster.rendered}"
 
-  s3_bucket_name          = "${var.s3_bucket_name}"
-  force_destroy_s3_bucket = "${var.force_destroy_s3_bucket}"
-
   vpc_id     = "${data.aws_vpc.default.id}"
   subnet_ids = "${data.aws_subnet_ids.default.ids}"
 
@@ -112,7 +109,6 @@ data "template_file" "user_data_vault_cluster" {
 
   vars {
     aws_region               = "${var.aws_region}"
-    s3_bucket_name           = "${var.s3_bucket_name}"
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
   }

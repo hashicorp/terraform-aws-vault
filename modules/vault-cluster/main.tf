@@ -178,35 +178,3 @@ data "aws_iam_policy_document" "instance_role" {
     }
   }
 }
-
-# ---------------------------------------------------------------------------------------------------------------------
-# CREATE AN S3 BUCKET TO USE AS A STORAGE BACKEND
-# Also, add an IAM role policy that gives the Vault servers access to this S3 bucket
-# ---------------------------------------------------------------------------------------------------------------------
-
-resource "aws_s3_bucket" "vault_storage" {
-  bucket        = "${var.s3_bucket_name}"
-  force_destroy = "${var.force_destroy_s3_bucket}"
-
-  tags {
-    Description = "Used for secret storage with Vault. DO NOT DELETE this Bucket unless you know what you are doing."
-  }
-}
-
-resource "aws_iam_role_policy" "vault_s3" {
-  name   = "vault_s3"
-  role   = "${aws_iam_role.instance_role.id}"
-  policy = "${data.aws_iam_policy_document.vault_s3.json}"
-}
-
-data "aws_iam_policy_document" "vault_s3" {
-  statement {
-    effect  = "Allow"
-    actions = ["s3:*"]
-
-    resources = [
-      "${aws_s3_bucket.vault_storage.arn}",
-      "${aws_s3_bucket.vault_storage.arn}/*",
-    ]
-  }
-}

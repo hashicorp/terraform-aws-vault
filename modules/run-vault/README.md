@@ -153,7 +153,7 @@ When you execute the `run-vault` script, you need to provide the paths to the pu
 certificate:
 
 ```
-/opt/vault/bin/run-vault us-east-1 --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
+/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
 ```
 
 See the [private-tls-cert module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/private-tls-cert) for information on how to generate a TLS certificate.

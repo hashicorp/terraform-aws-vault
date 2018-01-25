@@ -35,7 +35,7 @@ function print_usage {
   echo
   echo "Example:"
   echo
-  echo "  run-vault us-east-1 --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem"
+  echo "  run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem"
 }
 
 function log {

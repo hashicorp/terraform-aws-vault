@@ -102,3 +102,54 @@ resource "aws_route53_record" "vault_elb" {
     evaluate_target_health = false
   }
 }
+
+resource "aws_lb_ssl_negotiation_policy" "vault_elb" {
+  name = "${replace("wazuh-${var.name}-ssl-policy", "_", "-")}"
+  load_balancer = "${aws_elb.vault.id}"
+  lb_port = 443
+
+  attribute {
+    name = "Protocol-TLSv1.2"
+    value = "true"
+  }
+
+  attribute {
+    name = "Server-Defined-Cipher-Order"
+    value = "true"
+  }
+
+  attribute {
+    name = "ECDHE-ECDSA-AES256-GCM-SHA384"
+    value = "true"
+  }
+
+  attribute {
+    name = "ECDHE-RSA-AES256-GCM-SHA384"
+    value = "true"
+  }
+
+  attribute {
+    name = "ECDHE-ECDSA-AES128-GCM-SHA256"
+    value = "true"
+  }
+
+  attribute {
+    name = "ECDHE-ECDSA-AES256-SHA384"
+    value = "true"
+  }
+
+  attribute {
+    name = "ECDHE-RSA-AES256-SHA384"
+    value = "true"
+  }
+
+  attribute {
+    name = "ECDHE-ECDSA-AES128-SHA256"
+    value = "true"
+  }
+
+  attribute {
+    name = "ECDHE-RSA-AES128-SHA256"
+    value = "true"
+  }
+}

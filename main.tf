@@ -58,7 +58,7 @@ data "aws_ami" "vault_consul" {
 module "vault_cluster" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
-  # source = "git::git@github.com:hashicorp/terraform-aws-vault.git//modules/vault-cluster?ref=v0.0.1"
+  # source = "github.com/hashicorp/terraform-aws-vault//modules/vault-cluster?ref=v0.0.1"
   source = "modules/vault-cluster"
 
   cluster_name  = "${var.vault_cluster_name}"
@@ -67,9 +67,6 @@ module "vault_cluster" {
 
   ami_id    = "${var.ami_id == "" ? data.aws_ami.vault_consul.image_id : var.ami_id}"
   user_data = "${data.template_file.user_data_vault_cluster.rendered}"
-
-  s3_bucket_name          = "${var.s3_bucket_name}"
-  force_destroy_s3_bucket = "${var.force_destroy_s3_bucket}"
 
   vpc_id     = "${data.aws_vpc.default.id}"
   subnet_ids = "${data.aws_subnet_ids.default.ids}"
@@ -97,7 +94,7 @@ module "vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_iam_policies_servers" {
-  source = "git::git@github.com:hashicorp/terraform-aws-consul.git//modules/consul-iam-policies?ref=v0.0.2"
+  source = "github.com/hashicorp/terraform-aws-consul//modules/consul-iam-policies?ref=v0.0.2"
 
   iam_role_id = "${module.vault_cluster.iam_role_id}"
 }
@@ -112,7 +109,6 @@ data "template_file" "user_data_vault_cluster" {
 
   vars {
     aws_region               = "${var.aws_region}"
-    s3_bucket_name           = "${var.s3_bucket_name}"
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
   }
@@ -125,7 +121,7 @@ data "template_file" "user_data_vault_cluster" {
 module "vault_elb" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
-  # source = "git::git@github.com:hashicorp/terraform-aws-vault.git//modules/vault-elb?ref=v0.0.1"
+  # source = "github.com/hashicorp/terraform-aws-vault//modules/vault-elb?ref=v0.0.1"
   source = "modules/vault-elb"
 
   name = "${var.vault_cluster_name}"
@@ -156,7 +152,7 @@ data "aws_route53_zone" "selected" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_cluster" {
-  source = "git::git@github.com:hashicorp/terraform-aws-consul.git//modules/consul-cluster?ref=v0.0.2"
+  source = "github.com/hashicorp/terraform-aws-consul//modules/consul-cluster?ref=v0.0.2"
 
   cluster_name  = "${var.consul_cluster_name}"
   cluster_size  = "${var.consul_cluster_size}"

@@ -22,8 +22,6 @@ function print_usage {
   echo
   echo "Options:"
   echo
-  echo -e "  --s3-bucket\tSpecifies the S3 bucket where Vault data should be stored. Required."
-  echo -e "  --s3-bucket-region\tSpecifies the AWS region where --s3-bucket lives. Required."
   echo -e "  --port\t\tThe port for Vault to listen on. Optional. Default is $DEFAULT_PORT."
   echo -e "  --cluster-port\tThe port for Vault to listen on for server-to-server requests. Optional. Default is --port + 1."
   echo -e "  --config-dir\t\tThe path to the Vault config folder. Optional. Default is the absolute path of '../config', relative to this script."
@@ -101,8 +99,6 @@ function generate_vault_config {
   local readonly cluster_port="$2"
   local readonly config_dir="$3"
   local readonly user="$4"
-  local readonly s3_bucket="$5"
-  local readonly s3_bucket_region="$6"
   local readonly config_path="$config_dir/$VAULT_CONFIG_FILE"
 
   local instance_ip_address
@@ -110,12 +106,7 @@ function generate_vault_config {
 
   log_info "Creating default Vault config file in $config_path"
   cat > "$config_path" <<EOF
-storage "s3" {
-  bucket = "$s3_bucket"
-  region = "$s3_bucket_region"
-}
-
-ha_storage "consul" {
+storage "consul" {
   address = "127.0.0.1:8500"
   path    = "vault/"
   scheme  = "http"
@@ -174,8 +165,6 @@ function run {
   local tls_key_file=""
   local port="$DEFAULT_PORT"
   local cluster_port=""
-  local s3_bucket=""
-  local s3_bucket_region=""
   local config_dir=""
   local bin_dir=""
   local log_dir=""
@@ -194,14 +183,6 @@ function run {
         ;;
       --tls-key-file)
         tls_key_file="$2"
-        shift
-        ;;
-      --s3-bucket)
-        s3_bucket="$2"
-        shift
-        ;;
-      --s3-bucket-region)
-        s3_bucket_region="$2"
         shift
         ;;
       --port)
@@ -256,9 +237,6 @@ function run {
     shift
   done
 
-  assert_not_empty "--s3-bucket" "$s3_bucket"
-  assert_not_empty "--s3-bucket-region" "$s3_bucket_region"
-
   assert_is_installed "supervisorctl"
   assert_is_installed "aws"
   assert_is_installed "curl"
@@ -287,7 +265,7 @@ function run {
   if [[ "$skip_vault_config" == "true" ]]; then
     log_info "The --skip-vault-config flag is set, so will not generate a default Vault config file."
   else
-    generate_vault_config "$port" "$cluster_port" "$config_dir" "$user" "$s3_bucket" "$s3_bucket_region"
+    generate_vault_config "$port" "$cluster_port" "$config_dir" "$user"
   fi
 
   generate_supervisor_config "$SUPERVISOR_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_dir" "$log_level" "$user"

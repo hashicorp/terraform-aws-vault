@@ -1,21 +1,21 @@
 machine:
   environment:
-    PATH: $PATH:$HOME/terraform:$HOME/packer:$HOME/glide/linux-amd64
+    PATH: $PATH:$HOME/terraform:$HOME/packer
     VAULT_HOSTED_ZONE_DOMAIN_NAME: gruntwork.in # Domain name of Route 53 hosted zone to use at test time
 
 dependencies:
   override:
     # Install the gruntwork-module-circleci-helpers and use it to configure the build environment and run tests.
-    - curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version v0.0.16
-    - gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.3.17"
-    - gruntwork-install --module-name "build-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.3.17"
-    - gruntwork-install --module-name "aws-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.3.17"
-    - configure-environment-for-gruntwork-module --go-src-path test
+    - curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version v0.0.20
+    - gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.6.0"
+    - gruntwork-install --module-name "build-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.6.0"
+    - gruntwork-install --module-name "aws-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.6.0"
+    - configure-environment-for-gruntwork-module --go-src-path test --use-go-dep
 
   cache_directories:
     - ~/terraform
     - ~/packer
-    - ~/glide
+    - ~/dep
 
 test:
   override:

@@ -77,17 +77,35 @@ function install_supervisord_debian {
   sudo systemctl enable supervisor
 }
 
+
+function two_way_symlink() {
+  local src="$1"
+  local dest="$2"
+
+  if [[ ! -f "$dest" ]] && [[ ! -f "$src" ]]; then
+    echo "Missing source '$src' AND destination '$dest' exiting..."
+    exit -5
+  fi
+
+  if [[ ! -f "$dest" ]]; then
+    ## Destination isn't there point it to source
+    sudo ln -s $src  $dest
+  elif [[ ! -f "$src" ]]; then
+    ## Source file was missing, point to destination.  Should ONLY do so if it doesn't already exist (e.g. hadn't already been dual linked)
+    sudo ln -s $dest $src
+  fi
+
+
+}
+
+
 # Install steps are based on: http://stackoverflow.com/a/31576473/483528
 function install_supervisord_amazon_linux {
   sudo pip install supervisor
 
   # On Amazon Linux, /usr/local/bin is not in PATH for the root user, so we add symlinks to /usr/bin, which is in PATH
-  if [[ ! -f "/usr/bin/supervisorctl" ]]; then
-    sudo ln -s /usr/local/bin/supervisorctl /usr/bin/supervisorctl
-  fi
-  if [[ ! -f "/usr/bin/supervisord" ]]; then
-    sudo ln -s /usr/local/bin/supervisord /usr/bin/supervisord
-  fi
+  two_way_symlink "/usr/bin/supervisorctl" "/usr/local/bin/supervisorctl"
+  two_way_symlink "/usr/bin/supervisord" "/usr/local/bin/supervisord"
 
   sudo cp "$SCRIPT_DIR/supervisor-initd-script.sh" "/etc/init.d/supervisor"
   sudo chmod a+x /etc/init.d/supervisor

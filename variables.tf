@@ -13,7 +13,7 @@
 
 variable "ami_id" {
   description = "The ID of the AMI to run in the cluster. This should be an AMI built from the Packer template under examples/vault-consul-ami/vault-consul.json. If no AMI is specified, the template will 'just work' by using the example public AMIs. WARNING! Do not use the example AMIs in a production setting!"
-  default = ""
+  default     = ""
 }
 
 variable "create_dns_entry" {
@@ -36,6 +36,21 @@ variable "ssh_key_name" {
 # OPTIONAL PARAMETERS
 # These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------
+
+variable "subnet_tags" {
+  description = "Tags used to find subnets for vault and consul servers"
+  default     = {}
+}
+
+variable "vpc_tags" {
+  description = "Tags used to find a vpc for building resources in"
+  default     = {}
+}
+
+variable "use_default_vpc" {
+  description = "Whether to use the default VPC - NOT recommended for production! - should more likely change this to false and use the vpc_tags to find your vpc"
+  default     = true
+}
 
 variable "aws_region" {
   description = "The AWS region to deploy into (e.g. us-east-1)."

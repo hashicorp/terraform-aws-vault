@@ -13,7 +13,7 @@ which allows it to use the Consul server cluster for service discovery and there
 domain name `vault.service.consul`. For an example of a Vault cluster
 that is publicly accessible, see [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public).
 
-![Vault architecture](https://github.com/hashicorp/terraform-aws-vault/blob/master/_docs/architecture.png?raw=true)
+![Vault architecture](https://github.com/hashicorp/terraform-aws-vault/blob/master/_docs/architecture-with-s3.png?raw=true)
 
 You will need to create an [Amazon Machine Image (AMI)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) 
 that has Vault and Consul installed, which you can do using the [vault-consul-ami example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-consul-ami)).  

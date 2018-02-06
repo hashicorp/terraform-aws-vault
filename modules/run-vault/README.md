@@ -62,8 +62,7 @@ The `run-vault` script accepts the following arguments:
 * `user` (optional): The user to run Vault as. Default is to use the owner of `config-dir`.
 * `skip-vault-config` (optional): If this flag is set, don't generate a Vault configuration file. This is useful if you 
   have a custom configuration file and don't want to use any of of the default settings from `run-vault`.
-* `--enable-s3-backend` (optional): If this flag is set, then Vault will generate the `default.hcl` configuration file
-  with an S3 backend in addition to the HA Consul backend.
+* `--enable-s3-backend` (optional): If this flag is set, an S3 backend will be enabled in addition to the HA Consul backend.
 * `--s3-bucket` (optional): Specifies the S3 bucket to use to store Vault data. Only used if `--s3-backend-enabled` is set.
 * `--s3-bucket-region` (optional): Specifies the AWS region where `--s3-bucket` lives. Only used if `--s3-backend-enabled` is set.
 

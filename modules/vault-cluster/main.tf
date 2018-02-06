@@ -193,7 +193,7 @@ resource "aws_iam_role_policy" "vault_s3" {
   count  = "${var.enable_s3_backend ? 1 : 0}"
   name   = "vault_s3"
   role   = "${aws_iam_role.instance_role.id}"
-  policy = "${data.aws_iam_policy_document.vault_s3.json}"
+  policy = "${element(concat(data.aws_iam_policy_document.vault_s3.*.json, list("")), 0)}"
 }
 
 data "aws_iam_policy_document" "vault_s3" {

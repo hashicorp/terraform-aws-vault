@@ -119,7 +119,7 @@ function generate_vault_config {
   instance_ip_address=$(get_instance_ip_address)
 
   log_info "Creating default Vault config file in $config_path"
-  listener_config=$(cat <<EOF
+  local readonly listener_config=$(cat <<EOF
 listener "tcp" {
   address         = "0.0.0.0:$port"
   cluster_address = "0.0.0.0:$cluster_port"
@@ -129,7 +129,8 @@ listener "tcp" {
 EOF
 )
 
-  consul_storage_type="storage"
+  local consul_storage_type="storage"
+  local s3_config=""
   if [[ "$enable_s3_backend" == "true" ]]; then
     s3_config=$(cat <<EOF
 storage "s3" {
@@ -141,7 +142,7 @@ EOF
     consul_storage_type="ha_storage"
   fi
 
-    consul_storage=$(cat <<EOF
+  local readonly consul_storage=$(cat <<EOF
 $consul_storage_type "consul" {
   address = "127.0.0.1:8500"
   path    = "vault/"

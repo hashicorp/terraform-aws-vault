@@ -175,7 +175,7 @@ func runVaultWithS3BackendClusterTest(t *testing.T, testName string, packerBuild
 		VAR_CONSUL_CLUSTER_NAME: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_SSH_KEY_NAME: resourceCollection.KeyPair.Name,
-		VAULT_CLUSTER_ENABLE_S3_BACKEND: boolToTerraformVar(true),
+		VAR_ENABLE_S3_BACKEND: boolToTerraformVar(true),
 		VAR_S3_BUCKET_NAME: s3BucketName(resourceCollection),
 		VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
 	}

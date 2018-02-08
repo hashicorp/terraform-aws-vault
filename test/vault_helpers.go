@@ -120,7 +120,7 @@ func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName st
 
 	logger := terralog.NewLogger(testName)
 	resourceCollection := createBaseRandomResourceCollection(t)
-	terratestOptions := createBaseTerratestOptions(t, testName, filepath.Join(rootTempPath, VAULT_CLUSTER_PUBLIC_PATH), resourceCollection)
+	terratestOptions := createBaseTerratestOptions(t, testName, rootTempPath, resourceCollection)
 	defer terratest.Destroy(terratestOptions, resourceCollection)
 
 	tlsCert := generateSelfSignedTlsCert(t, testName)

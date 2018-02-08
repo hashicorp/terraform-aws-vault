@@ -61,7 +61,10 @@ The `run-vault` script accepts the following arguments:
   relative to the `run-vault` script itself.
 * `user` (optional): The user to run Vault as. Default is to use the owner of `config-dir`.
 * `skip-vault-config` (optional): If this flag is set, don't generate a Vault configuration file. This is useful if you 
-  have a custom configuration file and don't want to use any of of the default settings from `run-vault`. 
+  have a custom configuration file and don't want to use any of of the default settings from `run-vault`.
+* `--enable-s3-backend` (optional): If this flag is set, an S3 backend will be enabled in addition to the HA Consul backend.
+* `--s3-bucket` (optional): Specifies the S3 bucket to use to store Vault data. Only used if `--s3-backend-enabled` is set.
+* `--s3-bucket-region` (optional): Specifies the AWS region where `--s3-bucket` lives. Only used if `--s3-backend-enabled` is set.
 
 Example:
 
@@ -69,6 +72,11 @@ Example:
 /opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
 ```
 
+Or if you want to enable an S3 backend:
+
+```
+/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --s3-backend-enabled --s3-bucket my-vault-bucket --s3-bucket-region us-east-1
+```
 
 
 
@@ -114,6 +122,15 @@ available.
     * [tls_key_file](https://www.vaultproject.io/docs/configuration/listener/tcp.html#tls_key_file): Set to the 
       `--tls-key-file` parameter.
 
+`run-vault` can optionally set the following configuration values:
+
+* [storage](https://www.vaultproject.io/docs/configuration/index.html#storage): Set the `--s3-backend-enabled` flag to
+  configure S3 as an additional (non-HA) storage backend with the following settings:
+
+    * [bucket](https://www.vaultproject.io/docs/configuration/storage/s3.html#bucket): Set to the `--s3-bucket`
+      parameter.
+    * [region](https://www.vaultproject.io/docs/configuration/storage/s3.html#region): Set to the `--s3-bucket-region`
+      parameter.
 
 ### Overriding the configuration
 
@@ -161,8 +178,8 @@ See the [private-tls-cert module](https://github.com/hashicorp/terraform-aws-vau
 
 ### Consul encryption
 
-Since this Vault Module uses Consul as a storage backend, you may want to enable encryption for Consul too. Note that 
-Vault encrypts any data *before* sending it to a storage backend, so this isn't strictly necessary, but may be a good 
+Since this Vault Module uses Consul as a storage backend (and optionally S3), you may want to enable encryption for your storage too.
+Note that Vault encrypts any data *before* sending it to a storage backend, so this isn't strictly necessary, but may be a good
 extra layer of security.
 
 By default, the Vault server nodes communicate with a local Consul agent running on the same server over (unencrypted) 
@@ -170,7 +187,5 @@ HTTP. However, you can configure those agents to talk to the Consul servers usin
 encryption docs](https://www.consul.io/docs/agent/encryption.html) and the Consul AWS Module [How do you handle 
 encryption docs](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/run-consul#how-do-you-handle-encryption)
 for more info.
-
-
  
 

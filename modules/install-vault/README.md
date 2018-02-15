@@ -44,6 +44,7 @@ The `install-vault` script accepts the following arguments:
 * `version VERSION`: Install Vault version VERSION. Required. 
 * `path DIR`: Install Vault into folder DIR. Optional.
 * `user USER`: The install dirs will be owned by user USER. Optional.
+* `url URL`: Alternative url URL to download Vault from. Optional.
 
 Example:
 

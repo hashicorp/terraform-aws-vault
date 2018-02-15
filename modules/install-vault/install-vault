@@ -29,6 +29,7 @@ function print_usage {
   echo -e "  --version\t\tThe version of Vault to install. Required."
   echo -e "  --path\t\tThe path where Vault should be installed. Optional. Default: $DEFAULT_INSTALL_PATH."
   echo -e "  --user\t\tThe user who will own the Vault install directories. Optional. Default: $DEFAULT_VAULT_USER."
+  echo -e "  --url\t\t\tAlternative URL to download Vault from. Optional."
   echo
   echo "Example:"
   echo
@@ -184,8 +185,10 @@ function install_binaries {
   local readonly version="$1"
   local readonly path="$2"
   local readonly username="$3"
+  local readonly custom_url="$4"
 
-  local readonly url="https://releases.hashicorp.com/vault/${version}/vault_${version}_linux_amd64.zip"
+  local readonly default_url="https://releases.hashicorp.com/vault/${version}/vault_${version}_linux_amd64.zip"
+  local readonly url=${custom_url:=$default_url}
   local readonly download_path="/tmp/vault_${version}_linux_amd64.zip"
   local readonly bin_dir="$path/bin"
   local readonly vault_dest_path="$bin_dir/vault"
@@ -224,6 +227,7 @@ function install {
   local version=""
   local path="$DEFAULT_INSTALL_PATH"
   local user="$DEFAULT_VAULT_USER"
+  local url=""
 
   while [[ $# > 0 ]]; do
     local key="$1"
@@ -239,6 +243,10 @@ function install {
         ;;
       --user)
         user="$2"
+        shift
+        ;;
+      --url)
+        url="$2"
         shift
         ;;
       --help)
@@ -264,7 +272,7 @@ function install {
   install_dependencies
   create_vault_user "$user"
   create_vault_install_paths "$path" "$user"
-  install_binaries "$version" "$path" "$user"
+  install_binaries "$version" "$path" "$user" "$url"
   configure_mlock
 
   log_info "Vault install complete!"

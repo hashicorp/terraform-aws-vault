@@ -42,6 +42,9 @@ resource "aws_elb" "vault" {
   tags {
     Name = "${var.name}"
   }
+  lifecycle {
+    ignore_changes = ["availability_zones"]
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

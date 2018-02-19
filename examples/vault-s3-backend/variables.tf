@@ -31,12 +31,12 @@ variable "aws_region" {
 
 variable "vault_cluster_name" {
   description = "What to name the Vault server cluster and all of its associated resources"
-  default     = "vault-example"
+  default     = "vault-s3-example"
 }
 
 variable "consul_cluster_name" {
   description = "What to name the Consul server cluster and all of its associated resources"
-  default     = "consul-example"
+  default     = "consul-s3-example"
 }
 
 variable "vault_cluster_size" {
@@ -61,10 +61,20 @@ variable "consul_instance_type" {
 
 variable "consul_cluster_tag_key" {
   description = "The tag the Consul EC2 Instances will look for to automatically discover each other and form a cluster."
-  default     = "consul-servers"
+  default     = "consul-vault-s3-servers"
 }
 
 variable "vpc_id" {
   description = "The ID of the VPC to deploy into. Leave an empty string to use the Default VPC in this region."
   default     = ""
+}
+
+variable "s3_bucket_name" {
+  description = "The name of an S3 bucket to create and use as a storage backend (if configured). Note: S3 bucket names must be *globally* unique."
+  default     = "my-vault-bucket"
+}
+
+variable "force_destroy_s3_bucket" {
+  description = "If you set this to true, when you run terraform destroy, this tells Terraform to delete all the objects in the S3 bucket used for backend storage (if configured). You should NOT set this to true in production or you risk losing all your data! This property is only here so automated tests of this module can clean up after themselves."
+  default     = false
 }

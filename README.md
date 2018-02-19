@@ -3,7 +3,7 @@
 This repo contains a Module for how to deploy a [Vault](https://www.vaultproject.io/) cluster on 
 [AWS](https://aws.amazon.com/) using [Terraform](https://www.terraform.io/). Vault is an open source tool for managing
 secrets. By default, this Module uses [Consul](https://www.consul.io) as a [storage 
-backend](https://www.vaultproject.io/docs/configuration/storage/index.html).
+backend](https://www.vaultproject.io/docs/configuration/storage/index.html). You can optionally add an [S3](https://aws.amazon.com/s3/) backend for durability.
 
 ![Vault architecture](https://github.com/hashicorp/terraform-aws-vault/blob/master/_docs/architecture.png?raw=true)
 

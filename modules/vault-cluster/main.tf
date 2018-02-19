@@ -227,3 +227,32 @@ data "aws_iam_policy_document" "vault_kms" {
   }
 
 }
+resource "aws_s3_bucket" "vault_storage" {
+  count         = "${var.enable_s3_backend ? 1 : 0}"
+  bucket        = "${var.s3_bucket_name}"
+  force_destroy = "${var.force_destroy_s3_bucket}"
+
+  tags {
+    Description = "Used for secret storage with Vault. DO NOT DELETE this Bucket unless you know what you are doing."
+  }
+}
+
+resource "aws_iam_role_policy" "vault_s3" {
+  count  = "${var.enable_s3_backend ? 1 : 0}"
+  name   = "vault_s3"
+  role   = "${aws_iam_role.instance_role.id}"
+  policy = "${element(concat(data.aws_iam_policy_document.vault_s3.*.json, list("")), 0)}"
+}
+
+data "aws_iam_policy_document" "vault_s3" {
+  count  = "${var.enable_s3_backend ? 1 : 0}"
+  statement {
+    effect  = "Allow"
+    actions = ["s3:*"]
+
+    resources = [
+      "${aws_s3_bucket.vault_storage.arn}",
+      "${aws_s3_bucket.vault_storage.arn}/*",
+    ]
+  }
+}

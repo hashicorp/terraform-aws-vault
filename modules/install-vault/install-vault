@@ -29,6 +29,7 @@ function print_usage {
   echo -e "  --version\t\tThe version of Vault to install. Required."
   echo -e "  --path\t\tThe path where Vault should be installed. Optional. Default: $DEFAULT_INSTALL_PATH."
   echo -e "  --user\t\tThe user who will own the Vault install directories. Optional. Default: $DEFAULT_VAULT_USER."
+  echo -e "  --url\t\t\tAlternative URL to download Vault from. Optional."
   echo
   echo "Example:"
   echo
@@ -77,17 +78,35 @@ function install_supervisord_debian {
   sudo systemctl enable supervisor
 }
 
+
+function two_way_symlink() {
+  local src="$1"
+  local dest="$2"
+
+  if [[ ! -f "$dest" ]] && [[ ! -f "$src" ]]; then
+    echo "Missing source '$src' AND destination '$dest' exiting..."
+    exit -5
+  fi
+
+  if [[ ! -f "$dest" ]]; then
+    ## Destination isn't there point it to source
+    sudo ln -s $src  $dest
+  elif [[ ! -f "$src" ]]; then
+    ## Source file was missing, point to destination.  Should ONLY do so if it doesn't already exist (e.g. hadn't already been dual linked)
+    sudo ln -s $dest $src
+  fi
+
+
+}
+
+
 # Install steps are based on: http://stackoverflow.com/a/31576473/483528
 function install_supervisord_amazon_linux {
   sudo pip install supervisor
 
   # On Amazon Linux, /usr/local/bin is not in PATH for the root user, so we add symlinks to /usr/bin, which is in PATH
-  if [[ ! -f "/usr/bin/supervisorctl" ]]; then
-    sudo ln -s /usr/local/bin/supervisorctl /usr/bin/supervisorctl
-  fi
-  if [[ ! -f "/usr/bin/supervisord" ]]; then
-    sudo ln -s /usr/local/bin/supervisord /usr/bin/supervisord
-  fi
+  two_way_symlink "/usr/bin/supervisorctl" "/usr/local/bin/supervisorctl"
+  two_way_symlink "/usr/bin/supervisord" "/usr/local/bin/supervisord"
 
   sudo cp "$SCRIPT_DIR/supervisor-initd-script.sh" "/etc/init.d/supervisor"
   sudo chmod a+x /etc/init.d/supervisor
@@ -155,6 +174,8 @@ function create_vault_install_paths {
   sudo mkdir -p "$path/data"
   sudo mkdir -p "$path/log"
   sudo mkdir -p "$path/tls"
+  sudo chmod 755 "$path"
+  sudo chmod 755 "$path/bin"
 
   log_info "Changing ownership of $path to $username"
   sudo chown -R "$username:$username" "$path"
@@ -164,8 +185,10 @@ function install_binaries {
   local readonly version="$1"
   local readonly path="$2"
   local readonly username="$3"
+  local readonly custom_url="$4"
 
-  local readonly url="https://releases.hashicorp.com/vault/${version}/vault_${version}_linux_amd64.zip"
+  local readonly default_url="https://releases.hashicorp.com/vault/${version}/vault_${version}_linux_amd64.zip"
+  local readonly url=${custom_url:=$default_url}
   local readonly download_path="/tmp/vault_${version}_linux_amd64.zip"
   local readonly bin_dir="$path/bin"
   local readonly vault_dest_path="$bin_dir/vault"
@@ -204,6 +227,7 @@ function install {
   local version=""
   local path="$DEFAULT_INSTALL_PATH"
   local user="$DEFAULT_VAULT_USER"
+  local url=""
 
   while [[ $# > 0 ]]; do
     local key="$1"
@@ -219,6 +243,10 @@ function install {
         ;;
       --user)
         user="$2"
+        shift
+        ;;
+      --url)
+        url="$2"
         shift
         ;;
       --help)
@@ -244,7 +272,7 @@ function install {
   install_dependencies
   create_vault_user "$user"
   create_vault_install_paths "$path" "$user"
-  install_binaries "$version" "$path" "$user"
+  install_binaries "$version" "$path" "$user" "$url"
   configure_mlock
 
   log_info "Vault install complete!"

@@ -27,12 +27,6 @@ variable "subnet_ids" {
   default     = []
 }
 
-variable "availability_zones" {
-  description = "The availability zones into which the ELB should be deployed. At least one of var.subnet_ids or var.availability_zones must be non-empty."
-  type        = "list"
-  default     = []
-}
-
 variable "create_dns_entry" {
   description = "If set to true, this module will create a Route 53 DNS A record for the ELB in the var.hosted_zone_id hosted zone with the domain name in var.domain_name."
   default     = false

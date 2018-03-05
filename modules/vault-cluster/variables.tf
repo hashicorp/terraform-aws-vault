@@ -42,6 +42,11 @@ variable "cluster_size" {
 # These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------
 
+variable "use_asg" {
+  description = "Use an EC2 Auto Scaling Group for the Vault cluster. If set to false, individual instances are created."
+  default = true
+}
+
 variable "subnet_ids" {
   description = "The subnet IDs into which the EC2 Instances should be deployed. You should typically pass in one subnet ID per node in the cluster_size variable. We strongly recommend that you run Vault in private subnets. At least one of var.subnet_ids or var.availability_zones must be non-empty."
   type        = "list"
@@ -72,7 +77,7 @@ variable "allowed_ssh_security_group_ids" {
 }
 
 variable "cluster_tag_key" {
-  description = "Add a tag with this key and the value var.cluster_name to each Instance in the ASG."
+  description = "Add a tag with this key and the value var.cluster_name to each instance."
   default     = "Name"
 }
 
@@ -89,6 +94,12 @@ variable "cluster_extra_tags" {
   #   } 
   # ]
   default = []
+}
+
+variable "instance_extra_tags" {
+  description = "A map of additional tags to add to each instance when creating individual instances rather than an ASG."
+  type = "map"
+  default = {}
 }
 
 variable "termination_policies" {
@@ -133,7 +144,7 @@ variable "target_group_arns" {
 }
 
 variable "load_balancers" {
-  description = "A list of Elastic Load Balancer (ELB) names to associate with this ASG. If you're using an Application Load Balancer (ALB), use the target_group_arns variable instead."
+  description = "A list of Elastic Load Balancer (ELB) names to associate with this ASG or each created instance. If you're using an Application Load Balancer (ALB), use the target_group_arns variable instead."
   type        = "list"
   default     = []
 }

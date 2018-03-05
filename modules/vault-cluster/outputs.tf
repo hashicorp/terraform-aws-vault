@@ -1,5 +1,5 @@
 output "asg_name" {
-  value = "${aws_autoscaling_group.autoscaling_group.name}"
+  value = "${element(concat(aws_autoscaling_group.autoscaling_group.*.name, list("")), 0)}"
 }
 
 output "cluster_tag_key" {
@@ -11,11 +11,11 @@ output "cluster_tag_value" {
 }
 
 output "cluster_size" {
-  value = "${aws_autoscaling_group.autoscaling_group.desired_capacity}"
+  value = "${var.cluster_size}"
 }
 
 output "launch_config_name" {
-  value = "${aws_launch_configuration.launch_configuration.name}"
+  value = "${element(concat(aws_launch_configuration.launch_configuration.*.name, list("")), 0)}"
 }
 
 output "iam_role_arn" {
@@ -32,4 +32,18 @@ output "security_group_id" {
 
 output "s3_bucket_arn" {
   value = "${join(",", aws_s3_bucket.vault_storage.*.arn)}"
+}
+
+# Only available if not using an ASG.
+
+output "instance_ids" {
+  value = "${aws_instance.instance.*.id}"
+}
+
+output "instance_private_ips" {
+  value = "${aws_instance.instance.*.private_ip}"
+}
+
+output "instance_public_ips" {
+  value = "${aws_instance.instance.*.public_ip}"
 }

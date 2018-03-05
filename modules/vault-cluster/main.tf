@@ -6,11 +6,60 @@ terraform {
   required_version = ">= 0.9.3"
 }
 
+# Work around TF issues with indexing empty lists.
+locals {
+  instance_availability_zones = "${slice(
+    concat(var.availability_zones, list("")),
+    0,
+    max(length(var.availability_zones), 1))
+  }"
+  instance_subnet_ids = "${slice(
+    concat(var.subnet_ids, list("")),
+    0,
+    max(length(var.subnet_ids), 1))
+  }"
+}
+
+resource "aws_instance" "instance" {
+  count = "${var.use_asg ? 0 : var.cluster_size}"
+
+  ami = "${var.ami_id}"
+  instance_type = "${var.instance_type}"
+  availability_zone = "${element(local.instance_availability_zones, count.index)}"
+  subnet_id = "${element(local.instance_subnet_ids, count.index)}"
+  user_data = "${var.user_data}"
+
+  iam_instance_profile        = "${aws_iam_instance_profile.instance_profile.name}"
+  key_name                    = "${var.ssh_key_name}"
+  vpc_security_group_ids      = ["${aws_security_group.lc_security_group.id}"]
+  tenancy                     = "${var.tenancy}"
+  associate_public_ip_address = "${var.associate_public_ip_address}"
+
+  ebs_optimized = "${var.root_volume_ebs_optimized}"
+
+  root_block_device {
+    volume_type           = "${var.root_volume_type}"
+    volume_size           = "${var.root_volume_size}"
+    delete_on_termination = "${var.root_volume_delete_on_termination}"
+  }
+
+  tags = "${merge(map(var.cluster_tag_key, var.cluster_name), var.instance_extra_tags)}"
+}
+
+resource "aws_elb_attachment" "elb_attachment" {
+  count = "${var.use_asg ? 0 : var.cluster_size * length(var.load_balancers)}"
+
+  elb      = "${var.load_balancers[count.index / var.cluster_size]}"
+  instance = "${element(aws_instance.instance.*.id, count.index % var.cluster_size)}"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # CREATE AN AUTO SCALING GROUP (ASG) TO RUN VAULT
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_autoscaling_group" "autoscaling_group" {
+  count = "${var.use_asg ? 1 : 0}"
+
   launch_configuration = "${aws_launch_configuration.launch_configuration.name}"
 
   availability_zones  = ["${var.availability_zones}"]
@@ -41,6 +90,8 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_launch_configuration" "launch_configuration" {
+  count = "${var.use_asg ? 1 : 0}"
+
   name_prefix   = "${var.cluster_name}-"
   image_id      = "${var.ami_id}"
   instance_type = "${var.instance_type}"

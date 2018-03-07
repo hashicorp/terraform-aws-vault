@@ -119,8 +119,7 @@ function generate_vault_config {
 listener "tcp" {
   address         = "0.0.0.0:$port"
   cluster_address = "0.0.0.0:$cluster_port"
-  tls_cert_file   = "$tls_cert_file"
-  tls_key_file    = "$tls_key_file"
+  tls_disable     = true
 }\n
 EOF
 )

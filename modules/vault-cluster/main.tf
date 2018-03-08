@@ -186,7 +186,7 @@ data "aws_iam_policy_document" "instance_role" {
 }
 
 resource "aws_iam_role_policy" "vault_kms" {
-  name   = "vault_s3"
+  name   = "kms"
   role   = "${aws_iam_role.instance_role.id}"
   policy = "${data.aws_iam_policy_document.vault_kms.json}"
 }

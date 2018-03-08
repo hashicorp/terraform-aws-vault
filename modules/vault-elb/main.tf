@@ -6,6 +6,16 @@ terraform {
   required_version = ">= 0.9.3"
 }
 
+module "s3_elb_log" {
+  source = "git::https://github.com/Cimpress-MCP/terraform.git//s3_elb_access_logs"
+  
+  bucket_name = "${var.name}-elb-logs"
+
+  project = "${var.name}"
+
+  squad = "Ops"
+}
+
 # Discover SSL Cert
 data "aws_acm_certificate" "cert" {
   domain = "${var.domain_name}"
@@ -27,6 +37,11 @@ resource "aws_elb" "vault" {
   security_groups    = ["${aws_security_group.vault.id}"]
   availability_zones = ["${var.availability_zones}"]
   subnets            = ["${var.subnet_ids}"]
+
+  access_logs {
+    bucket        = "${module.s3_elb_log.bucket_name}"
+    interval      = 60
+  }
 
   # Run the ELB in TCP passthrough mode
   listener {

@@ -12,8 +12,6 @@ module "s3_elb_log" {
   bucket_name = "${var.name}-elb-logs"
 
   project = "${var.name}"
-
-  squad = "Ops"
 }
 
 # Discover SSL Cert

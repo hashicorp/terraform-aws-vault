@@ -16,6 +16,10 @@ variable "allowed_inbound_cidr_blocks" {
   type        = "list"
 }
 
+variable "vault_asg_name" {
+  description = "Name of the Vault Autoscaling Group"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # OPTIONAL PARAMETERS
 # These parameters have reasonable defaults.

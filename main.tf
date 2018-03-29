@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY A VAULT SERVER CLUSTER, AN ELB, AND A CONSUL SERVER CLUSTER IN AWS
-# This is an example of how to use the vault-cluster and vault-elb modules to deploy a Vault cluster in AWS with an 
-# Elastic Load Balancer (ELB) in front of it. This cluster uses Consul, running in a separate cluster, as its storage 
+# This is an example of how to use the vault-cluster and vault-elb modules to deploy a Vault cluster in AWS with an
+# Elastic Load Balancer (ELB) in front of it. This cluster uses Consul, running in a separate cluster, as its storage
 # backend.
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -71,9 +71,6 @@ module "vault_cluster" {
   vpc_id     = "${data.aws_vpc.default.id}"
   subnet_ids = "${data.aws_subnet_ids.default.ids}"
 
-  # Tell each Vault server to register in the ELB.
-  load_balancers = ["${module.vault_elb.load_balancer_name}"]
-
   # Do NOT use the ELB for the ASG health check, or the ASG will assume all sealed instances are unhealthy and
   # repeatedly try to redeploy them.
   health_check_type = "EC2"
@@ -128,6 +125,9 @@ module "vault_elb" {
 
   vpc_id     = "${data.aws_vpc.default.id}"
   subnet_ids = "${data.aws_subnet_ids.default.ids}"
+
+  # Associate the ELB with the instances created by the Vault Autoscaling group
+  vault_asg_name = "${module.vault_cluster.asg_name}"
 
   # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
   # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.

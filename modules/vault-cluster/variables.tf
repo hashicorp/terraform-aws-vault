@@ -80,13 +80,13 @@ variable "cluster_extra_tags" {
   description = "A list of additional tags to add to each Instance in the ASG. Each element in the list must be a map with the keys key, value, and propagate_at_launch"
   type        = "list"
 
-  #example: 
+  #example:
   # default = [
   #   {
   #     key = "Environment"
   #     value = "Dev"
   #     propagate_at_launch = true
-  #   } 
+  #   }
   # ]
   default = []
 }
@@ -124,18 +124,6 @@ variable "root_volume_size" {
 variable "root_volume_delete_on_termination" {
   description = "Whether the volume should be destroyed on instance termination."
   default     = true
-}
-
-variable "target_group_arns" {
-  description = "A list of target group ARNs of Application Load Balanacer (ALB) targets to associate with this ASG. If you're using a Elastic Load Balancer (AKA ELB Classic), use the load_balancers variable instead."
-  type        = "list"
-  default     = []
-}
-
-variable "load_balancers" {
-  description = "A list of Elastic Load Balancer (ELB) names to associate with this ASG. If you're using an Application Load Balancer (ALB), use the target_group_arns variable instead."
-  type        = "list"
-  default     = []
 }
 
 variable "wait_for_capacity_timeout" {

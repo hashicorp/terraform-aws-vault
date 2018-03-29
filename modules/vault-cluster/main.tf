@@ -24,8 +24,6 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   desired_capacity     = "${var.cluster_size}"
   termination_policies = ["${var.termination_policies}"]
 
-  target_group_arns         = ["${var.target_group_arns}"]
-  load_balancers            = ["${var.load_balancers}"]
   health_check_type         = "${var.health_check_type}"
   health_check_grace_period = "${var.health_check_grace_period}"
   wait_for_capacity_timeout = "${var.wait_for_capacity_timeout}"

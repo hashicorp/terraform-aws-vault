@@ -9,7 +9,7 @@ terraform {
 module "s3_elb_log" {
   source = "git::https://github.com/Cimpress-MCP/terraform.git//s3_elb_access_logs"
   
-  bucket_name = "${var.name}-elb-logs"
+  bucket_name = "${var.name}-elogs"
 
   project = "${var.name}"
 }

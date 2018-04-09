@@ -78,7 +78,11 @@ module "security_group_rules" {
   source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-security-group-rules?ref=v0.3.1"
 
   security_group_id           = "${module.vault_cluster.security_group_id}"
-  allowed_inbound_cidr_blocks = "${var.allowed_inbound_cidr_blocks}"
+
+  # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
+  # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
+  
+  allowed_inbound_cidr_blocks = ["0.0.0.0/0"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

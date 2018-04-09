@@ -87,6 +87,10 @@ resource "aws_security_group" "lc_security_group" {
   lifecycle {
     create_before_destroy = true
   }
+
+  tags {
+    Name = "${var.cluster_name}"
+  }
 }
 
 resource "aws_security_group_rule" "allow_ssh_inbound_from_cidr_blocks" {

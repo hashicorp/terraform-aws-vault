@@ -70,12 +70,12 @@ data "template_file" "user_data_vault_cluster" {
 
 # ---------------------------------------------------------------------------------------------------------------------
 # PERMIT CONSUL SPECIFIC TRAFFIC IN VAULT CLUSTER
-# To allow our Vault servers consul agents to communication with consul agents and servers, we open up the consul
-# specific protocols and ports for consul traffic
+# To allow our Vault servers consul agents to communicate with other consul agents and participate in the LAN gossip,
+# we open up the consul specific protocols and ports for consul traffic
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "security_group_rules" {
-  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-security-group-rules?ref=v0.3.1"
+  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-client-security-group-rules?ref=v0.3.1"
 
   security_group_id           = "${module.vault_cluster.security_group_id}"
 

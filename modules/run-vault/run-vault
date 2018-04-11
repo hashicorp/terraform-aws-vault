@@ -151,7 +151,7 @@ $consul_storage_type "consul" {
 
   # HA settings
   cluster_addr  = "https://$instance_ip_address:$cluster_port"
-  redirect_addr = "https://$instance_ip_address:$cluster_port"
+  api_addr = "https://$instance_ip_address:$cluster_port"
 }
 EOF
 )

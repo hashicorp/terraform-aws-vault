@@ -11,7 +11,7 @@ servers that have both Vault and Consul on each node:
 
 ```hcl
 module "cluster" {
-  source = "git::git@github.com:hashicorp/terraform-aws-consul.git//modules/consul-cluster?ref=v0.0.1"
+  source = "github.com/hashicorp/terraform-aws-consul.git/modules/consul-cluster?ref=v0.0.1"
   
   # This AMI has both Vault and Consul installed
   ami_id = "ami-1234abcd"
@@ -24,7 +24,7 @@ servers have the necessary ports open for using Vault, you can use this module a
 
 ```hcl
 module "security_group_rules" {
-  source = "git::git@github.com:hashicorp/terraform-aws-vault.git//modules/vault-security-group-rules?ref=v0.0.1"
+  source = github.com/hashicorp/terraform-aws-consul.git/modules/vault-security-group-rules?ref=v0.0.1"
 
   security_group_id = "${module.cluster.security_group_id}"
   

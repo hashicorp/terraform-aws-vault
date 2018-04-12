@@ -22,8 +22,6 @@ function print_usage {
   echo
   echo "Options:"
   echo
-  echo -e "  --s3-bucket\tSpecifies the S3 bucket where Vault data should be stored. Required."
-  echo -e "  --s3-bucket-region\tSpecifies the AWS region where --s3-bucket lives. Required."
   echo -e "  --tls-cert-file\tSpecifies the path to the certificate for TLS. Required. To use a CA certificate, concatenate the primary certificate and the CA certificate together."
   echo -e "  --tls-key-file\tSpecifies the path to the private key for the certificate. Required."
   echo -e "  --port\t\tThe port for Vault to listen on. Optional. Default is $DEFAULT_PORT."
@@ -34,10 +32,17 @@ function print_usage {
   echo -e "  --log-level\t\tThe log verbosity to use with Vault. Optional. Default is $DEFAULT_LOG_LEVEL."
   echo -e "  --user\t\tThe user to run Vault as. Optional. Default is to use the owner of --config-dir."
   echo -e "  --skip-vault-config\tIf this flag is set, don't generate a Vault configuration file. Optional. Default is false."
+  echo -e "  --enable-s3-backend\tIf this flag is set, an S3 backend will be enabled in addition to the HA Consul backend. Default is false."
+  echo -e "  --s3-bucket\tSpecifies the S3 bucket to use to store Vault data. Only used if '--s3-backend-enabled' is set."
+  echo -e "  --s3-bucket-region\tSpecifies the AWS region where `--s3-bucket` lives. Only used if `--s3-backend-enabled` is set."
   echo
-  echo "Example:"
+  echo "Examples:"
   echo
-  echo "  run-vault --s3-bucket my-vault-bucket --s3-bucket-region us-east-1 --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem"
+  echo "  run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem"
+  echo
+  echo "Or"
+  echo
+  echo "  run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --s3-backend-enabled --s3-bucket my-vault-bucket --s3-bucket-region us-east-1"
 }
 
 function log {
@@ -105,21 +110,40 @@ function generate_vault_config {
   local readonly cluster_port="$4"
   local readonly config_dir="$5"
   local readonly user="$6"
-  local readonly s3_bucket="$7"
-  local readonly s3_bucket_region="$8"
+  local readonly enable_s3_backend="$7"
+  local readonly s3_bucket="$8"
+  local readonly s3_bucket_region="$9"
   local readonly config_path="$config_dir/$VAULT_CONFIG_FILE"
 
   local instance_ip_address
   instance_ip_address=$(get_instance_ip_address)
 
   log_info "Creating default Vault config file in $config_path"
-  cat > "$config_path" <<EOF
+  local readonly listener_config=$(cat <<EOF
+listener "tcp" {
+  address         = "0.0.0.0:$port"
+  cluster_address = "0.0.0.0:$cluster_port"
+  tls_cert_file   = "$tls_cert_file"
+  tls_key_file    = "$tls_key_file"
+}\n
+EOF
+)
+
+  local consul_storage_type="storage"
+  local s3_config=""
+  if [[ "$enable_s3_backend" == "true" ]]; then
+    s3_config=$(cat <<EOF
 storage "s3" {
   bucket = "$s3_bucket"
   region = "$s3_bucket_region"
-}
+}\n
+EOF
+)
+    consul_storage_type="ha_storage"
+  fi
 
-ha_storage "consul" {
+  local readonly consul_storage=$(cat <<EOF
+$consul_storage_type "consul" {
   address = "127.0.0.1:8500"
   path    = "vault/"
   scheme  = "http"
@@ -129,14 +153,13 @@ ha_storage "consul" {
   cluster_addr  = "https://$instance_ip_address:$cluster_port"
   redirect_addr = "https://$instance_ip_address:$cluster_port"
 }
-
-listener "tcp" {
-  address         = "0.0.0.0:$port"
-  cluster_address = "0.0.0.0:$cluster_port"
-  tls_cert_file   = "$tls_cert_file"
-  tls_key_file    = "$tls_key_file"
-}
 EOF
+)
+
+  echo -e "$listener_config" >> "$config_path"
+  echo -e "$s3_config" >> "$config_path"
+  echo -e "$consul_storage" >> "$config_path"
+
   chown "$user:$user" "$config_path"
 }
 
@@ -179,14 +202,15 @@ function run {
   local tls_key_file=""
   local port="$DEFAULT_PORT"
   local cluster_port=""
-  local s3_bucket=""
-  local s3_bucket_region=""
   local config_dir=""
   local bin_dir=""
   local log_dir=""
   local log_level="$DEFAULT_LOG_LEVEL"
   local user=""
   local skip_vault_config="false"
+  local enable_s3_backend="false"
+  local s3_bucket=""
+  local s3_bucket_region=""
   local all_args=()
 
   while [[ $# > 0 ]]; do
@@ -199,14 +223,6 @@ function run {
         ;;
       --tls-key-file)
         tls_key_file="$2"
-        shift
-        ;;
-      --s3-bucket)
-        s3_bucket="$2"
-        shift
-        ;;
-      --s3-bucket-region)
-        s3_bucket_region="$2"
         shift
         ;;
       --port)
@@ -247,6 +263,17 @@ function run {
       --skip-vault-config)
         skip_vault_config="true"
         ;;
+      --enable-s3-backend)
+        enable_s3_backend="true"
+        ;;
+      --s3-bucket)
+        s3_bucket="$2"
+        shift
+        ;;
+      --s3-bucket-region)
+        s3_bucket_region="$2"
+        shift
+        ;;
       --help)
         print_usage
         exit
@@ -263,8 +290,11 @@ function run {
 
   assert_not_empty "--tls-cert-file" "$tls_cert_file"
   assert_not_empty "--tls-key-file" "$tls_key_file"
-  assert_not_empty "--s3-bucket" "$s3_bucket"
-  assert_not_empty "--s3-bucket-region" "$s3_bucket_region"
+
+  if [[ "$enable_s3_backend" == "true" ]]; then
+    assert_not_empty "--s3-bucket" "$s3_bucket"
+    assert_not_empty "--s3-bucket-region" "$s3_bucket_region"
+  fi
 
   assert_is_installed "supervisorctl"
   assert_is_installed "aws"
@@ -294,7 +324,7 @@ function run {
   if [[ "$skip_vault_config" == "true" ]]; then
     log_info "The --skip-vault-config flag is set, so will not generate a default Vault config file."
   else
-    generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$cluster_port" "$config_dir" "$user" "$s3_bucket" "$s3_bucket_region"
+    generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$cluster_port" "$config_dir" "$user" "$enable_s3_backend" "$s3_bucket" "$s3_bucket_region"
   fi
 
   generate_supervisor_config "$SUPERVISOR_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_dir" "$log_level" "$user"

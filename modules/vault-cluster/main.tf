@@ -11,6 +11,8 @@ terraform {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_autoscaling_group" "autoscaling_group" {
+  name_prefix = "${var.cluster_name}"
+
   launch_configuration = "${aws_launch_configuration.launch_configuration.name}"
 
   availability_zones  = ["${var.availability_zones}"]
@@ -22,8 +24,6 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   desired_capacity     = "${var.cluster_size}"
   termination_policies = ["${var.termination_policies}"]
 
-  target_group_arns         = ["${var.target_group_arns}"]
-  load_balancers            = ["${var.load_balancers}"]
   health_check_type         = "${var.health_check_type}"
   health_check_grace_period = "${var.health_check_grace_period}"
   wait_for_capacity_timeout = "${var.wait_for_capacity_timeout}"
@@ -86,6 +86,10 @@ resource "aws_security_group" "lc_security_group" {
   # when you try to do a terraform destroy.
   lifecycle {
     create_before_destroy = true
+  }
+
+  tags {
+    Name = "${var.cluster_name}"
   }
 }
 
@@ -179,12 +183,8 @@ data "aws_iam_policy_document" "instance_role" {
   }
 }
 
-# ---------------------------------------------------------------------------------------------------------------------
-# CREATE AN S3 BUCKET TO USE AS A STORAGE BACKEND
-# Also, add an IAM role policy that gives the Vault servers access to this S3 bucket
-# ---------------------------------------------------------------------------------------------------------------------
-
 resource "aws_s3_bucket" "vault_storage" {
+  count         = "${var.enable_s3_backend ? 1 : 0}"
   bucket        = "${var.s3_bucket_name}"
   force_destroy = "${var.force_destroy_s3_bucket}"
 
@@ -194,12 +194,14 @@ resource "aws_s3_bucket" "vault_storage" {
 }
 
 resource "aws_iam_role_policy" "vault_s3" {
+  count  = "${var.enable_s3_backend ? 1 : 0}"
   name   = "vault_s3"
   role   = "${aws_iam_role.instance_role.id}"
-  policy = "${data.aws_iam_policy_document.vault_s3.json}"
+  policy = "${element(concat(data.aws_iam_policy_document.vault_s3.*.json, list("")), 0)}"
 }
 
 data "aws_iam_policy_document" "vault_s3" {
+  count  = "${var.enable_s3_backend ? 1 : 0}"
   statement {
     effect  = "Allow"
     actions = ["s3:*"]

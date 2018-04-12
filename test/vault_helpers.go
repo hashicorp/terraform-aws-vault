@@ -23,16 +23,15 @@ const REPO_ROOT = "../"
 
 const VAR_AWS_REGION = "aws_region"
 const VAR_AMI_ID = "ami_id"
-const VAR_S3_BUCKET_NAME = "s3_bucket_name"
 const VAR_VAULT_CLUSTER_NAME = "vault_cluster_name"
 const VAR_CONSUL_CLUSTER_NAME = "consul_cluster_name"
 const VAR_CONSUL_CLUSTER_TAG_KEY = "consul_cluster_tag_key"
 const VAR_SSH_KEY_NAME = "ssh_key_name"
-const VAR_FORCE_DESTROY_S3_BUCKET = "force_destroy_s3_bucket"
 const OUTPUT_VAULT_CLUSTER_ASG_NAME = "asg_name_vault_cluster"
 
 const VAULT_CLUSTER_PRIVATE_PATH = "examples/vault-cluster-private"
-const VAULT_CLUSTER_PUBLIC_PATH = "examples/vault-cluster-public"
+const VAULT_CLUSTER_S3_BACKEND_PATH = "examples/vault-s3-backend"
+const VAULT_CLUSTER_PUBLIC_PATH = REPO_ROOT
 
 const VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY = "create_dns_entry"
 const VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME = "hosted_zone_domain_name"
@@ -40,6 +39,10 @@ const VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME = "vault_domain_name"
 
 const VAULT_CLUSTER_PUBLIC_OUTPUT_FQDN = "vault_fully_qualified_domain_name"
 const VAULT_CLUSTER_PUBLIC_OUTPUT_ELB_DNS_NAME = "vault_elb_dns_name"
+
+const VAR_ENABLE_S3_BACKEND = "enable_s3_backend"
+const VAR_S3_BUCKET_NAME = "s3_bucket_name"
+const VAR_FORCE_DESTROY_S3_BUCKET = "force_destroy_s3_bucket"
 
 const AMI_EXAMPLE_PATH = "../examples/vault-consul-ami/vault-consul.json"
 
@@ -91,12 +94,10 @@ func runVaultPrivateClusterTest(t *testing.T, testName string, packerBuildName s
 	terratestOptions.Vars = map[string]interface{} {
 		VAR_AMI_ID: amiId,
 		VAR_AWS_REGION: resourceCollection.AwsRegion,
-		VAR_S3_BUCKET_NAME: s3BucketName(resourceCollection),
 		VAR_VAULT_CLUSTER_NAME: fmt.Sprintf("vault-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_NAME: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_SSH_KEY_NAME: resourceCollection.KeyPair.Name,
-		VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
 	}
 
 	deploy(t, terratestOptions)
@@ -119,7 +120,7 @@ func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName st
 
 	logger := terralog.NewLogger(testName)
 	resourceCollection := createBaseRandomResourceCollection(t)
-	terratestOptions := createBaseTerratestOptions(t, testName, filepath.Join(rootTempPath, VAULT_CLUSTER_PUBLIC_PATH), resourceCollection)
+	terratestOptions := createBaseTerratestOptions(t, testName, rootTempPath, resourceCollection)
 	defer terratest.Destroy(terratestOptions, resourceCollection)
 
 	tlsCert := generateSelfSignedTlsCert(t, testName)
@@ -130,12 +131,10 @@ func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName st
 	terratestOptions.Vars = map[string]interface{} {
 		VAR_AMI_ID: amiId,
 		VAR_AWS_REGION: resourceCollection.AwsRegion,
-		VAR_S3_BUCKET_NAME: s3BucketName(resourceCollection),
 		VAR_VAULT_CLUSTER_NAME: fmt.Sprintf("vault-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_NAME: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
 		VAR_SSH_KEY_NAME: resourceCollection.KeyPair.Name,
-		VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
 		VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY: boolToTerraformVar(false),
 		VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME: "",
 		VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME: "",
@@ -144,6 +143,46 @@ func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName st
 	deploy(t, terratestOptions)
 	initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terratestOptions, resourceCollection, logger)
 	testVaultViaElb(t, terratestOptions, logger)
+}
+
+// Test the Vault public cluster example by:
+//
+// 1. Copy the code in this repo to a temp folder so tests on the Terraform code can run in parallel without the
+//    state files overwriting each other.
+// 2. Build the AMI in the vault-consul-ami example with the given build name
+// 3. Deploy that AMI using the example Terraform code
+// 4. SSH to a Vault node and initialize the Vault cluster
+// 5. SSH to each Vault node and unseal it
+// 6. Connect to the Vault cluster via the ELB
+func runVaultWithS3BackendClusterTest(t *testing.T, testName string, packerBuildName string, sshUserName string) {
+	rootTempPath := copyRepoToTempFolder(t, REPO_ROOT)
+	defer os.RemoveAll(rootTempPath)
+
+	logger := terralog.NewLogger(testName)
+	resourceCollection := createBaseRandomResourceCollection(t)
+	terratestOptions := createBaseTerratestOptions(t, testName, filepath.Join(rootTempPath, VAULT_CLUSTER_S3_BACKEND_PATH), resourceCollection)
+	defer terratest.Destroy(terratestOptions, resourceCollection)
+
+	tlsCert := generateSelfSignedTlsCert(t, testName)
+	defer cleanupTlsCertFiles(tlsCert)
+
+	amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, resourceCollection, logger)
+
+	terratestOptions.Vars = map[string]interface{} {
+		VAR_AMI_ID: amiId,
+		VAR_AWS_REGION: resourceCollection.AwsRegion,
+		VAR_VAULT_CLUSTER_NAME: fmt.Sprintf("vault-test-%s", resourceCollection.UniqueId),
+		VAR_CONSUL_CLUSTER_NAME: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
+		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
+		VAR_SSH_KEY_NAME: resourceCollection.KeyPair.Name,
+		VAR_ENABLE_S3_BACKEND: boolToTerraformVar(true),
+		VAR_S3_BUCKET_NAME: s3BucketName(resourceCollection),
+		VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
+	}
+
+	deploy(t, terratestOptions)
+	cluster := initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terratestOptions, resourceCollection, logger)
+	testVaultUsesConsulForDns(t, cluster, logger)
 }
 
 // Initialize the Vault cluster and unseal each of the nodes by connecting to them over SSH and executing Vault

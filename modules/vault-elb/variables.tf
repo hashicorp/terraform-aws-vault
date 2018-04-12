@@ -16,6 +16,10 @@ variable "allowed_inbound_cidr_blocks" {
   type        = "list"
 }
 
+variable "vault_asg_name" {
+  description = "Name of the Vault Autoscaling Group"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # OPTIONAL PARAMETERS
 # These parameters have reasonable defaults.
@@ -23,12 +27,6 @@ variable "allowed_inbound_cidr_blocks" {
 
 variable "subnet_ids" {
   description = "The subnet IDs into which the ELB should be deployed. You will typically want to deploy the ELB into public subnets so your Vault cluster can run in private subnets. At least one of var.subnet_ids or var.availability_zones must be non-empty."
-  type        = "list"
-  default     = []
-}
-
-variable "availability_zones" {
-  description = "The availability zones into which the ELB should be deployed. At least one of var.subnet_ids or var.availability_zones must be non-empty."
   type        = "list"
   default     = []
 }

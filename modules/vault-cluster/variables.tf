@@ -37,10 +37,6 @@ variable "cluster_size" {
   description = "The number of nodes to have in the cluster. We strongly recommend setting this to 3 or 5."
 }
 
-variable "s3_bucket_name" {
-  description = "The name of the S3 bucket to create and use as a storage backend."
-}
-
 # ---------------------------------------------------------------------------------------------------------------------
 # OPTIONAL PARAMETERS
 # These parameters have reasonable defaults.
@@ -82,14 +78,15 @@ variable "cluster_tag_key" {
 
 variable "cluster_extra_tags" {
   description = "A list of additional tags to add to each Instance in the ASG. Each element in the list must be a map with the keys key, value, and propagate_at_launch"
-  type = "list"
-  #example: 
+  type        = "list"
+
+  #example:
   # default = [
   #   {
   #     key = "Environment"
   #     value = "Dev"
   #     propagate_at_launch = true
-  #   } 
+  #   }
   # ]
   default = []
 }
@@ -129,18 +126,6 @@ variable "root_volume_delete_on_termination" {
   default     = true
 }
 
-variable "target_group_arns" {
-  description = "A list of target group ARNs of Application Load Balanacer (ALB) targets to associate with this ASG. If you're using a Elastic Load Balancer (AKA ELB Classic), use the load_balancers variable instead."
-  type        = "list"
-  default     = []
-}
-
-variable "load_balancers" {
-  description = "A list of Elastic Load Balancer (ELB) names to associate with this ASG. If you're using an Application Load Balancer (ALB), use the target_group_arns variable instead."
-  type        = "list"
-  default     = []
-}
-
 variable "wait_for_capacity_timeout" {
   description = "A maximum duration that Terraform should wait for ASG instances to be healthy before timing out. Setting this to '0' causes Terraform to skip all Capacity Waiting behavior."
   default     = "10m"
@@ -167,16 +152,26 @@ variable "api_port" {
 }
 
 variable "cluster_port" {
-  description = "The port to use for Vault server-to-server communication"
+  description = "The port to use for Vault server-to-server communication."
   default     = 8201
 }
 
 variable "ssh_port" {
-  description = "The port used for SSH connections"
+  description = "The port used for SSH connections."
   default     = 22
 }
 
+variable "enable_s3_backend" {
+  description = "Whether to configure an S3 storage backend in addition to Consul."
+  default     = false
+}
+
+variable "s3_bucket_name" {
+  description = "The name of the S3 bucket to create and use as a storage backend. Only used if 'enable_s3_backend' is set to true."
+  default     = ""
+}
+
 variable "force_destroy_s3_bucket" {
-  description = "If you set this to true, when you run terraform destroy, this tells Terraform to delete all the objects in the S3 bucket used for backend storage. You should NOT set this to true in production or you risk losing all your data! This property is only here so automated tests of this module can clean up after themselves."
+  description = "If 'configure_s3_backend' is enabled and you set this to true, when you run terraform destroy, this tells Terraform to delete all the objects in the S3 bucket used for backend storage. You should NOT set this to true in production or you risk losing all your data! This property is only here so automated tests of this module can clean up after themselves. Only used if 'enable_s3_backend' is set to true."
   default     = false
 }

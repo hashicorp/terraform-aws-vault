@@ -2,9 +2,8 @@
 
 This repo contains a Module for how to deploy a [Vault](https://www.vaultproject.io/) cluster on 
 [AWS](https://aws.amazon.com/) using [Terraform](https://www.terraform.io/). Vault is an open source tool for managing
-secrets. This Module uses [S3](https://aws.amazon.com/s3/) as a [storage 
-backend](https://www.vaultproject.io/docs/configuration/storage/index.html) and a [Consul](https://www.consul.io) 
-server cluster as a [high availability backend](https://www.vaultproject.io/docs/concepts/ha.html):
+secrets. By default, this Module uses [Consul](https://www.consul.io) as a [storage 
+backend](https://www.vaultproject.io/docs/configuration/storage/index.html). You can optionally add an [S3](https://aws.amazon.com/s3/) backend for durability.
 
 ![Vault architecture](https://github.com/hashicorp/terraform-aws-vault/blob/master/_docs/architecture.png?raw=true)
 
@@ -73,8 +72,8 @@ Each Module has the following folder structure:
 Click on each of the modules above for more details.
 
 To deploy Vault with this Module, you will need to deploy two separate clusters: one to run 
-[Consul](https://www.consul.io/) servers (which Vault uses as a [high availability 
-backend](https://www.vaultproject.io/docs/concepts/ha.html)) and one to run Vault servers. 
+[Consul](https://www.consul.io/) servers (which Vault uses as a [storage 
+backend](https://www.vaultproject.io/docs/configuration/storage/index.html)) and one to run Vault servers. 
 
 To deploy the Consul server cluster, use the [Consul AWS Module](https://github.com/hashicorp/terraform-aws-consul). 
 

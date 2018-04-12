@@ -12,20 +12,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 variable "ami_id" {
-  description = "The ID of the AMI to run in the cluster. This should be an AMI built from the Packer template under examples/vault-consul-ami/vault-consul.json. If no AMI is specified, the template will 'just work' by using the example public AMIs. WARNING! Do not use the example AMIs in a production setting!"
-  default     = ""
-}
-
-variable "create_dns_entry" {
-  description = "If set to true, this module will create a Route 53 DNS A record for the ELB in the var.hosted_zone_id hosted zone with the domain name in var.domain_name."
-}
-
-variable "hosted_zone_domain_name" {
-  description = "The domain name of the Route 53 Hosted Zone in which to add a DNS entry for Vault (e.g. example.com). Only used if var.create_dns_entry is true."
-}
-
-variable "vault_domain_name" {
-  description = "The domain name to use in the DNS A record for the Vault ELB (e.g. vault.example.com). Make sure that a) this is a domain within the var.hosted_zone_domain_name hosted zone and b) this is the same domain name you used in the TLS certificates for Vault. Only used if var.create_dns_entry is true."
+  description = "The ID of the AMI to run in the cluster. This should be an AMI built from the Packer template under examples/vault-consul-ami/vault-consul.json."
 }
 
 variable "ssh_key_name" {
@@ -37,21 +24,6 @@ variable "ssh_key_name" {
 # These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------
 
-variable "subnet_tags" {
-  description = "Tags used to find subnets for vault and consul servers"
-  default     = {}
-}
-
-variable "vpc_tags" {
-  description = "Tags used to find a vpc for building resources in"
-  default     = {}
-}
-
-variable "use_default_vpc" {
-  description = "Whether to use the default VPC - NOT recommended for production! - should more likely change this to false and use the vpc_tags to find your vpc"
-  default     = true
-}
-
 variable "aws_region" {
   description = "The AWS region to deploy into (e.g. us-east-1)."
   default     = "us-east-1"
@@ -59,12 +31,12 @@ variable "aws_region" {
 
 variable "vault_cluster_name" {
   description = "What to name the Vault server cluster and all of its associated resources"
-  default     = "vault-example"
+  default     = "vault-s3-example"
 }
 
 variable "consul_cluster_name" {
   description = "What to name the Consul server cluster and all of its associated resources"
-  default     = "consul-example"
+  default     = "consul-s3-example"
 }
 
 variable "vault_cluster_size" {
@@ -89,15 +61,20 @@ variable "consul_instance_type" {
 
 variable "consul_cluster_tag_key" {
   description = "The tag the Consul EC2 Instances will look for to automatically discover each other and form a cluster."
-  default     = "consul-servers"
-}
-
-variable "force_destroy_s3_bucket" {
-  description = "If you set this to true, when you run terraform destroy, this tells Terraform to delete all the objects in the S3 bucket used for backend storage. You should NOT set this to true in production or you risk losing all your data! This property is only here so automated tests of this module can clean up after themselves."
-  default     = false
+  default     = "consul-vault-s3-servers"
 }
 
 variable "vpc_id" {
-    description = "The ID of the VPC in which the nodes will be deployed.  Uses default VPC if not supplied."
-    default = ""
+  description = "The ID of the VPC to deploy into. Leave an empty string to use the Default VPC in this region."
+  default     = ""
+}
+
+variable "s3_bucket_name" {
+  description = "The name of an S3 bucket to create and use as a storage backend (if configured). Note: S3 bucket names must be *globally* unique."
+  default     = "my-vault-bucket"
+}
+
+variable "force_destroy_s3_bucket" {
+  description = "If you set this to true, when you run terraform destroy, this tells Terraform to delete all the objects in the S3 bucket used for backend storage (if configured). You should NOT set this to true in production or you risk losing all your data! This property is only here so automated tests of this module can clean up after themselves."
+  default     = false
 }

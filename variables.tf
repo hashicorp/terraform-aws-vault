@@ -91,3 +91,13 @@ variable "consul_cluster_tag_key" {
   description = "The tag the Consul EC2 Instances will look for to automatically discover each other and form a cluster."
   default     = "consul-servers"
 }
+
+variable "force_destroy_s3_bucket" {
+  description = "If you set this to true, when you run terraform destroy, this tells Terraform to delete all the objects in the S3 bucket used for backend storage. You should NOT set this to true in production or you risk losing all your data! This property is only here so automated tests of this module can clean up after themselves."
+  default     = false
+}
+
+variable "vpc_id" {
+    description = "The ID of the VPC in which the nodes will be deployed.  Uses default VPC if not supplied."
+    default = ""
+}

@@ -91,7 +91,7 @@ module "vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_iam_policies_servers" {
-  source = "github.com/hashicorp/terraform-aws-consul//modules/consul-iam-policies?ref=v0.2.0"
+  source = "github.com/hashicorp/terraform-aws-consul//modules/consul-iam-policies?ref=v0.3.3"
 
   iam_role_id = "${module.vault_cluster.iam_role_id}"
 }
@@ -109,6 +109,23 @@ data "template_file" "user_data_vault_cluster" {
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
   }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# PERMIT CONSUL SPECIFIC TRAFFIC IN VAULT CLUSTER
+# To allow our Vault servers consul agents to communicate with other consul agents and participate in the LAN gossip,
+# we open up the consul specific protocols and ports for consul traffic
+# ---------------------------------------------------------------------------------------------------------------------
+
+module "security_group_rules" {
+  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-client-security-group-rules?ref=v0.3.3"
+
+  security_group_id           = "${module.vault_cluster.security_group_id}"
+
+  # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
+  # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
+  
+  allowed_inbound_cidr_blocks = ["0.0.0.0/0"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -154,7 +171,7 @@ data "aws_route53_zone" "selected" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_cluster" {
-  source = "github.com/hashicorp/terraform-aws-consul//modules/consul-cluster?ref=v0.2.0"
+  source = "github.com/hashicorp/terraform-aws-consul//modules/consul-cluster?ref=v0.3.3"
 
   cluster_name  = "${var.consul_cluster_name}"
   cluster_size  = "${var.consul_cluster_size}"

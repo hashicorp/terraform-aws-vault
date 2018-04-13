@@ -178,4 +178,5 @@ variable "force_destroy_s3_bucket" {
 
 variable "enable_EC2_IAM_Auth" {
   description = "Configure IAM Instance Profile on Vault cluster members to permit the user to enable AWS Auth backend. Note that this does NOT actually enable the backend, but merely sets policys that will permit it to function as expected."
+  default     = false
 }

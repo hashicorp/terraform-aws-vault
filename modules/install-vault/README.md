@@ -21,7 +21,7 @@ for all available tags) and run the `install-vault` script:
 
 ```
 git clone --branch <VERSION> https://github.com/hashicorp/terraform-aws-vault.git
-terraform-aws-vault/modules/install-vault/install-vault --version 0.5.4
+terraform-aws-vault/modules/install-vault/install-vault --version 0.10.0
 ```
 
 The `install-vault` script will install Vault, its dependencies, and the [run-vault script](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/run-vault).
@@ -49,7 +49,7 @@ The `install-vault` script accepts the following arguments:
 Example:
 
 ```
-install-vault --version 0.7.0
+install-vault --version 0.10.0
 ```
 
 

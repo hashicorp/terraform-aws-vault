@@ -2,7 +2,7 @@
   "min_packer_version": "0.12.0",
   "variables": {
     "aws_region": "us-east-1",
-    "vault_version": "0.8.2",
+    "vault_version": "0.10.0",
     "consul_module_version": "v0.0.2",
     "consul_version": "0.9.3",
     "github_oauth_token": "{{env `GITHUB_OAUTH_TOKEN`}}",

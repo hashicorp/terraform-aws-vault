@@ -1,19 +1,19 @@
 {
   "min_packer_version": "0.12.0",
   "variables": {
-    "aws_region": "us-east-1",
-    "vault_version": "0.8.2",
-    "consul_module_version": "v0.0.2",
-    "consul_version": "0.9.3",
+    "aws_region": "us-west-2",
+    "vault_version": "0.10.0",
+    "consul_module_version": "v0.3.3",
+    "consul_version": "1.0.7",
     "github_oauth_token": "{{env `GITHUB_OAUTH_TOKEN`}}",
-    "ca_public_key_path": null,
-    "tls_public_key_path": null,
-    "tls_private_key_path": null
+    "ca_public_key_path": "/dev/shm/secure/vault-ca-public.crt.pem",
+    "tls_public_key_path": "/dev/shm/secure/vault-public.crt.pem",
+    "tls_private_key_path": "/dev/shm/secure/vault-private.key.pem"
   },
   "builders": [{
     "ami_name": "vault-consul-ubuntu-{{isotime | clean_ami_name}}",
     "ami_description": "An Ubuntu 16.04 AMI that has Vault and Consul installed.",
-    "instance_type": "t2.micro",
+    "instance_type": "m3.large",
     "name": "ubuntu16-ami",
     "region": "{{user `aws_region`}}",
     "type": "amazon-ebs",
@@ -28,26 +28,9 @@
       "owners": ["099720109477"],
       "most_recent": true
     },
-    "ssh_username": "ubuntu"
-  },{
-    "ami_name": "vault-consul-amazon-linux-{{isotime | clean_ami_name}}",
-    "ami_description": "An Amazon Linux AMI that has Vault and Consul installed.",
-    "instance_type": "t2.micro",
-    "name": "amazon-linux-ami",
-    "region": "{{user `aws_region`}}",
-    "type": "amazon-ebs",
-    "source_ami_filter": {
-      "filters": {
-        "virtualization-type": "hvm",
-        "architecture": "x86_64",
-        "name": "*amzn-ami-hvm-*",
-        "block-device-mapping.volume-type": "gp2",
-        "root-device-type": "ebs"
-      },
-      "owners": ["amazon"],
-      "most_recent": true
-    },
-    "ssh_username": "ec2-user"
+    "ssh_username": "ubuntu",
+    "vpc_id": "vpc-76eb040f",
+    "subnet_id": "subnet-12d79f5a"
   }],
   "provisioners": [{
     "type": "file",
@@ -85,21 +68,9 @@
   },{
     "type": "shell",
     "inline": [
-      "sudo apt-get install -y git"
+      "sudo apt-get install -y git",
+      "sudo apt-get update && sudo apt-get dist-upgrade -y"
     ],
     "only": ["ubuntu16-ami"]
-  },{
-    "type": "shell",
-    "inline": [
-      "sudo yum install -y git"
-    ],
-    "only": ["amazon-linux-ami"]
-  },{
-    "type": "shell",
-    "inline": [
-      "git clone --branch {{user `consul_module_version`}} https://{{user `github_oauth_token`}}@github.com/hashicorp/terraform-aws-consul.git /tmp/terraform-aws-consul",
-      "/tmp/terraform-aws-consul/modules/install-consul/install-consul --version {{user `consul_version`}}",
-      "/tmp/terraform-aws-consul/modules/install-dnsmasq/install-dnsmasq"
-    ]
   }]
 }

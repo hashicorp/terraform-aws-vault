@@ -2,17 +2,16 @@ package test
 
 import (
 	"testing"
-	"path/filepath"
-	"github.com/gruntwork-io/terratest"
-	"os"
 	"os/user"
 	"io/ioutil"
+	"github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/modules/terraform"
 )
 
 type TlsCert struct {
-	CAPublicKeyPath  string
-	PublicKeyPath    string
-	PrivateKeyPath   string
+	CAPublicKeyPath string
+	PublicKeyPath   string
+	PrivateKeyPath  string
 }
 
 const PRIVATE_TLS_CERT_PATH = "modules/private-tls-cert"
@@ -29,14 +28,7 @@ const VAR_IP_ADDRESSES = "ip_addresses"
 const VAR_VALIDITY_PERIOD_HOURS = "validity_period_hours"
 
 // Use the private-tls-cert module to generate a self-signed TLS certificate
-func generateSelfSignedTlsCert(t *testing.T, testName string) TlsCert {
-	rootTempPath := copyRepoToTempFolder(t, REPO_ROOT)
-	defer os.RemoveAll(rootTempPath)
-
-	resourceCollection := createBaseRandomResourceCollection(t)
-	terratestOptions := createBaseTerratestOptions(t, testName, filepath.Join(rootTempPath, PRIVATE_TLS_CERT_PATH), resourceCollection)
-	defer terratest.Destroy(terratestOptions, resourceCollection)
-
+func generateSelfSignedTlsCert(t *testing.T) TlsCert {
 	currentUser, err := user.Current()
 	if err != nil {
 		t.Fatalf("Couldn't get current OS user: %v", err)
@@ -57,26 +49,31 @@ func generateSelfSignedTlsCert(t *testing.T, testName string) TlsCert {
 		t.Fatalf("Couldn't create temp file: %v", err)
 	}
 
-	terratestOptions.Vars = map[string]interface{}{
-		VAR_CA_PUBLIC_KEY_FILE_PATH: caPublicKeyFilePath.Name(),
-		VAR_PUBLIC_KEY_FILE_PATH: publicKeyFilePath.Name(),
-		VAR_PRIVATE_KEY_FILE_PATH: privateKeyFilePath.Name(),
-		VAR_OWNER: currentUser.Username,
-		VAR_ORGANIZATION_NAME: "Gruntwork",
-		VAR_CA_COMMON_NAME: "Vault Module Test CA",
-		VAR_COMMON_NAME: "Vault Module Test",
-		VAR_DNS_NAMES: []string{"vault.service.consul"},
-		VAR_IP_ADDRESSES: []string{"127.0.0.1"},
-		VAR_VALIDITY_PERIOD_HOURS: 1000,
+	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, PRIVATE_TLS_CERT_PATH)
+
+	terraformOptions := &terraform.Options{
+		TerraformDir: examplesDir,
+		Vars: map[string]interface{}{
+			VAR_CA_PUBLIC_KEY_FILE_PATH: caPublicKeyFilePath.Name(),
+			VAR_PUBLIC_KEY_FILE_PATH:    publicKeyFilePath.Name(),
+			VAR_PRIVATE_KEY_FILE_PATH:   privateKeyFilePath.Name(),
+			VAR_OWNER:                   currentUser.Username,
+			VAR_ORGANIZATION_NAME:       "Gruntwork",
+			VAR_CA_COMMON_NAME:          "Vault Module Test CA",
+			VAR_COMMON_NAME:             "Vault Module Test",
+			VAR_DNS_NAMES:               []string{"vault.service.consul"},
+			VAR_IP_ADDRESSES:            []string{"127.0.0.1"},
+			VAR_VALIDITY_PERIOD_HOURS:   1000,
+		},
 	}
 
-	if _, err := terratest.Apply(terratestOptions); err != nil {
-		t.Fatalf("Failed to create TLS certs: %v", err)
-	}
+	defer terraform.Destroy(t, terraformOptions)
+
+	terraform.InitAndApply(t, terraformOptions)
 
 	return TlsCert{
 		CAPublicKeyPath: caPublicKeyFilePath.Name(),
-		PublicKeyPath: publicKeyFilePath.Name(),
-		PrivateKeyPath: privateKeyFilePath.Name(),
+		PublicKeyPath:   publicKeyFilePath.Name(),
+		PrivateKeyPath:  privateKeyFilePath.Name(),
 	}
 }

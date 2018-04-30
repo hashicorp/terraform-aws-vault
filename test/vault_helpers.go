@@ -279,7 +279,7 @@ func runVaultWithS3BackendClusterTest(t *testing.T, packerBuildName string, sshU
 				VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
 			},
 		}
-		
+
 		terraform.InitAndApply(t, terraformOptions)
 
 		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)

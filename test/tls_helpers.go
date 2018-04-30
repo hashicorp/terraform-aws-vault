@@ -69,7 +69,7 @@ func generateSelfSignedTlsCert(t *testing.T) TlsCert {
 
 	defer terraform.Destroy(t, terraformOptions)
 
-	terraform.Apply(t, terraformOptions)
+	terraform.InitAndApply(t, terraformOptions)
 
 	return TlsCert{
 		CAPublicKeyPath: caPublicKeyFilePath.Name(),

@@ -34,8 +34,8 @@
 [[projects]]
   name = "github.com/gruntwork-io/terratest"
   packages = ["modules/aws","modules/collections","modules/files","modules/logger","modules/packer","modules/random","modules/retry","modules/shell","modules/ssh","modules/terraform","modules/test-structure"]
-  revision = "9c235cf826d8e1bf92af71c93e421347447238e6"
-  version = "v0.9.0"
+  revision = "b9eaa580d17795b28ac89173b066d951c6feb3c4"
+  version = "v0.9.1"
 
 [[projects]]
   branch = "master"

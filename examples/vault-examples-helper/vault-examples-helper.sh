@@ -193,7 +193,7 @@ function print_instructions {
 
   instructions+=("To initialize your Vault cluster, SSH to one of the servers and run the init command:\n")
   instructions+=("    ssh -i $ssh_key_name ubuntu@$server_ip")
-  instructions+=("    vault init")
+  instructions+=("    vault operator init")
 
   instructions+=("\nTo unseal your Vault cluster, SSH to each of the servers and run the unseal command with 3 of the 5 unseal keys:\n")
   for server_ip in "${server_ips[@]}"; do

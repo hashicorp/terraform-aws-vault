@@ -100,7 +100,7 @@ Vault](https://www.vaultproject.io/intro/getting-started/deploy.html#initializin
 this is to SSH to one of the servers that has Vault installed and run:
 
 ```
-vault init
+vault operator init
 
 Key 1: 427cd2c310be3b84fe69372e683a790e01
 Key 2: 0e2b8f3555b42a232f7ace6fe0e68eaf02
@@ -124,7 +124,7 @@ different user's public key. That way, no one, not even the operator running the
 in one place:
 
 ```
-vault init -pgp-keys="keybase:jefferai,keybase:vishalnayak,keybase:sethvargo"
+vault operator init -pgp-keys="keybase:jefferai,keybase:vishalnayak,keybase:sethvargo"
 
 Key 1: wcBMA37rwGt6FS1VAQgAk1q8XQh6yc...
 Key 2: wcBMA0wwnMXgRzYYAQgAavqbTCxZGD...

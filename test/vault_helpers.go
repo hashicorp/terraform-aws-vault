@@ -379,7 +379,7 @@ func waitForVaultToBoot(t *testing.T, cluster VaultCluster) {
 // Initialize the Vault cluster, filling in the unseal keys in the given vaultCluster struct
 func initializeVault(t *testing.T, vaultCluster *VaultCluster) {
 	logger.Logf(t, "Initializing the cluster")
-	output := ssh.CheckSshCommand(t, vaultCluster.Leader, "vault init")
+	output := ssh.CheckSshCommand(t, vaultCluster.Leader, "vault operator init")
 	vaultCluster.UnsealKeys = parseUnsealKeysFromVaultInitResponse(t, output)
 }
 

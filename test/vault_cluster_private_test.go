@@ -6,10 +6,10 @@ import (
 
 func TestVaultClusterPrivateWithUbuntuAmi(t *testing.T) {
 	t.Parallel()
-	runVaultPrivateClusterTest(t, "vault-private-ubuntu", "ubuntu16-ami", "ubuntu")
+	runVaultPrivateClusterTest(t, "ubuntu16-ami", "ubuntu")
 }
 
 func TestVaultClusterPrivateWithAmazonLinuxAmi(t *testing.T) {
 	t.Parallel()
-	runVaultPrivateClusterTest(t, "vault-private-amzn", "amazon-linux-ami", "ec2-user")
+	runVaultPrivateClusterTest(t, "amazon-linux-ami", "ec2-user")
 }

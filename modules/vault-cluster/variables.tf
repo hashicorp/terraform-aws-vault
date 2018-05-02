@@ -71,6 +71,12 @@ variable "allowed_ssh_security_group_ids" {
   default     = []
 }
 
+variable "additional_security_group_ids" {
+  description = "A list of additional security group IDs to add to Vault EC2 Instances"
+  type        = "list"
+  default     = []
+}
+
 variable "cluster_tag_key" {
   description = "Add a tag with this key and the value var.cluster_name to each Instance in the ASG."
   default     = "Name"

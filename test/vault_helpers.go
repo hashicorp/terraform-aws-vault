@@ -1,22 +1,23 @@
 package test
 
 import (
-	"github.com/gruntwork-io/terratest"
 	"testing"
 	"os"
-	terralog "github.com/gruntwork-io/terratest/log"
-	"log"
-	"github.com/gruntwork-io/terratest/util"
 	"time"
 	"fmt"
-	"path/filepath"
 	"regexp"
-	"github.com/gruntwork-io/terratest/ssh"
 	"strconv"
 	"strings"
 	"github.com/hashicorp/vault/api"
 	"net/http"
 	"errors"
+	"github.com/gruntwork-io/terratest/modules/ssh"
+	"github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/retry"
 )
 
 const REPO_ROOT = "../"
@@ -45,14 +46,15 @@ const VAR_S3_BUCKET_NAME = "s3_bucket_name"
 const VAR_FORCE_DESTROY_S3_BUCKET = "force_destroy_s3_bucket"
 
 const AMI_EXAMPLE_PATH = "../examples/vault-consul-ami/vault-consul.json"
+const SAVED_AWS_REGION = "AwsRegion"
 
 var UnsealKeyRegex = regexp.MustCompile("^Unseal Key \\d: (.+)$")
 
 type VaultCluster struct {
-	Leader  	ssh.Host
-	Standby1	ssh.Host
-	Standby2  	ssh.Host
-	UnsealKeys	[]string
+	Leader     ssh.Host
+	Standby1   ssh.Host
+	Standby2   ssh.Host
+	UnsealKeys []string
 }
 
 func (cluster VaultCluster) Nodes() []ssh.Host {
@@ -61,11 +63,12 @@ func (cluster VaultCluster) Nodes() []ssh.Host {
 
 // From: https://www.vaultproject.io/api/system/health.html
 type VaultStatus int
+
 const (
-	Leader VaultStatus = 200
-	Standby            = 429
-	Uninitialized      = 501
-	Sealed             = 503
+	Leader        VaultStatus = 200
+	Standby                   = 429
+	Uninitialized             = 501
+	Sealed                    = 503
 )
 
 // Test the Vault private cluster example by:
@@ -77,32 +80,68 @@ const (
 // 4. SSH to a Vault node and initialize the Vault cluster
 // 5. SSH to each Vault node and unseal it
 // 5. SSH to a Vault node and make sure you can communicate with the nodes via Consul-managed DNS
-func runVaultPrivateClusterTest(t *testing.T, testName string, packerBuildName string, sshUserName string) {
-	rootTempPath := copyRepoToTempFolder(t, REPO_ROOT)
-	defer os.RemoveAll(rootTempPath)
+func runVaultPrivateClusterTest(t *testing.T, packerBuildName string, sshUserName string) {
+	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_CLUSTER_PRIVATE_PATH)
 
-	resourceCollection := createBaseRandomResourceCollection(t)
-	terratestOptions := createBaseTerratestOptions(t, testName, filepath.Join(rootTempPath, VAULT_CLUSTER_PRIVATE_PATH), resourceCollection)
-	defer terratest.Destroy(terratestOptions, resourceCollection)
+	defer test_structure.RunTestStage(t, "teardown", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		terraform.Destroy(t, terraformOptions)
 
-	tlsCert := generateSelfSignedTlsCert(t, testName)
-	defer cleanupTlsCertFiles(tlsCert)
+		amiId := test_structure.LoadAmiId(t, examplesDir)
+		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
+		aws.DeleteAmi(t, awsRegion, amiId)
 
-	logger := terralog.NewLogger(testName)
-	amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, resourceCollection, logger)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+		aws.DeleteEC2KeyPair(t, keyPair)
 
-	terratestOptions.Vars = map[string]interface{} {
-		VAR_AMI_ID: amiId,
-		VAR_AWS_REGION: resourceCollection.AwsRegion,
-		VAR_VAULT_CLUSTER_NAME: fmt.Sprintf("vault-test-%s", resourceCollection.UniqueId),
-		VAR_CONSUL_CLUSTER_NAME: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
-		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
-		VAR_SSH_KEY_NAME: resourceCollection.KeyPair.Name,
-	}
+		tlsCert := loadTlsCert(t, examplesDir)
+		cleanupTlsCertFiles(tlsCert)
+	})
 
-	deploy(t, terratestOptions)
-	cluster := initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terratestOptions, resourceCollection, logger)
-	testVaultUsesConsulForDns(t, cluster, logger)
+	test_structure.RunTestStage(t, "setup_ami", func() {
+		awsRegion := aws.GetRandomRegion(t, nil, nil)
+		tlsCert := generateSelfSignedTlsCert(t)
+
+		amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, awsRegion)
+
+		test_structure.SaveAmiId(t, examplesDir, amiId)
+		test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
+		saveTlsCert(t, examplesDir, tlsCert)
+	})
+
+	test_structure.RunTestStage(t, "deploy", func() {
+		uniqueId := random.UniqueId()
+		amiId := test_structure.LoadAmiId(t, examplesDir)
+		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
+
+		keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
+
+		terraformOptions := &terraform.Options{
+			TerraformDir: examplesDir,
+			Vars: map[string]interface{}{
+				VAR_AMI_ID:                 amiId,
+				VAR_AWS_REGION:             awsRegion,
+				VAR_VAULT_CLUSTER_NAME:     fmt.Sprintf("vault-test-%s", uniqueId),
+				VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
+				VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
+				VAR_SSH_KEY_NAME:           keyPair.Name,
+			},
+		}
+
+		terraform.InitAndApply(t, terraformOptions)
+
+		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
+		test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
+	})
+
+	test_structure.RunTestStage(t, "validate", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+
+		cluster := initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
+		testVaultUsesConsulForDns(t, cluster)
+	})
 }
 
 // Test the Vault public cluster example by:
@@ -114,35 +153,71 @@ func runVaultPrivateClusterTest(t *testing.T, testName string, packerBuildName s
 // 4. SSH to a Vault node and initialize the Vault cluster
 // 5. SSH to each Vault node and unseal it
 // 6. Connect to the Vault cluster via the ELB
-func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName string, sshUserName string) {
-	rootTempPath := copyRepoToTempFolder(t, REPO_ROOT)
-	defer os.RemoveAll(rootTempPath)
+func runVaultPublicClusterTest(t *testing.T, packerBuildName string, sshUserName string) {
+	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, ".")
 
-	logger := terralog.NewLogger(testName)
-	resourceCollection := createBaseRandomResourceCollection(t)
-	terratestOptions := createBaseTerratestOptions(t, testName, rootTempPath, resourceCollection)
-	defer terratest.Destroy(terratestOptions, resourceCollection)
+	defer test_structure.RunTestStage(t, "teardown", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		terraform.Destroy(t, terraformOptions)
 
-	tlsCert := generateSelfSignedTlsCert(t, testName)
-	defer cleanupTlsCertFiles(tlsCert)
+		amiId := test_structure.LoadAmiId(t, examplesDir)
+		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
+		aws.DeleteAmi(t, awsRegion, amiId)
 
-	amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, resourceCollection, logger)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+		aws.DeleteEC2KeyPair(t, keyPair)
 
-	terratestOptions.Vars = map[string]interface{} {
-		VAR_AMI_ID: amiId,
-		VAR_AWS_REGION: resourceCollection.AwsRegion,
-		VAR_VAULT_CLUSTER_NAME: fmt.Sprintf("vault-test-%s", resourceCollection.UniqueId),
-		VAR_CONSUL_CLUSTER_NAME: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
-		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
-		VAR_SSH_KEY_NAME: resourceCollection.KeyPair.Name,
-		VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY: boolToTerraformVar(false),
-		VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME: "",
-		VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME: "",
-	}
+		tlsCert := loadTlsCert(t, examplesDir)
+		cleanupTlsCertFiles(tlsCert)
+	})
 
-	deploy(t, terratestOptions)
-	initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terratestOptions, resourceCollection, logger)
-	testVaultViaElb(t, terratestOptions, logger)
+	test_structure.RunTestStage(t, "setup_ami", func() {
+		awsRegion := aws.GetRandomRegion(t, nil, nil)
+		tlsCert := generateSelfSignedTlsCert(t)
+
+		amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, awsRegion)
+
+		test_structure.SaveAmiId(t, examplesDir, amiId)
+		test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
+		saveTlsCert(t, examplesDir, tlsCert)
+	})
+
+	test_structure.RunTestStage(t, "deploy", func() {
+		uniqueId := random.UniqueId()
+		amiId := test_structure.LoadAmiId(t, examplesDir)
+		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
+
+		keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
+
+		terraformOptions := &terraform.Options{
+			TerraformDir: examplesDir,
+			Vars: map[string]interface{}{
+				VAR_AMI_ID:                                       amiId,
+				VAR_AWS_REGION:                                   awsRegion,
+				VAR_VAULT_CLUSTER_NAME:                           fmt.Sprintf("vault-test-%s", uniqueId),
+				VAR_CONSUL_CLUSTER_NAME:                          fmt.Sprintf("consul-test-%s", uniqueId),
+				VAR_CONSUL_CLUSTER_TAG_KEY:                       fmt.Sprintf("consul-test-%s", uniqueId),
+				VAR_SSH_KEY_NAME:                                 keyPair.Name,
+				VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY:        boolToTerraformVar(false),
+				VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME: "",
+				VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME:       "",
+			},
+		}
+
+		terraform.InitAndApply(t, terraformOptions)
+
+		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
+		test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
+	})
+
+	test_structure.RunTestStage(t, "validate", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+
+		initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
+		testVaultViaElb(t, terraformOptions)
+	})
 }
 
 // Test the Vault public cluster example by:
@@ -154,132 +229,157 @@ func runVaultPublicClusterTest(t *testing.T, testName string, packerBuildName st
 // 4. SSH to a Vault node and initialize the Vault cluster
 // 5. SSH to each Vault node and unseal it
 // 6. Connect to the Vault cluster via the ELB
-func runVaultWithS3BackendClusterTest(t *testing.T, testName string, packerBuildName string, sshUserName string) {
-	rootTempPath := copyRepoToTempFolder(t, REPO_ROOT)
-	defer os.RemoveAll(rootTempPath)
+func runVaultWithS3BackendClusterTest(t *testing.T, packerBuildName string, sshUserName string) {
+	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_CLUSTER_S3_BACKEND_PATH)
 
-	logger := terralog.NewLogger(testName)
-	resourceCollection := createBaseRandomResourceCollection(t)
-	terratestOptions := createBaseTerratestOptions(t, testName, filepath.Join(rootTempPath, VAULT_CLUSTER_S3_BACKEND_PATH), resourceCollection)
-	defer terratest.Destroy(terratestOptions, resourceCollection)
+	defer test_structure.RunTestStage(t, "teardown", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		terraform.Destroy(t, terraformOptions)
 
-	tlsCert := generateSelfSignedTlsCert(t, testName)
-	defer cleanupTlsCertFiles(tlsCert)
+		amiId := test_structure.LoadAmiId(t, examplesDir)
+		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
+		aws.DeleteAmi(t, awsRegion, amiId)
 
-	amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, resourceCollection, logger)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+		aws.DeleteEC2KeyPair(t, keyPair)
 
-	terratestOptions.Vars = map[string]interface{} {
-		VAR_AMI_ID: amiId,
-		VAR_AWS_REGION: resourceCollection.AwsRegion,
-		VAR_VAULT_CLUSTER_NAME: fmt.Sprintf("vault-test-%s", resourceCollection.UniqueId),
-		VAR_CONSUL_CLUSTER_NAME: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
-		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", resourceCollection.UniqueId),
-		VAR_SSH_KEY_NAME: resourceCollection.KeyPair.Name,
-		VAR_ENABLE_S3_BACKEND: boolToTerraformVar(true),
-		VAR_S3_BUCKET_NAME: s3BucketName(resourceCollection),
-		VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
-	}
+		tlsCert := loadTlsCert(t, examplesDir)
+		cleanupTlsCertFiles(tlsCert)
+	})
 
-	deploy(t, terratestOptions)
-	cluster := initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terratestOptions, resourceCollection, logger)
-	testVaultUsesConsulForDns(t, cluster, logger)
+	test_structure.RunTestStage(t, "setup_ami", func() {
+		awsRegion := aws.GetRandomRegion(t, nil, nil)
+		tlsCert := generateSelfSignedTlsCert(t)
+
+		amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, awsRegion)
+
+		test_structure.SaveAmiId(t, examplesDir, amiId)
+		test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
+		saveTlsCert(t, examplesDir, tlsCert)
+	})
+
+	test_structure.RunTestStage(t, "deploy", func() {
+		uniqueId := random.UniqueId()
+		amiId := test_structure.LoadAmiId(t, examplesDir)
+		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
+
+		keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
+
+		terraformOptions := &terraform.Options{
+			TerraformDir: examplesDir,
+			Vars: map[string]interface{}{
+				VAR_AMI_ID:                  amiId,
+				VAR_AWS_REGION:              awsRegion,
+				VAR_VAULT_CLUSTER_NAME:      fmt.Sprintf("vault-test-%s", uniqueId),
+				VAR_CONSUL_CLUSTER_NAME:     fmt.Sprintf("consul-test-%s", uniqueId),
+				VAR_CONSUL_CLUSTER_TAG_KEY:  fmt.Sprintf("consul-test-%s", uniqueId),
+				VAR_SSH_KEY_NAME:            keyPair.Name,
+				VAR_ENABLE_S3_BACKEND:       boolToTerraformVar(true),
+				VAR_S3_BUCKET_NAME:          s3BucketName(uniqueId),
+				VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
+			},
+		}
+
+		terraform.InitAndApply(t, terraformOptions)
+
+		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
+		test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
+	})
+
+	test_structure.RunTestStage(t, "validate", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+
+		cluster := initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
+		testVaultUsesConsulForDns(t, cluster)
+	})
 }
 
 // Initialize the Vault cluster and unseal each of the nodes by connecting to them over SSH and executing Vault
 // commands. The reason we use SSH rather than using the Vault client remotely is we want to verify that the
 // self-signed TLS certificate is properly configured on each server so when you're on that server, you don't
 // get errors about the certificate being signed by an unknown party.
-func initializeAndUnsealVaultCluster(t *testing.T, asgNameOutputVar string, sshUserName string, terratestOptions *terratest.TerratestOptions, resourceCollection *terratest.RandomResourceCollection, logger *log.Logger) VaultCluster {
-	cluster := findVaultClusterNodes(t, asgNameOutputVar, sshUserName, terratestOptions, resourceCollection)
+func initializeAndUnsealVaultCluster(t *testing.T, asgNameOutputVar string, sshUserName string, terraformOptions *terraform.Options, awsRegion string, keyPair *aws.Ec2Keypair) VaultCluster {
+	cluster := findVaultClusterNodes(t, asgNameOutputVar, sshUserName, terraformOptions, awsRegion, keyPair)
 
-	establishConnectionToCluster(t, cluster, logger)
-	waitForVaultToBoot(t, cluster, logger)
-	initializeVault(t, &cluster, logger)
+	establishConnectionToCluster(t, cluster)
+	waitForVaultToBoot(t, cluster)
+	initializeVault(t, &cluster)
 
-	assertStatus(t, cluster.Leader, Sealed, logger)
-	unsealVaultNode(t, cluster.Leader, cluster.UnsealKeys, logger)
-	assertStatus(t, cluster.Leader, Leader, logger)
+	assertStatus(t, cluster.Leader, Sealed)
+	unsealVaultNode(t, cluster.Leader, cluster.UnsealKeys)
+	assertStatus(t, cluster.Leader, Leader)
 
-	assertStatus(t, cluster.Standby1, Sealed, logger)
-	unsealVaultNode(t, cluster.Standby1, cluster.UnsealKeys, logger)
-	assertStatus(t, cluster.Standby1, Standby, logger)
+	assertStatus(t, cluster.Standby1, Sealed)
+	unsealVaultNode(t, cluster.Standby1, cluster.UnsealKeys)
+	assertStatus(t, cluster.Standby1, Standby)
 
-	assertStatus(t, cluster.Standby2, Sealed, logger)
-	unsealVaultNode(t, cluster.Standby2, cluster.UnsealKeys, logger)
-	assertStatus(t, cluster.Standby2, Standby, logger)
+	assertStatus(t, cluster.Standby2, Sealed)
+	unsealVaultNode(t, cluster.Standby2, cluster.UnsealKeys)
+	assertStatus(t, cluster.Standby2, Standby)
 
 	return cluster
 }
 
 // Find the nodes in the given Vault ASG and return them in a VaultCluster struct
-func findVaultClusterNodes(t *testing.T, asgNameOutputVar string, sshUserName string, terratestOptions *terratest.TerratestOptions, resourceCollection *terratest.RandomResourceCollection) VaultCluster {
-	asgName, err := terratest.Output(terratestOptions, asgNameOutputVar)
-	if err != nil {
-		t.Fatalf("Could not read output %s due to error: %v", asgNameOutputVar, err)
-	}
+func findVaultClusterNodes(t *testing.T, asgNameOutputVar string, sshUserName string, terraformOptions *terraform.Options, awsRegion string, keyPair *aws.Ec2Keypair) VaultCluster {
+	asgName := terraform.Output(t, terraformOptions, asgNameOutputVar)
 
-	nodeIpAddresses := getIpAddressesOfAsgInstances(t, asgName, resourceCollection.AwsRegion)
+	nodeIpAddresses := getIpAddressesOfAsgInstances(t, asgName, awsRegion)
 	if len(nodeIpAddresses) != 3 {
 		t.Fatalf("Expected to get three IP addresses for Vault cluster, but got %d: %v", len(nodeIpAddresses), nodeIpAddresses)
 	}
 
 	return VaultCluster{
 		Leader: ssh.Host{
-			Hostname: nodeIpAddresses[0],
+			Hostname:    nodeIpAddresses[0],
 			SshUserName: sshUserName,
-			SshKeyPair: resourceCollection.KeyPair,
+			SshKeyPair:  keyPair.KeyPair,
 		},
 
-		Standby1: ssh.Host {
-			Hostname: nodeIpAddresses[1],
+		Standby1: ssh.Host{
+			Hostname:    nodeIpAddresses[1],
 			SshUserName: sshUserName,
-			SshKeyPair: resourceCollection.KeyPair,
+			SshKeyPair:  keyPair.KeyPair,
 		},
 
-		Standby2: ssh.Host {
-			Hostname: nodeIpAddresses[2],
+		Standby2: ssh.Host{
+			Hostname:    nodeIpAddresses[2],
 			SshUserName: sshUserName,
-			SshKeyPair: resourceCollection.KeyPair,
+			SshKeyPair:  keyPair.KeyPair,
 		},
 	}
 }
 
 // Wait until we can connect to each of the Vault cluster EC2 Instances
-func establishConnectionToCluster(t *testing.T, cluster VaultCluster, logger *log.Logger) {
+func establishConnectionToCluster(t *testing.T, cluster VaultCluster) {
 	for _, node := range cluster.Nodes() {
 		description := fmt.Sprintf("Trying to establish SSH connection to %s", node.Hostname)
-		logger.Println(description)
+		logger.Logf(t, description)
 
 		maxRetries := 30
 		sleepBetweenRetries := 10 * time.Second
 
-		_, err := util.DoWithRetry(description, maxRetries, sleepBetweenRetries, logger, func() (string, error) {
-			return "", ssh.CheckSshConnection(node, logger)
+		retry.DoWithRetry(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {
+			return "", ssh.CheckSshConnectionE(t, node)
 		})
-
-		if err != nil {
-			t.Fatalf("Failed to establish connection to host %s: %v", node.Hostname, err)
-		}
 	}
 }
 
 // Wait until the Vault servers are booted the very first time on the EC2 Instance. As a simple solution, we simply
 // wait for the leader to boot and assume if it's up, the other nodes will be too.
-func waitForVaultToBoot(t *testing.T, cluster VaultCluster, logger *log.Logger) {
+func waitForVaultToBoot(t *testing.T, cluster VaultCluster) {
 	for _, node := range cluster.Nodes() {
-		logger.Printf("Waiting for Vault to boot the first time on host %s. Expecting it to be in uninitialized status (%d).", node.Hostname, int(Uninitialized))
-		assertStatus(t, node, Uninitialized, logger)
+		logger.Logf(t, "Waiting for Vault to boot the first time on host %s. Expecting it to be in uninitialized status (%d).", node.Hostname, int(Uninitialized))
+		assertStatus(t, node, Uninitialized)
 	}
 }
 
 // Initialize the Vault cluster, filling in the unseal keys in the given vaultCluster struct
-func initializeVault(t * testing.T, vaultCluster *VaultCluster, logger *log.Logger) {
-	logger.Println("Initializing the cluster")
-	output, err := ssh.CheckSshCommand(vaultCluster.Leader, "vault init", logger)
-	if err != nil {
-		t.Fatalf("Failed to initalize Vault: %v", err)
-	}
-
+func initializeVault(t *testing.T, vaultCluster *VaultCluster) {
+	logger.Logf(t, "Initializing the cluster")
+	output := ssh.CheckSshCommand(t, vaultCluster.Leader, "vault operator init")
 	vaultCluster.UnsealKeys = parseUnsealKeysFromVaultInitResponse(t, output)
 }
 
@@ -308,29 +408,28 @@ func parseUnsealKeysFromVaultInitResponse(t *testing.T, vaultInitResponse string
 
 // Generate a unique name for an S3 bucket. Note that S3 bucket names must be globally unique and that only lowercase
 // alphanumeric characters and hyphens are allowed.
-func s3BucketName(resourceCollection *terratest.RandomResourceCollection) string {
-	return strings.ToLower(fmt.Sprintf("vault-module-test-%s", resourceCollection.UniqueId))
+func s3BucketName(uniqueId string) string {
+	return strings.ToLower(fmt.Sprintf("vault-module-test-%s", uniqueId))
 }
 
 // SSH to a Vault node and make sure that is properly configured to use Consul for DNS so that the vault.service.consul
 // domain name works.
-func testVaultUsesConsulForDns(t *testing.T, cluster VaultCluster, logger *log.Logger) {
+func testVaultUsesConsulForDns(t *testing.T, cluster VaultCluster) {
 	// Pick any host, it shouldn't matter
 	host := cluster.Standby1
 
 	command := "vault status -address=https://vault.service.consul:8200"
 	description := fmt.Sprintf("Checking that the Vault server at %s is properly configured to use Consul for DNS: %s", host.Hostname, command)
-	logger.Println(description)
-
+	logger.Logf(t, description)
 
 	maxRetries := 30
 	sleepBetweenRetries := 10 * time.Second
 
-	out, err := util.DoWithRetry(description, maxRetries, sleepBetweenRetries, logger, func() (string, error) {
-		return ssh.CheckSshCommand(host, command, logger)
+	out, err := retry.DoWithRetryE(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {
+		return ssh.CheckSshCommandE(t, host, command)
 	})
 
-	logger.Printf("Output from command vault status call to vault.service.consul: %s", out)
+	logger.Logf(t, "Output from command vault status call to vault.service.consul: %s", out)
 	if err != nil {
 		t.Fatalf("Failed to run vault command with vault.service.consul URL due to error: %v", err)
 	}
@@ -338,17 +437,17 @@ func testVaultUsesConsulForDns(t *testing.T, cluster VaultCluster, logger *log.L
 
 // Use the Vault client to connect to the Vault via the ELB, via the public DNS entry, and make sure it works without
 // Vault or TLS errors
-func testVaultViaElb(t *testing.T, terratestOptions *terratest.TerratestOptions, logger *log.Logger) {
-	domainName := getElbDomainName(t, terratestOptions)
+func testVaultViaElb(t *testing.T, terraformOptions *terraform.Options) {
+	domainName := getElbDomainName(t, terraformOptions)
 	description := fmt.Sprintf("Testing Vault via ELB at domain name %s", domainName)
-	logger.Printf(description)
+	logger.Logf(t, description)
 
 	maxRetries := 30
 	sleepBetweenRetries := 10 * time.Second
 
 	vaultClient := createVaultClient(t, domainName)
 
-	out, err := util.DoWithRetry(description, maxRetries, sleepBetweenRetries, logger, func() (string, error) {
+	out := retry.DoWithRetry(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {
 		isInitialized, err := vaultClient.Sys().InitStatus()
 		if err != nil {
 			return "", err
@@ -360,23 +459,12 @@ func testVaultViaElb(t *testing.T, terratestOptions *terratest.TerratestOptions,
 		}
 	})
 
-	if err != nil {
-		t.Fatalf("Failed to use Vault client with ELB to validate that the cluster is initialized: %v", err)
-	}
-
-	logger.Printf(out)
+	logger.Logf(t, out)
 }
 
 // Get the ELB domain name
-func getElbDomainName(t *testing.T, terratestOptions *terratest.TerratestOptions) string {
-	domainName, err := terratest.Output(terratestOptions, VAULT_CLUSTER_PUBLIC_OUTPUT_ELB_DNS_NAME)
-	if err != nil {
-		t.Fatalf("Failed to read output %s: %v", VAULT_CLUSTER_PUBLIC_OUTPUT_ELB_DNS_NAME, err)
-	}
-	if domainName == "" {
-		t.Fatalf("Domain name output %s was empty", VAULT_CLUSTER_PUBLIC_OUTPUT_ELB_DNS_NAME)
-	}
-	return domainName
+func getElbDomainName(t *testing.T, terraformOptions *terraform.Options) string {
+	return terraform.OutputRequired(t, terraformOptions, VAULT_CLUSTER_PUBLIC_OUTPUT_ELB_DNS_NAME)
 }
 
 // Create a Vault client configured to talk to Vault running at the given domain name
@@ -397,7 +485,7 @@ func createVaultClient(t *testing.T, domainName string) *api.Client {
 }
 
 // Unseal the given Vault server using the given unseal keys
-func unsealVaultNode(t *testing.T, host ssh.Host, unsealKeys []string, logger *log.Logger) {
+func unsealVaultNode(t *testing.T, host ssh.Host, unsealKeys []string) {
 	unsealCommands := []string{}
 	for _, unsealKey := range unsealKeys {
 		unsealCommands = append(unsealCommands, fmt.Sprintf("vault unseal %s", unsealKey))
@@ -405,11 +493,8 @@ func unsealVaultNode(t *testing.T, host ssh.Host, unsealKeys []string, logger *l
 
 	unsealCommand := strings.Join(unsealCommands, " && ")
 
-	logger.Printf("Unsealing Vault on host %s", host.Hostname)
-	_, err := ssh.CheckSshCommand(host, unsealCommand, logger)
-	if err != nil {
-		t.Fatalf("Failed to unseal cluster due to error: %v", err)
-	}
+	logger.Logf(t, "Unsealing Vault on host %s", host.Hostname)
+	ssh.CheckSshCommand(t, host, unsealCommand)
 }
 
 // Parse an unseal key from a single line of the stdout of the vault init command, which should be of the format:
@@ -434,22 +519,18 @@ func boolToTerraformVar(val bool) int {
 }
 
 // Check that the Vault node at the given host has the given
-func assertStatus(t *testing.T, host ssh.Host, expectedStatus VaultStatus, logger *log.Logger) {
+func assertStatus(t *testing.T, host ssh.Host, expectedStatus VaultStatus) {
 	description := fmt.Sprintf("Check that the Vault node %s has status %d", host.Hostname, int(expectedStatus))
-	logger.Println(description)
+	logger.Logf(t, description)
 
 	maxRetries := 30
 	sleepBetweenRetries := 10 * time.Second
 
-	out, err := util.DoWithRetry(description, maxRetries, sleepBetweenRetries, logger, func() (string, error) {
-		return checkStatus(host, expectedStatus, logger)
+	out := retry.DoWithRetry(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {
+		return checkStatus(t, host, expectedStatus)
 	})
 
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	logger.Printf(out)
+	logger.Logf(t, out)
 }
 
 // Delete the temporary self-signed cert files we created
@@ -461,11 +542,11 @@ func cleanupTlsCertFiles(tlsCert TlsCert) {
 
 // Check the status of the given Vault node and ensure it matches the expected status. Note that we use curl to do the
 // status check so we can ensure that TLS certificates work for curl (and not just the Vault client).
-func checkStatus(host ssh.Host, expectedStatus VaultStatus, logger *log.Logger) (string, error) {
+func checkStatus(t *testing.T, host ssh.Host, expectedStatus VaultStatus) (string, error) {
 	curlCommand := "curl -s -o /dev/null -w '%{http_code}' https://127.0.0.1:8200/v1/sys/health"
-	logger.Printf("Using curl to check status of Vault server %s: %s", host.Hostname, curlCommand)
+	logger.Logf(t, "Using curl to check status of Vault server %s: %s", host.Hostname, curlCommand)
 
-	output, err := ssh.CheckSshCommand(host, curlCommand, logger)
+	output, err := ssh.CheckSshCommandE(t, host, curlCommand)
 	if err != nil {
 		return "", err
 	}

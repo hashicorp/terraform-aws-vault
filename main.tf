@@ -5,10 +5,6 @@
 # backend.
 # ---------------------------------------------------------------------------------------------------------------------
 
-provider "aws" {
-  region = "${var.aws_region}"
-}
-
 # Terraform 0.9.5 suffered from https://github.com/hashicorp/terraform/issues/14399, which causes this template the
 # conditionals in this template to fail.
 terraform {
@@ -105,7 +101,7 @@ data "template_file" "user_data_vault_cluster" {
   template = "${file("${path.module}/examples/root-example/user-data-vault.sh")}"
 
   vars {
-    aws_region               = "${var.aws_region}"
+    aws_region               = "${data.aws_region.current.name}"
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
   }
@@ -225,3 +221,5 @@ data "aws_subnet_ids" "default" {
   vpc_id = "${data.aws_vpc.default.id}"
   tags   = "${var.subnet_tags}"
 }
+
+data "aws_region" "current" {}

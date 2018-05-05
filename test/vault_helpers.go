@@ -22,7 +22,7 @@ import (
 
 const REPO_ROOT = "../"
 
-const ENV_VAR_AWS_REGION = "aws_region"
+const ENV_VAR_AWS_REGION = "AWS_DEFAULT_REGION"
 
 const VAR_AMI_ID = "ami_id"
 const VAR_VAULT_CLUSTER_NAME = "vault_cluster_name"

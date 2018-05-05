@@ -4,10 +4,6 @@
 # running in a separate cluster, as its storage backend.
 # ---------------------------------------------------------------------------------------------------------------------
 
-provider "aws" {
-  region = "${var.aws_region}"
-}
-
 terraform {
   required_version = ">= 0.9.3"
 }
@@ -62,7 +58,7 @@ data "template_file" "user_data_vault_cluster" {
   template = "${file("${path.module}/user-data-vault.sh")}"
 
   vars {
-    aws_region               = "${var.aws_region}"
+    aws_region               = "${data.aws_region.current.name}"
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
   }
@@ -143,3 +139,5 @@ data "aws_vpc" "default" {
 data "aws_subnet_ids" "default" {
   vpc_id = "${data.aws_vpc.default.id}"
 }
+
+data "aws_region" "current" {}

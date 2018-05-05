@@ -22,7 +22,8 @@ import (
 
 const REPO_ROOT = "../"
 
-const VAR_AWS_REGION = "aws_region"
+const ENV_VAR_AWS_REGION = "AWS_DEFAULT_REGION"
+
 const VAR_AMI_ID = "ami_id"
 const VAR_VAULT_CLUSTER_NAME = "vault_cluster_name"
 const VAR_CONSUL_CLUSTER_NAME = "consul_cluster_name"
@@ -100,13 +101,13 @@ func runVaultPrivateClusterTest(t *testing.T, packerBuildName string, sshUserNam
 
 	test_structure.RunTestStage(t, "setup_ami", func() {
 		awsRegion := aws.GetRandomRegion(t, nil, nil)
+		test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
+
 		tlsCert := generateSelfSignedTlsCert(t)
+		saveTlsCert(t, examplesDir, tlsCert)
 
 		amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, awsRegion)
-
 		test_structure.SaveAmiId(t, examplesDir, amiId)
-		test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
-		saveTlsCert(t, examplesDir, tlsCert)
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
@@ -115,23 +116,24 @@ func runVaultPrivateClusterTest(t *testing.T, packerBuildName string, sshUserNam
 		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
 
 		keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
+		test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
 
 		terraformOptions := &terraform.Options{
 			TerraformDir: examplesDir,
 			Vars: map[string]interface{}{
 				VAR_AMI_ID:                 amiId,
-				VAR_AWS_REGION:             awsRegion,
 				VAR_VAULT_CLUSTER_NAME:     fmt.Sprintf("vault-test-%s", uniqueId),
 				VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
 				VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
 				VAR_SSH_KEY_NAME:           keyPair.Name,
 			},
+			EnvVars: map[string]string{
+				ENV_VAR_AWS_REGION: awsRegion,
+			},
 		}
+		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
 
 		terraform.InitAndApply(t, terraformOptions)
-
-		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
-		test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
@@ -173,13 +175,13 @@ func runVaultPublicClusterTest(t *testing.T, packerBuildName string, sshUserName
 
 	test_structure.RunTestStage(t, "setup_ami", func() {
 		awsRegion := aws.GetRandomRegion(t, nil, nil)
+		test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
+
 		tlsCert := generateSelfSignedTlsCert(t)
+		saveTlsCert(t, examplesDir, tlsCert)
 
 		amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, awsRegion)
-
 		test_structure.SaveAmiId(t, examplesDir, amiId)
-		test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
-		saveTlsCert(t, examplesDir, tlsCert)
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
@@ -188,12 +190,12 @@ func runVaultPublicClusterTest(t *testing.T, packerBuildName string, sshUserName
 		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
 
 		keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
+		test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
 
 		terraformOptions := &terraform.Options{
 			TerraformDir: examplesDir,
 			Vars: map[string]interface{}{
 				VAR_AMI_ID:                                       amiId,
-				VAR_AWS_REGION:                                   awsRegion,
 				VAR_VAULT_CLUSTER_NAME:                           fmt.Sprintf("vault-test-%s", uniqueId),
 				VAR_CONSUL_CLUSTER_NAME:                          fmt.Sprintf("consul-test-%s", uniqueId),
 				VAR_CONSUL_CLUSTER_TAG_KEY:                       fmt.Sprintf("consul-test-%s", uniqueId),
@@ -202,12 +204,13 @@ func runVaultPublicClusterTest(t *testing.T, packerBuildName string, sshUserName
 				VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME: "",
 				VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME:       "",
 			},
+			EnvVars: map[string]string{
+				ENV_VAR_AWS_REGION: awsRegion,
+			},
 		}
+		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
 
 		terraform.InitAndApply(t, terraformOptions)
-
-		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
-		test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
@@ -249,13 +252,13 @@ func runVaultWithS3BackendClusterTest(t *testing.T, packerBuildName string, sshU
 
 	test_structure.RunTestStage(t, "setup_ami", func() {
 		awsRegion := aws.GetRandomRegion(t, nil, nil)
+		test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
+
 		tlsCert := generateSelfSignedTlsCert(t)
+		saveTlsCert(t, examplesDir, tlsCert)
 
 		amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, awsRegion)
-
 		test_structure.SaveAmiId(t, examplesDir, amiId)
-		test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
-		saveTlsCert(t, examplesDir, tlsCert)
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
@@ -264,12 +267,12 @@ func runVaultWithS3BackendClusterTest(t *testing.T, packerBuildName string, sshU
 		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
 
 		keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
+		test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
 
 		terraformOptions := &terraform.Options{
 			TerraformDir: examplesDir,
 			Vars: map[string]interface{}{
 				VAR_AMI_ID:                  amiId,
-				VAR_AWS_REGION:              awsRegion,
 				VAR_VAULT_CLUSTER_NAME:      fmt.Sprintf("vault-test-%s", uniqueId),
 				VAR_CONSUL_CLUSTER_NAME:     fmt.Sprintf("consul-test-%s", uniqueId),
 				VAR_CONSUL_CLUSTER_TAG_KEY:  fmt.Sprintf("consul-test-%s", uniqueId),
@@ -278,12 +281,13 @@ func runVaultWithS3BackendClusterTest(t *testing.T, packerBuildName string, sshU
 				VAR_S3_BUCKET_NAME:          s3BucketName(uniqueId),
 				VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
 			},
+			EnvVars: map[string]string{
+				ENV_VAR_AWS_REGION: awsRegion,
+			},
 		}
+		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
 
 		terraform.InitAndApply(t, terraformOptions)
-
-		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
-		test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {

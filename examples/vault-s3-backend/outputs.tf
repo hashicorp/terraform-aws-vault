@@ -39,7 +39,7 @@ output "security_group_id_consul_cluster" {
 }
 
 output "aws_region" {
-  value = "${var.aws_region}"
+  value = "${data.aws_region.current.name}"
 }
 
 output "vault_servers_cluster_tag_key" {

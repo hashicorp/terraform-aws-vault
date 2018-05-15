@@ -24,6 +24,7 @@ variable "allowed_inbound_security_group_ids" {
 
 variable "allowed_inbound_security_group_count" {
   description = "A count of allowed_inbound_security_group_ids used internally"
+  default = "${length(var.allowed_inbound_security_group_ids)}"
 }
 
 variable "api_port" {

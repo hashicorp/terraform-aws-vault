@@ -29,6 +29,10 @@ variable "allowed_inbound_security_group_ids" {
   type        = "list"
 }
 
+variable "allowed_inbound_security_group_count" {
+  description = "A count of allowed_inbound_security_group_ids used internally due to terraform limitation"
+}
+
 variable "user_data" {
   description = "A User Data script to execute while the server is booting. We recommend passing in a bash script that executes the run-vault script, which should have been installed in the AMI by the install-vault module."
 }
@@ -80,13 +84,13 @@ variable "cluster_extra_tags" {
   description = "A list of additional tags to add to each Instance in the ASG. Each element in the list must be a map with the keys key, value, and propagate_at_launch"
   type        = "list"
 
-  #example: 
+  #example:
   # default = [
   #   {
   #     key = "Environment"
   #     value = "Dev"
   #     propagate_at_launch = true
-  #   } 
+  #   }
   # ]
   default = []
 }

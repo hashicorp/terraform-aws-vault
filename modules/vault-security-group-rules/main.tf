@@ -2,10 +2,7 @@
 # CREATE THE SECURITY GROUP RULES THAT CONTROL WHAT TRAFFIC CAN GO IN AND OUT OF A VAULT CLUSTER
 # ---------------------------------------------------------------------------------------------------------------------
 
-variable "group_count" {
-}
-
-group_count = "${length(var.allowed_inbound_security_group_ids)}"
+allowed_inbound_security_group_count = "${length(var.allowed_inbound_security_group_ids)}"
 
 resource "aws_security_group_rule" "allow_api_inbound_from_cidr_blocks" {
   count       = "${length(var.allowed_inbound_cidr_blocks) >= 1 ? 1 : 0}"

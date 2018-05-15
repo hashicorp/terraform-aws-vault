@@ -22,6 +22,10 @@ variable "allowed_inbound_security_group_ids" {
 # These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------
 
+variable "allowed_inbound_security_group_count" {
+  description = "A count of allowed_inbound_security_group_ids used internally"
+}
+
 variable "api_port" {
   description = "The port to use for Vault API calls"
   default     = 8200

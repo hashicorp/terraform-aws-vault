@@ -29,6 +29,10 @@ variable "allowed_inbound_security_group_ids" {
   type        = "list"
 }
 
+variable "allowed_inbound_security_group_count" {
+  description = "The number of entries in var.allowed_inbound_security_group_ids. Ideally, this value could be computed dynamically, but we pass this variable to a Terraform resource's 'count' property and Terraform requires that 'count' be computed with literals or data sources only."
+}
+
 variable "user_data" {
   description = "A User Data script to execute while the server is booting. We recommend passing in a bash script that executes the run-vault script, which should have been installed in the AMI by the install-vault module."
 }

@@ -109,7 +109,7 @@ function generate_vault_config {
   local readonly tls_key_file="$2"
   local readonly port="$3"
   local readonly cluster_port="$4"
-  local api_addr="$5"
+  local readonly api_addr="$5"
   local readonly config_dir="$6"
   local readonly user="$7"
   local readonly enable_s3_backend="$8"
@@ -119,11 +119,6 @@ function generate_vault_config {
 
   local instance_ip_address
   instance_ip_address=$(get_instance_ip_address)
-
-
-  if [[ -z "$api_addr" ]]; then
-    api_addr="https://${instance_ip_address}:${port}"
-  fi
 
   log_info "Creating default Vault config file in $config_path"
   local readonly listener_config=$(cat <<EOF
@@ -333,6 +328,10 @@ function run {
 
   if [[ -z "$cluster_port" ]]; then
     cluster_port=$(( $port + 1 ))
+  fi
+
+  if [[ -z "$api_addr" ]]; then
+    api_addr="https://$(get_instance_ip_address):${port}"
   fi
 
   if [[ "$skip_vault_config" == "true" ]]; then

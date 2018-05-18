@@ -23,7 +23,7 @@ variable "allowed_inbound_security_group_ids" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 variable "allowed_inbound_security_group_count" {
-  description = "A count of allowed_inbound_security_group_ids used internally due to terraform limitation"
+  description = "The number of entries in var.allowed_inbound_security_group_ids. Ideally, this value could be computed dynamically, but we pass this variable to a Terraform resource's 'count' property and Terraform requires that 'count' be computed with literals or data sources only."
 }
 
 variable "api_port" {

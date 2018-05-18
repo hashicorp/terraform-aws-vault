@@ -91,6 +91,14 @@ available.
 ### Default configuration
 
 `run-vault` sets the following configuration values by default:
+* [api_addr](https://www.vaultproject.io/docs/configuration/index.html#api_addr): 
+      Set to `https://<PRIVATE_IP>:<PORT>` where `PRIVATE_IP` is the Instance's private IP fetched from
+      [Metadata](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) and `PORT` is
+      the value passed to `--port`.  
+* [cluster_addr](https://www.vaultproject.io/docs/configuration/index.html#cluster_addr): 
+      Set to `https://<PRIVATE_IP>:<CLUSTER_PORT>` where `PRIVATE_IP` is the Instance's private IP fetched from
+      [Metadata](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) and `CLUSTER_PORT` is
+      the value passed to `--cluster-port`.
 
 * [storage](https://www.vaultproject.io/docs/configuration/index.html#storage): Configure Consul as the storage backend
   with the following settings:
@@ -101,14 +109,7 @@ available.
       connection is to a Consul agent running on the same server.
     * [path](https://www.vaultproject.io/docs/configuration/storage/consul.html#path): Set to `vault/`.
     * [service](https://www.vaultproject.io/docs/configuration/storage/consul.html#service): Set to `vault`.  
-    * [api_addr](https://www.vaultproject.io/docs/configuration/index.html#api_addr): 
-      Set to `https://<PRIVATE_IP>:<CLUSTER_PORT>` where `PRIVATE_IP` is the Instance's private IP fetched from
-      [Metadata](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) and `CLUSTER_PORT` is
-      the value passed to `--cluster-port`.  
-    * [cluster_addr](https://www.vaultproject.io/docs/configuration/index.html#cluster_addr): 
-      Set to `https://<PRIVATE_IP>:<CLUSTER_PORT>` where `PRIVATE_IP` is the Instance's private IP fetched from
-      [Metadata](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) and `CLUSTER_PORT` is
-      the value passed to `--cluster-port`.
+
       
 * [listener](https://www.vaultproject.io/docs/configuration/index.html#listener): Configure a [TCP 
   listener](https://www.vaultproject.io/docs/configuration/listener/tcp.html) with the following settings:

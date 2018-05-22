@@ -26,6 +26,7 @@ function print_usage {
   echo -e "  --tls-key-file\tSpecifies the path to the private key for the certificate. Required."
   echo -e "  --port\t\tThe port for Vault to listen on. Optional. Default is $DEFAULT_PORT."
   echo -e "  --cluster-port\tThe port for Vault to listen on for server-to-server requests. Optional. Default is --port + 1."
+  echo -e "  --api-addr\t\tThe full address to use for Client Redirection when running Vault in HA mode. Defaults to \"https://[instance_ip]:$DEFAULT_PORT\". Optional."
   echo -e "  --config-dir\t\tThe path to the Vault config folder. Optional. Default is the absolute path of '../config', relative to this script."
   echo -e "  --bin-dir\t\tThe path to the folder with Vault binary. Optional. Default is the absolute path of the parent folder of this script."
   echo -e "  --log-dir\t\tThe path to the Vault log folder. Optional. Default is the absolute path of '../log', relative to this script."
@@ -108,11 +109,12 @@ function generate_vault_config {
   local readonly tls_key_file="$2"
   local readonly port="$3"
   local readonly cluster_port="$4"
-  local readonly config_dir="$5"
-  local readonly user="$6"
-  local readonly enable_s3_backend="$7"
-  local readonly s3_bucket="$8"
-  local readonly s3_bucket_region="$9"
+  local readonly api_addr="$5"
+  local readonly config_dir="$6"
+  local readonly user="$7"
+  local readonly enable_s3_backend="$8"
+  local readonly s3_bucket="$9"
+  local readonly s3_bucket_region="${10}"
   local readonly config_path="$config_dir/$VAULT_CONFIG_FILE"
 
   local instance_ip_address
@@ -152,7 +154,7 @@ $consul_storage_type "consul" {
 
 # HA settings
 cluster_addr  = "https://$instance_ip_address:$cluster_port"
-api_addr      = "https://$instance_ip_address:$port"
+api_addr      = "$api_addr"
 
 EOF
 )
@@ -203,6 +205,7 @@ function run {
   local tls_key_file=""
   local port="$DEFAULT_PORT"
   local cluster_port=""
+  local api_addr=""
   local config_dir=""
   local bin_dir=""
   local log_dir=""
@@ -239,6 +242,11 @@ function run {
       --config-dir)
         assert_not_empty "$key" "$2"
         config_dir="$2"
+        shift
+        ;;
+       --api-addr)
+        assert_not_empty "$key" "$2"
+        api_addr="$2"
         shift
         ;;
       --bin-dir)
@@ -322,10 +330,14 @@ function run {
     cluster_port=$(( $port + 1 ))
   fi
 
+  if [[ -z "$api_addr" ]]; then
+    api_addr="https://$(get_instance_ip_address):${port}"
+  fi
+
   if [[ "$skip_vault_config" == "true" ]]; then
     log_info "The --skip-vault-config flag is set, so will not generate a default Vault config file."
   else
-    generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$cluster_port" "$config_dir" "$user" "$enable_s3_backend" "$s3_bucket" "$s3_bucket_region"
+    generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$cluster_port" "$api_addr" "$config_dir" "$user" "$enable_s3_backend" "$s3_bucket" "$s3_bucket_region"
   fi
 
   generate_supervisor_config "$SUPERVISOR_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_dir" "$log_level" "$user"

@@ -64,8 +64,8 @@ The `run-vault` script accepts the following arguments:
 * `skip-vault-config` (optional): If this flag is set, don't generate a Vault configuration file. This is useful if you
   have a custom configuration file and don't want to use any of of the default settings from `run-vault`.
 * `--enable-s3-backend` (optional): If this flag is set, an S3 backend will be enabled in addition to the HA Consul backend.
-* `--s3-bucket` (optional): Specifies the S3 bucket to use to store Vault data. Only used if `--s3-backend-enabled` is set.
-* `--s3-bucket-region` (optional): Specifies the AWS region where `--s3-bucket` lives. Only used if `--s3-backend-enabled` is set.
+* `--s3-bucket` (optional): Specifies the S3 bucket to use to store Vault data. Only used if `--enable-s3-backend` is set.
+* `--s3-bucket-region` (optional): Specifies the AWS region where `--s3-bucket` lives. Only used if `--enable-s3-backend` is set.
 
 Example:
 
@@ -76,7 +76,7 @@ Example:
 Or if you want to enable an S3 backend:
 
 ```
-/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --s3-backend-enabled --s3-bucket my-vault-bucket --s3-bucket-region us-east-1
+/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --enable-s3-backend --s3-bucket my-vault-bucket --s3-bucket-region us-east-1
 ```
 
 
@@ -126,7 +126,7 @@ available.
 
 `run-vault` can optionally set the following configuration values:
 
-* [storage](https://www.vaultproject.io/docs/configuration/index.html#storage): Set the `--s3-backend-enabled` flag to
+* [storage](https://www.vaultproject.io/docs/configuration/index.html#storage): Set the `--enable-s3-backend` flag to
   configure S3 as an additional (non-HA) storage backend with the following settings:
 
     * [bucket](https://www.vaultproject.io/docs/configuration/storage/s3.html#bucket): Set to the `--s3-bucket`

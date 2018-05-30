@@ -34,8 +34,8 @@ function print_usage {
   echo -e "  --user\t\tThe user to run Vault as. Optional. Default is to use the owner of --config-dir."
   echo -e "  --skip-vault-config\tIf this flag is set, don't generate a Vault configuration file. Optional. Default is false."
   echo -e "  --enable-s3-backend\tIf this flag is set, an S3 backend will be enabled in addition to the HA Consul backend. Default is false."
-  echo -e "  --s3-bucket\tSpecifies the S3 bucket to use to store Vault data. Only used if '--s3-backend-enabled' is set."
-  echo -e "  --s3-bucket-region\tSpecifies the AWS region where `--s3-bucket` lives. Only used if `--s3-backend-enabled` is set."
+  echo -e "  --s3-bucket\tSpecifies the S3 bucket to use to store Vault data. Only used if '--enable-s3-backend' is set."
+  echo -e "  --s3-bucket-region\tSpecifies the AWS region where `--s3-bucket` lives. Only used if `--enable-s3-backend` is set."
   echo
   echo "Examples:"
   echo
@@ -43,7 +43,7 @@ function print_usage {
   echo
   echo "Or"
   echo
-  echo "  run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --s3-backend-enabled --s3-bucket my-vault-bucket --s3-bucket-region us-east-1"
+  echo "  run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --enable-s3-backend --s3-bucket my-vault-bucket --s3-bucket-region us-east-1"
 }
 
 function log {

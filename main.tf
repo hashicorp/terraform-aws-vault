@@ -5,10 +5,6 @@
 # backend.
 # ---------------------------------------------------------------------------------------------------------------------
 
-provider "aws" {
-  region = "${var.aws_region}"
-}
-
 # Terraform 0.9.5 suffered from https://github.com/hashicorp/terraform/issues/14399, which causes this template the
 # conditionals in this template to fail.
 terraform {
@@ -78,10 +74,11 @@ module "vault_cluster" {
   # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
   # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
 
-  allowed_ssh_cidr_blocks            = ["0.0.0.0/0"]
-  allowed_inbound_cidr_blocks        = ["0.0.0.0/0"]
-  allowed_inbound_security_group_ids = []
-  ssh_key_name                       = "${var.ssh_key_name}"
+  allowed_ssh_cidr_blocks              = ["0.0.0.0/0"]
+  allowed_inbound_cidr_blocks          = ["0.0.0.0/0"]
+  allowed_inbound_security_group_ids   = []
+  allowed_inbound_security_group_count = 0
+  ssh_key_name                         = "${var.ssh_key_name}"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -105,7 +102,7 @@ data "template_file" "user_data_vault_cluster" {
   template = "${file("${path.module}/examples/root-example/user-data-vault.sh")}"
 
   vars {
-    aws_region               = "${var.aws_region}"
+    aws_region               = "${data.aws_region.current.name}"
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
   }
@@ -226,3 +223,5 @@ data "aws_subnet_ids" "default" {
   vpc_id = "${data.aws_vpc.default.id}"
   tags   = "${var.subnet_tags}"
 }
+
+data "aws_region" "current" {}

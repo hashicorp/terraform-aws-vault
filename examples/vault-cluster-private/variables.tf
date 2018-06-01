@@ -5,6 +5,7 @@
 
 # AWS_ACCESS_KEY_ID
 # AWS_SECRET_ACCESS_KEY
+# AWS_DEFAULT_REGION
 
 # ---------------------------------------------------------------------------------------------------------------------
 # REQUIRED PARAMETERS
@@ -23,11 +24,6 @@ variable "ssh_key_name" {
 # OPTIONAL PARAMETERS
 # These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------
-
-variable "aws_region" {
-  description = "The AWS region to deploy into (e.g. us-east-1)."
-  default     = "us-east-1"
-}
 
 variable "vault_cluster_name" {
   description = "What to name the Vault server cluster and all of its associated resources"

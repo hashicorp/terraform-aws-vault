@@ -5,6 +5,7 @@
 
 # AWS_ACCESS_KEY_ID
 # AWS_SECRET_ACCESS_KEY
+# AWS_DEFAULT_REGION
 
 # ---------------------------------------------------------------------------------------------------------------------
 # REQUIRED PARAMETERS
@@ -39,22 +40,19 @@ variable "ssh_key_name" {
 
 variable "subnet_tags" {
   description = "Tags used to find subnets for vault and consul servers"
+  type        = "map"
   default     = {}
 }
 
 variable "vpc_tags" {
   description = "Tags used to find a vpc for building resources in"
+  type        = "map"
   default     = {}
 }
 
 variable "use_default_vpc" {
   description = "Whether to use the default VPC - NOT recommended for production! - should more likely change this to false and use the vpc_tags to find your vpc"
   default     = true
-}
-
-variable "aws_region" {
-  description = "The AWS region to deploy into (e.g. us-east-1)."
-  default     = "us-east-1"
 }
 
 variable "vault_cluster_name" {

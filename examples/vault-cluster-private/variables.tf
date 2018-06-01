@@ -65,24 +65,7 @@ variable "vpc_id" {
   default     = ""
 }
 
-variable "enable_s3_backend" {
-  description = "Whether to configure an S3 storage backend in addition to Consul."
-  default     = false
-}
-
-variable "s3_bucket_name" {
-  description = "The name of the S3 bucket to create and use as a storage backend. Only used if 'enable_s3_backend' is set to true."
-  default     = ""
-}
-
-variable "force_destroy_s3_bucket" {
-  description = "If 'configure_s3_backend' is enabled and you set this to true, when you run terraform destroy, this tells Terraform to delete all the objects in the S3 bucket used for backend storage. You should NOT set this to true in production or you risk losing all your data! This property is only here so automated tests of this module can clean up after themselves. Only used if 'enable_s3_backend' is set to true."
-  default     = false
-}
-
 variable "enable_EC2_IAM_Auth" {
   description = "Configure IAM Instance Profile on Vault cluster members to permit the user to enable AWS Auth backend. Note that this does NOT actually enable the backend, but merely sets policies that will permit it to function as expected."
   default     = false
 }
-
-

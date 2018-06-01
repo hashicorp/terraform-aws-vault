@@ -37,8 +37,6 @@ module "vault_cluster" {
   allowed_inbound_security_group_count = 0
   ssh_key_name                       = "${var.ssh_key_name}"
   enable_EC2_IAM_Auth                = "${var.enable_EC2_IAM_Auth}"
-  enable_s3_backend                  = "${var.enable_s3_backend}"
-  s3_bucket_name                     = "${var.s3_bucket_name}"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -62,7 +60,6 @@ data "template_file" "user_data_vault_cluster" {
   template = "${file("${path.module}/user-data-vault.sh")}"
 
   vars {
-    s3_bucket_name           = "${var.s3_bucket_name}"
     aws_region               = "${data.aws_region.current.name}"
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"

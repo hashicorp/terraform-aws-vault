@@ -194,6 +194,29 @@ resource "aws_s3_bucket" "vault_storage" {
   }
 }
 
+resource "aws_dynamodb_table" "vault_dynamo" {
+  count          = "${var.enable_dynamo_backend ? 1 : 0}"
+  name           = "${var.dynamo_table_name}"
+  hash_key       = "Path"
+  range_key      = "Key"
+  read_capacity  = "${var.dynamo_read_capacity}"          #Defaults to 5
+  write_capacity = "${var.dynamo_write_capacity}"         #Defaults to 5
+
+  attribute {
+    name = "Path"
+    type = "S"
+  }
+
+  attribute {
+    name = "Key"
+    type = "S"
+  }
+
+  tags {
+    Description = "Used for HA storage with Vault."
+  }
+}
+
 resource "aws_iam_role_policy" "vault_s3" {
   count  = "${var.enable_s3_backend ? 1 : 0}"
   name   = "vault_s3"
@@ -201,8 +224,16 @@ resource "aws_iam_role_policy" "vault_s3" {
   policy = "${element(concat(data.aws_iam_policy_document.vault_s3.*.json, list("")), 0)}"
 }
 
+resource "aws_iam_role_policy" "vault_dynamo" {
+  count  = "${var.enable_dynamo_backend ? 1 : 0}"
+  name   = "vault_dynamo"
+  role   = "${aws_iam_role.instance_role.id}"
+  policy = "${element(concat(data.aws_iam_policy_document.vault_dynamo.*.json, list("")), 0)}"
+}
+
 data "aws_iam_policy_document" "vault_s3" {
-  count  = "${var.enable_s3_backend ? 1 : 0}"
+  count = "${var.enable_s3_backend ? 1 : 0}"
+
   statement {
     effect  = "Allow"
     actions = ["s3:*"]
@@ -210,6 +241,19 @@ data "aws_iam_policy_document" "vault_s3" {
     resources = [
       "${aws_s3_bucket.vault_storage.arn}",
       "${aws_s3_bucket.vault_storage.arn}/*",
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "vault_dynamo" {
+  count = "${var.enable_dynamo_backend ? 1 : 0}"
+
+  statement {
+    effect  = "Allow"
+    actions = ["dynamodb:*"]
+
+    resources = [
+      "${aws_dynamodb_table.vault_dynamo.arn}",
     ]
   }
 }

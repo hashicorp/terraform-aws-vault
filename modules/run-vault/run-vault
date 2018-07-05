@@ -397,10 +397,10 @@ function run {
 
   if [[ "$skip_vault_config" == "true" ]]; then
     log_info "The --skip-vault-config flag is set, so will not generate a default Vault config file."
-  elif [[ "$enable_s3_backend" == "true" ]]; then
-    generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$cluster_port" "$api_addr" "$config_dir" "$user" "$enable_s3_backend" "$s3_bucket" "$s3_bucket_region"
   elif [[ "$enable_dynamo" == "true" ]]; then
-    generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$cluster_port" "$api_addr" "$config_dir" "$user" "$enable_dynamo" "$dynamo_region" "$dynamo_table"
+    generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$cluster_port" "$api_addr" "$config_dir" "$user" "$enable_dynamo" "$dynamo_region" "$dynamo_table"  
+  else
+    generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$cluster_port" "$api_addr" "$config_dir" "$user" "$enable_s3_backend" "$s3_bucket" "$s3_bucket_region"
   fi
 
   generate_supervisor_config "$SUPERVISOR_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_dir" "$log_level" "$user"

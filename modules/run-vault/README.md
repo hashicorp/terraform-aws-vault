@@ -63,9 +63,12 @@ The `run-vault` script accepts the following arguments:
 * `user` (optional): The user to run Vault as. Default is to use the owner of `config-dir`.
 * `skip-vault-config` (optional): If this flag is set, don't generate a Vault configuration file. This is useful if you
   have a custom configuration file and don't want to use any of of the default settings from `run-vault`.
-* `--enable-s3-backend` (optional): If this flag is set, an S3 backend will be enabled in addition to the HA Consul backend.
+* `--enable-s3-backend` (optional): Cannot be set with `--enable-dynamo`.  If this flag is set, an S3 backend will be enabled in addition to the HA Consul backend.
 * `--s3-bucket` (optional): Specifies the S3 bucket to use to store Vault data. Only used if `--enable-s3-backend` is set.
 * `--s3-bucket-region` (optional): Specifies the AWS region where `--s3-bucket` lives. Only used if `--enable-s3-backend` is set.
+* `--enable-dynamo` (optional): Cannot be set with `--enable-s3-backend`.  If this flag is set, a DynamoDB backend will be enabled.  Consul will __NOT__ be enabled as a backend.
+* `--dynamo-table` (optional): Specifies the DynamoDB table to use to store Vault data.  Only used if `--enable-dynamo` is set. 
+* `--dynamo-region` (optional): Specifies the AWS region where `--dynamo-table` lives.  Only used if `--enable-dynamo` is set.
 
 Example:
 
@@ -73,12 +76,17 @@ Example:
 /opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem
 ```
 
-Or if you want to enable an S3 backend:
+If you want to enable an S3 backend:
 
 ```
 /opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --enable-s3-backend --s3-bucket my-vault-bucket --s3-bucket-region us-east-1
 ```
 
+OR if you want to enable DynamoDB backend:
+
+```
+/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --enable-dynamo --dynamo-table my-dynamo-table --dynamo-region us-east-1
+```
 
 
 ## Vault configuration
@@ -132,6 +140,14 @@ available.
     * [bucket](https://www.vaultproject.io/docs/configuration/storage/s3.html#bucket): Set to the `--s3-bucket`
       parameter.
     * [region](https://www.vaultproject.io/docs/configuration/storage/s3.html#region): Set to the `--s3-bucket-region`
+      parameter.
+
+* [storage](https://www.vaultproject.io/docs/configuration/index.html#storage): Set the `--enable-dynamo` flag to
+  configure DynamoDB as the main (HA) storage backend for Vault:
+
+    * [table](https://www.vaultproject.io/docs/configuration/storage/dynamodb.html#table): Set to the `--dynamo-table`
+      parameter.
+    * [region](https://www.vaultproject.io/docs/configuration/storage/dynamodb.html#region): Set to the `--dynamo-region`
       parameter.
 
 ### Overriding the configuration

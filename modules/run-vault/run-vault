@@ -35,7 +35,10 @@ function print_usage {
   echo -e "  --skip-vault-config\tIf this flag is set, don't generate a Vault configuration file. Optional. Default is false."
   echo -e "  --enable-s3-backend\tIf this flag is set, an S3 backend will be enabled in addition to the HA Consul backend. Default is false."
   echo -e "  --s3-bucket\tSpecifies the S3 bucket to use to store Vault data. Only used if '--enable-s3-backend' is set."
-  echo -e "  --s3-bucket-region\tSpecifies the AWS region where `--s3-bucket` lives. Only used if `--enable-s3-backend` is set."
+  echo -e "  --s3-bucket-region\tSpecifies the AWS region where '--s3-bucket' lives. Only used if '--enable-s3-backend' is set."
+  echo -e "  --enable-dynamo\tIf this flag is set, DynamoDB will be enabled as the backend storage (HA)"
+  echo -e "  --dynamo-region\tSpecifies the AWS region where --dynamo-table lives.  Only used if '--enable-dynamo is on'"
+  echo -e "  --dynamo--table\tSpecifies the DynamoDB table to use for HA Storage.  Only used if '--enable-dynamo is on'"
   echo
   echo "Examples:"
   echo
@@ -112,9 +115,25 @@ function generate_vault_config {
   local readonly api_addr="$5"
   local readonly config_dir="$6"
   local readonly user="$7"
-  local readonly enable_s3_backend="$8"
-  local readonly s3_bucket="$9"
-  local readonly s3_bucket_region="${10}"
+
+  if [[ "$enable_s3_backend" == "true" ]]; then
+    local readonly enable_s3_backend="$8"
+    local readonly s3_bucket="$9"
+    local readonly s3_bucket_region="${10}"
+    local readonly enable_dynamo=""
+    local readonly dynamo_region=""
+    local readonly dynamo_table=""
+  fi
+
+  if [[ "$enable_dynamo" == "true" ]]; then
+    local readonly enable_dynamo="$8"
+    local readonly dynamo_region="$9"
+    local readonly dynamo_table="${10}"
+    local readonly enable_s3_backend=""
+    local readonly s3_bucket=""
+    local readonly s3_bucket_region=""
+  fi
+
   local readonly config_path="$config_dir/$VAULT_CONFIG_FILE"
 
   local instance_ip_address
@@ -122,6 +141,8 @@ function generate_vault_config {
 
   log_info "Creating default Vault config file in $config_path"
   local readonly listener_config=$(cat <<EOF
+ui = true
+
 listener "tcp" {
   address         = "0.0.0.0:$port"
   cluster_address = "0.0.0.0:$cluster_port"
@@ -133,6 +154,7 @@ EOF
 
   local consul_storage_type="storage"
   local s3_config=""
+
   if [[ "$enable_s3_backend" == "true" ]]; then
     s3_config=$(cat <<EOF
 storage "s3" {
@@ -144,7 +166,24 @@ EOF
     consul_storage_type="ha_storage"
   fi
 
-  local readonly consul_storage=$(cat <<EOF
+
+  if [[ "$enable_dynamo" == "true" ]]; then
+    consul_storage=""
+    vault_storage=$(cat <<EOF
+storage "dynamodb" {
+  ha_enabled = "true"
+  region = "$dynamo_region"
+  table  = "$dynamo_table"
+}
+
+# HA settings
+cluster_addr  = "https://$instance_ip_address:$cluster_port"
+api_addr      = "$api_addr"
+
+EOF
+)
+  else
+    local readonly consul_storage=$(cat <<EOF
 $consul_storage_type "consul" {
   address = "127.0.0.1:8500"
   path    = "vault/"
@@ -159,9 +198,12 @@ api_addr      = "$api_addr"
 EOF
 )
 
+  fi
+
   echo -e "$listener_config" >> "$config_path"
   echo -e "$s3_config" >> "$config_path"
   echo -e "$consul_storage" >> "$config_path"
+  echo -e "$vault_storage" >> "$config_path"
 
   chown "$user:$user" "$config_path"
 }
@@ -215,6 +257,9 @@ function run {
   local enable_s3_backend="false"
   local s3_bucket=""
   local s3_bucket_region=""
+  local enable_dynamo="false"
+  local dynamo_region=""
+  local dynamo_table=""
   local all_args=()
 
   while [[ $# > 0 ]]; do
@@ -283,6 +328,17 @@ function run {
         s3_bucket_region="$2"
         shift
         ;;
+      --enable-dynamo)
+        enable_dynamo="true"
+        ;;
+      --dynamo-region)
+        dynamo_region="$2"
+        shift
+        ;;
+      --dynamo-table)
+        dynamo_table="$2"
+        shift
+        ;;
       --help)
         print_usage
         exit
@@ -303,6 +359,11 @@ function run {
   if [[ "$enable_s3_backend" == "true" ]]; then
     assert_not_empty "--s3-bucket" "$s3_bucket"
     assert_not_empty "--s3-bucket-region" "$s3_bucket_region"
+  fi
+
+  if [[ "$enable_dynamo" == "true" ]]; then
+    assert_not_empty "--dynamo-table" "$dynamo_table"
+    assert_not_empty "--dynamo-region" "$dynamo_region"
   fi
 
   assert_is_installed "supervisorctl"
@@ -336,8 +397,10 @@ function run {
 
   if [[ "$skip_vault_config" == "true" ]]; then
     log_info "The --skip-vault-config flag is set, so will not generate a default Vault config file."
-  else
+  elif [[ "$enable_s3_backend" == "true" ]]; then
     generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$cluster_port" "$api_addr" "$config_dir" "$user" "$enable_s3_backend" "$s3_bucket" "$s3_bucket_region"
+  elif [[ "$enable_dynamo" == "true" ]]; then
+    generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$cluster_port" "$api_addr" "$config_dir" "$user" "$enable_dynamo" "$dynamo_region" "$dynamo_table"
   fi
 
   generate_supervisor_config "$SUPERVISOR_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_dir" "$log_level" "$user"

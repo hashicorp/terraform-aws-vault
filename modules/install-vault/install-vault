@@ -102,8 +102,6 @@ function two_way_symlink() {
 
 # Install steps are based on: http://stackoverflow.com/a/31576473/483528
 function install_supervisord_amazon_linux {
-  if [[ ! $(pip list |grep supervisor) ]]; then
-
   sudo pip install supervisor
 
   # On Amazon Linux, /usr/local/bin is not in PATH for the root user, so we add symlinks to /usr/bin, which is in PATH
@@ -117,7 +115,6 @@ function install_supervisord_amazon_linux {
   create_supervisor_config
   sudo chkconfig --add supervisor
   sudo chkconfig supervisor on
-  fi
 }
 
 function create_supervisor_config {

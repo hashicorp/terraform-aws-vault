@@ -115,24 +115,12 @@ function generate_vault_config {
   local readonly api_addr="$5"
   local readonly config_dir="$6"
   local readonly user="$7"
-
-  if [[ "$enable_s3_backend" == "true" ]]; then
-    local readonly enable_s3_backend="$8"
-    local readonly s3_bucket="$9"
-    local readonly s3_bucket_region="${10}"
-    local readonly enable_dynamo=""
-    local readonly dynamo_region=""
-    local readonly dynamo_table=""
-  fi
-
-  if [[ "$enable_dynamo" == "true" ]]; then
-    local readonly enable_dynamo="$8"
-    local readonly dynamo_region="$9"
-    local readonly dynamo_table="${10}"
-    local readonly enable_s3_backend=""
-    local readonly s3_bucket=""
-    local readonly s3_bucket_region=""
-  fi
+  local readonly enable_s3_backend="$8"
+  local readonly s3_bucket="$9"
+  local readonly s3_bucket_region="${10}"
+  local readonly enable_dynamo="${11}"
+  local readonly dynamo_region="${12}"
+  local readonly dynamo_table="${13}"
 
   local readonly config_path="$config_dir/$VAULT_CONFIG_FILE"
 
@@ -400,8 +388,10 @@ function run {
     log_info "The --skip-vault-config flag is set, so will not generate a default Vault config file."
   elif [[ "$enable_dynamo" == "true" ]]; then
     generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$cluster_port" "$api_addr" "$config_dir" "$user" "$enable_dynamo" "$dynamo_region" "$dynamo_table"  
-  else
+  elif [[ "$enable_s3_backend" == "true" ]]; then
     generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$cluster_port" "$api_addr" "$config_dir" "$user" "$enable_s3_backend" "$s3_bucket" "$s3_bucket_region"
+  else
+    generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$cluster_port" "$api_addr" "$config_dir" "$user"
   fi
 
   generate_supervisor_config "$SUPERVISOR_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_dir" "$log_level" "$user"

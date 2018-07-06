@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY A VAULT SERVER CLUSTER AND A CONSUL SERVER CLUSTER IN AWS
-# This is an example of how to use the vault-cluster module to deploy a Vault cluster in AWS. This cluster uses Consul,
-# running in a separate cluster, as its storage backend.
+# DEPLOY A VAULT SERVER CLUSTER WITH DYNAMODB BACKEND IN AWS
+# This is an example of how to use the vault-cluster module to deploy a Vault cluster in AWS. This cluster uses DynamoDB,
+# running separately (built within the vault-cluster module), as its storage backend.
 # ---------------------------------------------------------------------------------------------------------------------
 
 terraform {

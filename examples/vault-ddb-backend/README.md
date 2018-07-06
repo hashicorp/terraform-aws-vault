@@ -26,9 +26,8 @@ production usage, we strongly recommend deploying the Vault cluster into the pri
 To deploy a Vault Cluster:
 
 1. `git clone` this repo to your computer.
-1. Optional: build a Vault and Consul AMI. See the [vault-consul-ami
-   example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-consul-ami) documentation for
-   instructions. Make sure to note down the ID of the AMI.
+1. Optional: build a Vault AMI. See the [vault-consul-ami example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-consul-ami) documentation for instructions on how to build an AMI that has both Vault and Consul installed (note that for this example, you'll only need Vault, but having both won't hurt anything).
+
 1. Install [Terraform](https://www.terraform.io/).
 1. Open `vars.tf`, set the environment variables specified at the top of the file, and fill in any other variables that
    don't have a default. If you built a custom AMI, put the AMI ID into the `ami_id` variable. Otherwise, one of our

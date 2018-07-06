@@ -154,6 +154,8 @@ EOF
 
   local consul_storage_type="storage"
   local s3_config=""
+  local consul_storage=""
+  local vault_storage=""
 
   if [[ "$enable_s3_backend" == "true" ]]; then
     s3_config=$(cat <<EOF
@@ -168,7 +170,6 @@ EOF
 
 
   if [[ "$enable_dynamo" == "true" ]]; then
-    consul_storage=""
     vault_storage=$(cat <<EOF
 storage "dynamodb" {
   ha_enabled = "true"
@@ -183,7 +184,7 @@ api_addr      = "$api_addr"
 EOF
 )
   else
-    local readonly consul_storage=$(cat <<EOF
+    consul_storage=$(cat <<EOF
 $consul_storage_type "consul" {
   address = "127.0.0.1:8500"
   path    = "vault/"

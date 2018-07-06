@@ -35,5 +35,5 @@ output "s3_bucket_arn" {
 }
 
 output "dynamo_table_arn" {
-  value = "${aws_dynamodb_table.vault_dynamo.arn}"
+  value = "${element(concat(aws_dynamodb_table.vault_dynamo.*.arn, list("")), 0)}"
 }

@@ -13,6 +13,7 @@ readonly EC2_INSTANCE_METADATA_URL="http://169.254.169.254/latest/meta-data"
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_NAME="$(basename "$0")"
+readonly VAULT_VERSION=$(vault -v|awk '{print $2}'|tr -d v)
 
 function print_usage {
   echo
@@ -121,6 +122,12 @@ function generate_vault_config {
   instance_ip_address=$(get_instance_ip_address)
 
   log_info "Creating default Vault config file in $config_path"
+  local readonly ui_config=$(cat <<EOF
+ui = true
+
+EOF
+)
+
   local readonly listener_config=$(cat <<EOF
 listener "tcp" {
   address         = "0.0.0.0:$port"
@@ -159,6 +166,11 @@ api_addr      = "$api_addr"
 EOF
 )
 
+if [ $(echo "$VAULT_VERSION 0.10.0" | tr " " "\n" |sort --version-sort| head -n 1) = 0.10.0 ]; then
+    echo -e "$ui_config" >> "$config_path"
+  else
+    log_info "Vault 0.10.0 or greater is required for UI support."
+fi
   echo -e "$listener_config" >> "$config_path"
   echo -e "$s3_config" >> "$config_path"
   echo -e "$consul_storage" >> "$config_path"

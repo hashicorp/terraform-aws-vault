@@ -92,6 +92,9 @@ available.
 ### Default configuration
 
 `run-vault` sets the following configuration values by default:
+* [ui](https://www.vaultproject.io/docs/configuration/index.html#ui):
+      Set to "ui = true" only when the installed vault version is >=0.10.0.
+
 * [api_addr](https://www.vaultproject.io/docs/configuration/index.html#api_addr):
       Set to `https://<PRIVATE_IP>:<PORT>` where `PRIVATE_IP` is the Instance's private IP fetched from
       [Metadata](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html) and `PORT` is

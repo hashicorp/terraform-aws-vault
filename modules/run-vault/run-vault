@@ -104,6 +104,28 @@ function assert_is_installed {
   fi
 }
 
+function get_vault_version {
+  #Runs vault -v to get the vault version, then strips out everything but the version number.
+  #The current output format of vault -v is:
+  #Vault v0.10.4 ('e21712a687889de1125e0a12a980420b1a4f72d3')
+  /usr/local/bin/vault -v|awk '{print $2}'|tr -d v
+}
+
+function vault_version_at_least {
+  local readonly config_path=$1
+  local readonly ui_config=$2
+  VAULT_VERSION=$(get_vault_version)
+
+  #This if statement will echo the current vault version and the minimum version required for ui support.
+  #It then strips out the comments, sorts the two values, and chooses the top (least) one.
+  if [[ $(echo "$VAULT_VERSION 0.10.0" | tr " " "\n" |sort --version-sort| head -n 1) = 0.10.0 ]]
+    then
+      echo -e "$ui_config" >> "$config_path"
+    else
+      log_info "Vault 0.10.0 or greater is required for UI support."
+  fi
+}
+
 function generate_vault_config {
   local readonly tls_cert_file="$1"
   local readonly tls_key_file="$2"
@@ -121,6 +143,12 @@ function generate_vault_config {
   instance_ip_address=$(get_instance_ip_address)
 
   log_info "Creating default Vault config file in $config_path"
+  local readonly ui_config=$(cat <<EOF
+ui = true
+
+EOF
+)
+
   local readonly listener_config=$(cat <<EOF
 listener "tcp" {
   address         = "0.0.0.0:$port"
@@ -159,6 +187,7 @@ api_addr      = "$api_addr"
 EOF
 )
 
+  vault_version_at_least "$config_path" "$ui_config"
   echo -e "$listener_config" >> "$config_path"
   echo -e "$s3_config" >> "$config_path"
   echo -e "$consul_storage" >> "$config_path"

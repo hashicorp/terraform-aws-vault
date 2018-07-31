@@ -50,8 +50,8 @@ data "template_file" "user_data_vault_cluster" {
   template = "${file("${path.module}/user-data-vault.sh")}"
 
   vars {
-    aws_region         = "${data.aws_region.current.name}"
-    dynamo_table_name  = "${var.dynamo_table_name}"
+    aws_region        = "${data.aws_region.current.name}"
+    dynamo_table_name = "${var.dynamo_table_name}"
   }
 }
 

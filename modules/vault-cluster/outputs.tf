@@ -33,3 +33,7 @@ output "security_group_id" {
 output "s3_bucket_arn" {
   value = "${join(",", aws_s3_bucket.vault_storage.*.arn)}"
 }
+
+output "dynamo_table_arn" {
+  value = "${element(concat(aws_dynamodb_table.vault_dynamo.*.arn, list("")), 0)}"
+}

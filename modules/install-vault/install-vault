@@ -139,7 +139,7 @@ function install_dependencies {
     install_supervisord_debian
   elif $(has_yum); then
     sudo yum update -y
-    sudo yum install -y aws curl unzip jq
+    sudo yum install -y awscli curl unzip jq
     install_supervisord_amazon_linux
   else
     log_error "Could not find apt-get or yum. Cannot install dependencies on this OS."

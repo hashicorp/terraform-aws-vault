@@ -110,3 +110,8 @@ variable "health_check_timeout" {
   description = "The amount of time, in seconds, before a health check times out."
   default     = 5
 }
+
+variable "lb_tags" {
+  description = "Tags to be applied to the load balancer."
+  default     = {}
+}

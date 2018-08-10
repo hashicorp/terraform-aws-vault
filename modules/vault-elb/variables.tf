@@ -91,6 +91,11 @@ variable "health_check_path" {
   default     = "/v1/sys/health?standbyok=true"
 }
 
+variable "health_check_port" {
+  description = "The port to use for health checks if not vault_api_port."
+  default     = 0
+}
+
 variable "health_check_interval" {
   description = "The amount of time, in seconds, between health checks."
   default     = 15

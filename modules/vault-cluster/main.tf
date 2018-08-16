@@ -88,9 +88,7 @@ resource "aws_security_group" "lc_security_group" {
     create_before_destroy = true
   }
 
-  tags {
-    Name = "${var.cluster_name}"
-  }
+  tags = "${merge(map("Name", var.cluster_name), var.security_group_tags)}"
 }
 
 resource "aws_security_group_rule" "allow_ssh_inbound_from_cidr_blocks" {
@@ -189,9 +187,10 @@ resource "aws_s3_bucket" "vault_storage" {
   bucket        = "${var.s3_bucket_name}"
   force_destroy = "${var.force_destroy_s3_bucket}"
 
-  tags {
-    Description = "Used for secret storage with Vault. DO NOT DELETE this Bucket unless you know what you are doing."
-  }
+  tags = "${merge(
+    map("Description", "Used for secret storage with Vault. DO NOT DELETE this Bucket unless you know what you are doing."),
+    var.s3_bucket_tags)
+  }"
 }
 
 resource "aws_iam_role_policy" "vault_s3" {

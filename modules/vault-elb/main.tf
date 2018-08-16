@@ -58,6 +58,8 @@ resource "aws_security_group" "vault" {
   name        = "${var.name}-elb"
   description = "Security group for the ${var.name} ELB"
   vpc_id      = "${var.vpc_id}"
+
+  tags = "${var.sg_tags}"
 }
 
 resource "aws_security_group_rule" "allow_inbound_api" {

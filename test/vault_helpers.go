@@ -492,7 +492,7 @@ func createVaultClient(t *testing.T, domainName string) *api.Client {
 func unsealVaultNode(t *testing.T, host ssh.Host, unsealKeys []string) {
 	unsealCommands := []string{}
 	for _, unsealKey := range unsealKeys {
-		unsealCommands = append(unsealCommands, fmt.Sprintf("vault unseal %s", unsealKey))
+		unsealCommands = append(unsealCommands, fmt.Sprintf("vault operator unseal %s", unsealKey))
 	}
 
 	unsealCommand := strings.Join(unsealCommands, " && ")

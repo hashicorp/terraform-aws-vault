@@ -11,7 +11,7 @@ dependencies:
     - gruntwork-install --module-name "build-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.12.2"
     - gruntwork-install --module-name "aws-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.12.2"
     - gruntwork-install --module-name "git-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.12.2"
-    - configure-environment-for-gruntwork-module --go-src-path test --use-go-dep
+    - configure-environment-for-gruntwork-module --go-src-path test --use-go-dep --terraform-version 0.11.7
 
   cache_directories:
     - ~/terraform

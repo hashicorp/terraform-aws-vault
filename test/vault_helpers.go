@@ -54,6 +54,8 @@ var UnsealKeyRegex = regexp.MustCompile("^Unseal Key \\d: (.+)$")
 
 const vaultStdOutLogFilePath = "/opt/vault/log/vault-stdout.log"
 const vaultStdErrLogFilePath = "/opt/vault/log/vault-error.log"
+const vaultSyslogPathUbuntu = "/var/log/syslog"
+const vaultSyslogPathAmazonLinux = "/var/log/messages"
 const vaultClusterSizeInExamples = 3
 
 type VaultCluster struct {
@@ -261,16 +263,23 @@ func runVaultWithS3BackendClusterTest(t *testing.T, packerBuildName string, sshU
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
 		asgName := terraform.OutputRequired(t, terraformOptions, OUTPUT_VAULT_CLUSTER_ASG_NAME)
 
-		instanceIdToFilePathToContents := aws.FetchContentsOfFilesFromAsg(t, awsRegion, sshUserName, keyPair, asgName, true, vaultStdOutLogFilePath, vaultStdErrLogFilePath)
+		sysLogPath := vaultSyslogPathUbuntu
+		if sshUserName == "ec2-user" {
+			sysLogPath = vaultSyslogPathAmazonLinux
+		}
+
+		instanceIdToFilePathToContents := aws.FetchContentsOfFilesFromAsg(t, awsRegion, sshUserName, keyPair, asgName, true, vaultStdOutLogFilePath, vaultStdErrLogFilePath, sysLogPath)
 
 		require.Len(t, instanceIdToFilePathToContents, vaultClusterSizeInExamples)
 
 		for instanceID, filePathToContents := range instanceIdToFilePathToContents {
 			require.Contains(t, filePathToContents, vaultStdOutLogFilePath)
 			require.Contains(t, filePathToContents, vaultStdErrLogFilePath)
+			require.Contains(t, filePathToContents, sysLogPath)
 
 			logger.Logf(t, "Contents of %s on Instance %s:\n\n%s\n", vaultStdOutLogFilePath, instanceID, filePathToContents[vaultStdOutLogFilePath])
 			logger.Logf(t, "Contents of %s on Instance %s:\n\n%s\n", vaultStdErrLogFilePath, instanceID, filePathToContents[vaultStdErrLogFilePath])
+			logger.Logf(t, "Contents of %s on Instance %s:\n\n%s\n", sysLogPath, instanceID, filePathToContents[sysLogPath])
 		}
 	})
 

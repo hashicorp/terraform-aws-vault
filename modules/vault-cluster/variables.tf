@@ -81,6 +81,12 @@ variable "additional_security_group_ids" {
   default     = []
 }
 
+variable "security_group_tags" {
+  description = "Tags to be applied to the LC security group"
+  type        = "map"
+  default     = {}
+}
+
 variable "cluster_tag_key" {
   description = "Add a tag with this key and the value var.cluster_name to each Instance in the ASG."
   default     = "Name"
@@ -179,6 +185,12 @@ variable "enable_s3_backend" {
 variable "s3_bucket_name" {
   description = "The name of the S3 bucket to create and use as a storage backend. Only used if 'enable_s3_backend' is set to true."
   default     = ""
+}
+
+variable "s3_bucket_tags" {
+  description = "Tags to be applied to the S3 bucket."
+  type        = "map"
+  default     = {}
 }
 
 variable "force_destroy_s3_bucket" {

@@ -38,7 +38,7 @@ resource "aws_elb" "vault" {
     timeout             = "${var.health_check_timeout}"
   }
 
-  tags = "${merge(map("Name", var.name), var.lb_tags)}"
+  tags = "${merge(var.load_balancer_tags, map("Name", var.name))}"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -58,6 +58,8 @@ resource "aws_security_group" "vault" {
   name        = "${var.name}-elb"
   description = "Security group for the ${var.name} ELB"
   vpc_id      = "${var.vpc_id}"
+
+  tags = "${var.security_group_tags}"
 }
 
 resource "aws_security_group_rule" "allow_inbound_api" {

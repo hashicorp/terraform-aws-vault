@@ -116,7 +116,13 @@ variable "health_check_timeout" {
   default     = 5
 }
 
-variable "lb_tags" {
-  description = "Tags to be applied to the load balancer."
+variable "load_balancer_tags" {
+  description = "Tags to be applied to the ELB."
+  default     = {}
+}
+
+variable "security_group_tags" {
+  description = "Tags to be applied to the ELB security group."
+  type        = "map"
   default     = {}
 }

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/gruntwork-io/terratest/modules/terraform"
+	"strings"
 )
 
 type TlsCert struct {
@@ -71,9 +72,28 @@ func generateSelfSignedTlsCert(t *testing.T) TlsCert {
 
 	terraform.InitAndApply(t, terraformOptions)
 
+	assertFileNotEmpty(t, caPublicKeyFilePath.Name())
+	assertFileNotEmpty(t, publicKeyFilePath.Name())
+	assertFileNotEmpty(t, privateKeyFilePath.Name())
+
 	return TlsCert{
 		CAPublicKeyPath: caPublicKeyFilePath.Name(),
 		PublicKeyPath:   publicKeyFilePath.Name(),
 		PrivateKeyPath:  privateKeyFilePath.Name(),
+	}
+}
+
+// This is an attempt to catch a strange issue where the private-tls-cert module seems to occasionally create a private
+// key file that is completely empty. This doesn't fix the issue, but it at least helps us confirm that this is the
+// issue that is causing intermittent test failures.
+func assertFileNotEmpty(t *testing.T, path string) {
+	bytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fileContents := string(bytes)
+	if strings.TrimSpace(fileContents) == "" {
+		t.Fatalf("Expected file at %s to not be empty", path)
 	}
 }

@@ -26,6 +26,9 @@ if [[ -z "$PACKER_BUILD_NAME" ]]; then
   exit 1
 fi
 
+echo "Checking out branch $BRANCH_NAME to make sure we do all work in a branch and not in detached HEAD state"
+git checkout "$BRANCH_NAME"
+
 # Build the example AMI. Note that we pass in the example TLS files. WARNING! In a production setting, you should
 # decrypt or fetch secrets like this when the AMI boots versus embedding them statically into the AMI.
 build-packer-artifact \

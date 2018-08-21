@@ -18,6 +18,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
+	"github.com/stretchr/testify/require"
 )
 
 const REPO_ROOT = "../"
@@ -50,6 +51,12 @@ const AMI_EXAMPLE_PATH = "../examples/vault-consul-ami/vault-consul.json"
 const SAVED_AWS_REGION = "AwsRegion"
 
 var UnsealKeyRegex = regexp.MustCompile("^Unseal Key \\d: (.+)$")
+
+const vaultStdOutLogFilePath = "/opt/vault/log/vault-stdout.log"
+const vaultStdErrLogFilePath = "/opt/vault/log/vault-error.log"
+const vaultSyslogPathUbuntu = "/var/log/syslog"
+const vaultSyslogPathAmazonLinux = "/var/log/messages"
+const vaultClusterSizeInExamples = 3
 
 type VaultCluster struct {
 	Leader     ssh.Host
@@ -248,6 +255,32 @@ func runVaultWithS3BackendClusterTest(t *testing.T, packerBuildName string, sshU
 
 		tlsCert := loadTlsCert(t, examplesDir)
 		cleanupTlsCertFiles(tlsCert)
+	})
+
+	defer test_structure.RunTestStage(t, "logs", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+		asgName := terraform.OutputRequired(t, terraformOptions, OUTPUT_VAULT_CLUSTER_ASG_NAME)
+
+		sysLogPath := vaultSyslogPathUbuntu
+		if sshUserName == "ec2-user" {
+			sysLogPath = vaultSyslogPathAmazonLinux
+		}
+
+		instanceIdToFilePathToContents := aws.FetchContentsOfFilesFromAsg(t, awsRegion, sshUserName, keyPair, asgName, true, vaultStdOutLogFilePath, vaultStdErrLogFilePath, sysLogPath)
+
+		require.Len(t, instanceIdToFilePathToContents, vaultClusterSizeInExamples)
+
+		for instanceID, filePathToContents := range instanceIdToFilePathToContents {
+			require.Contains(t, filePathToContents, vaultStdOutLogFilePath)
+			require.Contains(t, filePathToContents, vaultStdErrLogFilePath)
+			require.Contains(t, filePathToContents, sysLogPath)
+
+			logger.Logf(t, "Contents of %s on Instance %s:\n\n%s\n", vaultStdOutLogFilePath, instanceID, filePathToContents[vaultStdOutLogFilePath])
+			logger.Logf(t, "Contents of %s on Instance %s:\n\n%s\n", vaultStdErrLogFilePath, instanceID, filePathToContents[vaultStdErrLogFilePath])
+			logger.Logf(t, "Contents of %s on Instance %s:\n\n%s\n", sysLogPath, instanceID, filePathToContents[sysLogPath])
+		}
 	})
 
 	test_structure.RunTestStage(t, "setup_ami", func() {
@@ -492,7 +525,7 @@ func createVaultClient(t *testing.T, domainName string) *api.Client {
 func unsealVaultNode(t *testing.T, host ssh.Host, unsealKeys []string) {
 	unsealCommands := []string{}
 	for _, unsealKey := range unsealKeys {
-		unsealCommands = append(unsealCommands, fmt.Sprintf("vault unseal %s", unsealKey))
+		unsealCommands = append(unsealCommands, fmt.Sprintf("vault operator unseal %s", unsealKey))
 	}
 
 	unsealCommand := strings.Join(unsealCommands, " && ")

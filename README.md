@@ -106,8 +106,8 @@ To deploy the Vault cluster:
    sample code.
 
 1. If you need to access Vault from the public Internet, deploy the [vault-elb module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-elb) in a public 
-   subnet and have all requests to Vault go through the ELB. See the [vault-cluster-public 
-   example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) for working sample code.
+   subnet and have all requests to Vault go through the ELB. See the [main.tf in the root folder of this repo 
+   example](https://github.com/hashicorp/terraform-aws-vault/blob/master/main.tf) for working sample code.
 
 1. Head over to the [How do you use the Vault cluster?](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster#how-do-you-use-the-vault-cluster) guide
    to learn how to initialize, unseal, and use Vault.

@@ -13,7 +13,8 @@ terraform {
 resource "aws_autoscaling_group" "autoscaling_group" {
   name_prefix = "${var.cluster_name}"
 
-  launch_configuration = "${aws_launch_configuration.launch_configuration.name}"
+  launch_configuration = "${var.use_launch_template ? 0 : aws_launch_configuration.launch_configuration.*.name[0]}"
+  launch_template      = "${var.use_launch_template ? aws_launch_template.launch_template.*.name[0] : 0}"
 
   availability_zones  = ["${var.availability_zones}"]
   vpc_zone_identifier = ["${var.subnet_ids}"]
@@ -41,6 +42,7 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_launch_configuration" "launch_configuration" {
+  count         = "${var.use_launch_template ? 0 : 1}"
   name_prefix   = "${var.cluster_name}-"
   image_id      = "${var.ami_id}"
   instance_type = "${var.instance_type}"
@@ -58,6 +60,66 @@ resource "aws_launch_configuration" "launch_configuration" {
     volume_type           = "${var.root_volume_type}"
     volume_size           = "${var.root_volume_size}"
     delete_on_termination = "${var.root_volume_delete_on_termination}"
+  }
+
+  # Important note: whenever using a launch configuration with an auto scaling group, you must set
+  # create_before_destroy = true. However, as soon as you set create_before_destroy = true in one resource, you must
+  # also set it in every resource that it depends on, or you'll get an error about cyclic dependencies (especially when
+  # removing resources). For more info, see:
+  #
+  # https://www.terraform.io/docs/providers/aws/r/launch_configuration.html
+  # https://terraform.io/docs/configuration/resources.html
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+data "aws_ami" "ami" {
+  filter {
+    name   = "image-id"
+    values = ["${var.ami_id}"]
+  }
+}
+
+resource "aws_launch_template" "launch_template" {
+  count         = "${var.use_launch_template ? 1 : 0}"
+  name_prefix   = "${var.cluster_name}-"
+  image_id      = "${var.ami_id}"
+  instance_type = "${var.instance_type}"
+  user_data     = "${var.user_data}"
+
+  iam_instance_profile {
+    name = "${aws_iam_instance_profile.instance_profile.name}"
+  }
+
+  key_name               = "${var.ssh_key_name}"
+  vpc_security_group_ids = ["${concat(list(aws_security_group.lc_security_group.id), var.additional_security_group_ids)}"]
+
+  placement {
+    tenancy = "${var.tenancy}"
+  }
+
+  network_interfaces {
+    associate_public_ip_address = "${var.associate_public_ip_address}"
+  }
+
+  ebs_optimized = "${var.root_volume_ebs_optimized}"
+
+  block_device {
+    device_name           = "${data.aws_ami.ami.root_device_name}"
+    volume_type           = "${var.root_volume_type}"
+    volume_size           = "${var.root_volume_size}"
+    delete_on_termination = "${var.root_volume_delete_on_termination}"
+  }
+
+  tag_specifications {
+    # Instanc tags are already handled by the autoscaling group
+    resource_type = "volume"
+
+    tags = "${merge(
+      map("key", var.cluster_tag_key, "value", var.cluster_name),
+      var.volume_extra_tags)
+    }"
   }
 
   # Important note: whenever using a launch configuration with an auto scaling group, you must set
@@ -201,7 +263,8 @@ resource "aws_iam_role_policy" "vault_s3" {
 }
 
 data "aws_iam_policy_document" "vault_s3" {
-  count  = "${var.enable_s3_backend ? 1 : 0}"
+  count = "${var.enable_s3_backend ? 1 : 0}"
+
   statement {
     effect  = "Allow"
     actions = ["s3:*"]

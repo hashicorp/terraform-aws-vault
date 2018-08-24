@@ -13,22 +13,21 @@ terraform {
 resource "aws_autoscaling_group" "autoscaling_group" {
   name_prefix = "${var.cluster_name}"
 
-  launch_configuration = "${var.use_launch_template ? 0 : aws_launch_configuration.launch_configuration.*.name[0]}"
-  launch_template      = "${var.use_launch_template ? aws_launch_template.launch_template.*.name[0] : 0}"
+  # launch_configuration = "${aws_launch_configuration.launch_configuration.name}"
 
+  launch_template {
+    id = "${aws_launch_template.launch_template.id}"
+  }
   availability_zones  = ["${var.availability_zones}"]
   vpc_zone_identifier = ["${var.subnet_ids}"]
-
   # Use a fixed-size cluster
-  min_size             = "${var.cluster_size}"
-  max_size             = "${var.cluster_size}"
-  desired_capacity     = "${var.cluster_size}"
-  termination_policies = ["${var.termination_policies}"]
-
+  min_size                  = "${var.cluster_size}"
+  max_size                  = "${var.cluster_size}"
+  desired_capacity          = "${var.cluster_size}"
+  termination_policies      = ["${var.termination_policies}"]
   health_check_type         = "${var.health_check_type}"
   health_check_grace_period = "${var.health_check_grace_period}"
   wait_for_capacity_timeout = "${var.wait_for_capacity_timeout}"
-
   tags = ["${concat(
     list(
       map("key", var.cluster_tag_key, "value", var.cluster_name, "propagate_at_launch", true)
@@ -38,11 +37,10 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# CREATE LAUNCH CONFIGURATION TO DEFINE WHAT RUNS ON EACH INSTANCE IN THE ASG
+# CREATE LAUNCH TEMPLATE TO DEFINE WHAT RUNS ON EACH INSTANCE IN THE ASG
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_launch_configuration" "launch_configuration" {
-  count         = "${var.use_launch_template ? 0 : 1}"
   name_prefix   = "${var.cluster_name}-"
   image_id      = "${var.ami_id}"
   instance_type = "${var.instance_type}"
@@ -82,11 +80,10 @@ data "aws_ami" "ami" {
 }
 
 resource "aws_launch_template" "launch_template" {
-  count         = "${var.use_launch_template ? 1 : 0}"
   name_prefix   = "${var.cluster_name}-"
   image_id      = "${var.ami_id}"
   instance_type = "${var.instance_type}"
-  user_data     = "${var.user_data}"
+  user_data     = "${base64encode(var.user_data)}"
 
   iam_instance_profile {
     name = "${aws_iam_instance_profile.instance_profile.name}"
@@ -99,21 +96,25 @@ resource "aws_launch_template" "launch_template" {
     tenancy = "${var.tenancy}"
   }
 
-  network_interfaces {
-    associate_public_ip_address = "${var.associate_public_ip_address}"
-  }
+  # network_interfaces {
+  #   associate_public_ip_address = "${var.associate_public_ip_address}"
+  #   security_groups             = ["${concat(list(aws_security_group.lc_security_group.id), var.additional_security_group_ids)}"]
+  # }
 
   ebs_optimized = "${var.root_volume_ebs_optimized}"
+  block_device_mappings {
+    device_name = "${data.aws_ami.ami.root_device_name}"
 
-  block_device {
-    device_name           = "${data.aws_ami.ami.root_device_name}"
-    volume_type           = "${var.root_volume_type}"
-    volume_size           = "${var.root_volume_size}"
-    delete_on_termination = "${var.root_volume_delete_on_termination}"
+    ebs {
+      encrypted             = "${var.ebs_encryption}"
+      volume_type           = "${var.root_volume_type}"
+      volume_size           = "${var.root_volume_size}"
+      delete_on_termination = "${var.root_volume_delete_on_termination}"
+    }
   }
-
+  tags = "${var.launch_template_tags}"
   tag_specifications {
-    # Instanc tags are already handled by the autoscaling group
+    # Instance tags are already handled by the autoscaling group
     resource_type = "volume"
 
     tags = "${merge(
@@ -121,7 +122,6 @@ resource "aws_launch_template" "launch_template" {
       var.volume_extra_tags)
     }"
   }
-
   # Important note: whenever using a launch configuration with an auto scaling group, you must set
   # create_before_destroy = true. However, as soon as you set create_before_destroy = true in one resource, you must
   # also set it in every resource that it depends on, or you'll get an error about cyclic dependencies (especially when

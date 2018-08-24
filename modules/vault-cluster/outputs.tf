@@ -14,12 +14,8 @@ output "cluster_size" {
   value = "${aws_autoscaling_group.autoscaling_group.desired_capacity}"
 }
 
-output "launch_config_name" {
-  value = "${var.use_launch_template ? "" : aws_launch_configuration.launch_configuration.*.name[0]}"
-}
-
 output "launch_template_name" {
-  value = "${var.use_launch_template ? aws_launch_template.launch_template.*.name[0] : ""}"
+  value = "${aws_launch_template.launch_template.name}"
 }
 
 output "iam_role_arn" {

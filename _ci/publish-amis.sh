@@ -7,10 +7,11 @@
 
 set -e
 
-readonly PACKER_TEMPLATE_PATH="/home/ubuntu/$CIRCLE_PROJECT_REPONAME/examples/vault-consul-ami/vault-consul.json"
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly PACKER_TEMPLATE_PATH="$SCRIPT_DIR/../examples/vault-consul-ami/vault-consul.json"
 readonly PACKER_TEMPLATE_DEFAULT_REGION="us-east-1"
 readonly AMI_PROPERTIES_FILE="/tmp/ami.properties"
-readonly AMI_LIST_MARKDOWN_DIR="/home/ubuntu/$CIRCLE_PROJECT_REPONAME/_docs"
+readonly AMI_LIST_MARKDOWN_DIR="$SCRIPT_DIR/../_docs"
 readonly GIT_COMMIT_MESSAGE="Add latest AMI IDs."
 readonly GIT_USER_NAME="gruntwork-ci"
 readonly GIT_USER_EMAIL="ci@gruntwork.io"
@@ -44,9 +45,9 @@ build-packer-artifact \
   --packer-template-path "$PACKER_TEMPLATE_PATH" \
   --build-name "$PACKER_BUILD_NAME" \
   --output-properties-file "$AMI_PROPERTIES_FILE" \
-  --var ca_public_key_path=~/$CIRCLE_PROJECT_REPONAME/examples/vault-consul-ami/tls/ca.crt.pem \
-  --var tls_public_key_path=~/$CIRCLE_PROJECT_REPONAME/examples/vault-consul-ami/tls/vault.crt.pem \
-  --var tls_private_key_path=~/$CIRCLE_PROJECT_REPONAME/examples/vault-consul-ami/tls/vault.key.pem
+  --var ca_public_key_path="$SCRIPT_DIR/../examples/vault-consul-ami/tls/ca.crt.pem" \
+  --var tls_public_key_path="$SCRIPT_DIR/../examples/vault-consul-ami/tls/vault.crt.pem" \
+  --var tls_private_key_path="$SCRIPT_DIR/../examples/vault-consul-ami/tls/vault.key.pem"
 
 # Copy the AMI to all regions and make it public in each
 source "$AMI_PROPERTIES_FILE"

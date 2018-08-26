@@ -43,7 +43,7 @@ jobs:
       - deploy:
           command: |
             if [[ $CIRCLE_BRANCH == "publish-amis" || -n $CIRCLE_TAG ]]; then
-              ~/$CIRCLE_PROJECT_REPONAME/_ci/publish-amis.sh "ubuntu16-ami"
-              ~/$CIRCLE_PROJECT_REPONAME/_ci/publish-amis.sh "amazon-linux-ami"
+              ./_ci/publish-amis.sh "ubuntu16-ami"
+              ./_ci/publish-amis.sh "amazon-linux-ami"
             fi
 

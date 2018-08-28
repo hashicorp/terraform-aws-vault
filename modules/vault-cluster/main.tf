@@ -15,8 +15,10 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 
   # launch_configuration = "${aws_launch_configuration.launch_configuration.name}"
 
+  depends_on = ["aws_iam_instance_profile.instance_profile", "aws_launch_template.launch_template"]
   launch_template {
-    id = "${aws_launch_template.launch_template.id}"
+    id      = "${aws_launch_template.launch_template.id}"
+    version = "$$Latest"
   }
   availability_zones  = ["${var.availability_zones}"]
   vpc_zone_identifier = ["${var.subnet_ids}"]
@@ -86,22 +88,26 @@ resource "aws_launch_template" "launch_template" {
   instance_type = "${var.instance_type}"
   user_data     = "${base64encode(var.user_data)}"
 
+  depends_on = ["aws_iam_instance_profile.instance_profile"]
+
   iam_instance_profile {
     name = "${aws_iam_instance_profile.instance_profile.name}"
   }
 
-  key_name               = "${var.ssh_key_name}"
-  vpc_security_group_ids = ["${concat(list(aws_security_group.lc_security_group.id), var.additional_security_group_ids)}"]
+  key_name = "${var.ssh_key_name}"
+
+  # Don't use vpc_security_group_ids when network_interfaces
+  # includes security_groups.
+  # vpc_security_group_ids = ["${concat(list(aws_security_group.lc_security_group.id), var.additional_security_group_ids)}"]
 
   placement {
     tenancy = "${var.tenancy}"
   }
-
-  # network_interfaces {
-  #   associate_public_ip_address = "${var.associate_public_ip_address}"
-  #   security_groups             = ["${concat(list(aws_security_group.lc_security_group.id), var.additional_security_group_ids)}"]
-  # }
-
+  network_interfaces {
+    associate_public_ip_address = "${var.associate_public_ip_address}"
+    delete_on_termination       = true
+    security_groups             = ["${concat(list(aws_security_group.lc_security_group.id), var.additional_security_group_ids)}"]
+  }
   ebs_optimized = "${var.root_volume_ebs_optimized}"
   block_device_mappings {
     device_name = "${data.aws_ami.ami.root_device_name}"
@@ -133,6 +139,23 @@ resource "aws_launch_template" "launch_template" {
   # https://terraform.io/docs/configuration/resources.html
   lifecycle {
     create_before_destroy = true
+  }
+}
+
+resource "null_resource" "update_launch_template" {
+  #
+  # Any time the launch configuration changes we need to use the CLI to create a
+  # new version of the template without the encryption method. I have only tested
+  # this where var.ebs_encryption is false.
+  # Got the idea & code from:
+  #   https://github.com/terraform-providers/terraform-provider-aws/issues/4553#issuecomment-414716171
+  #
+  triggers {
+    launch_template_version = "${aws_launch_template.launch_template.latest_version}"
+  }
+
+  provisioner "local-exec" {
+    command = "${var.ebs_encryption} || (sleep 5; aws ec2 create-launch-template-version --launch-template-id ${aws_launch_template.launch_template.id} --version-description turnOffEncryption --source-version '$$Latest' --launch-template-data '{\"BlockDeviceMappings\": [{\"DeviceName\": \"${data.aws_ami.ami.root_device_name}\", \"Ebs\": { \"VolumeSize\": ${var.root_volume_size}, \"VolumeType\": \"${var.root_volume_type}\" }}]}')"
   }
 }
 
@@ -252,8 +275,9 @@ resource "aws_s3_bucket" "vault_storage" {
   force_destroy = "${var.force_destroy_s3_bucket}"
 
   tags = "${merge(
-    map("Description", "Used for secret storage with Vault. DO NOT DELETE this Bucket unless you know what you are doing."),
-    var.s3_bucket_tags)
+    var.s3_bucket_tags,
+    map("Description", "Used for secret storage with Vault. DO NOT DELETE this Bucket unless you know what you are doing.")
+    )
   }"
 }
 

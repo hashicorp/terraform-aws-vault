@@ -29,10 +29,11 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   health_check_grace_period = "${var.health_check_grace_period}"
   wait_for_capacity_timeout = "${var.wait_for_capacity_timeout}"
   tags = ["${concat(
+    var.cluster_extra_tags,
     list(
       map("key", var.cluster_tag_key, "value", var.cluster_name, "propagate_at_launch", true)
-    ),
-    var.cluster_extra_tags)
+      )
+    )
   }"]
 }
 
@@ -118,8 +119,9 @@ resource "aws_launch_template" "launch_template" {
     resource_type = "volume"
 
     tags = "${merge(
-      map("key", var.cluster_tag_key, "value", var.cluster_name),
-      var.volume_extra_tags)
+      var.volume_extra_tags,
+      map("key", var.cluster_tag_key, "value", var.cluster_name)
+      )
     }"
   }
   # Important note: whenever using a launch configuration with an auto scaling group, you must set
@@ -150,7 +152,7 @@ resource "aws_security_group" "lc_security_group" {
     create_before_destroy = true
   }
 
-  tags = "${merge(map("Name", var.cluster_name), var.security_group_tags)}"
+  tags = "${merge(var.security_group_tags, map("Name", var.cluster_name))}"
 }
 
 resource "aws_security_group_rule" "allow_ssh_inbound_from_cidr_blocks" {

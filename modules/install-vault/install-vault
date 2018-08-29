@@ -204,7 +204,7 @@ function fetch_binary {
     download_url="https://releases.hashicorp.com/vault/${version}/vault_${version}_linux_amd64.zip"
   fi
 
-  log_info "Downloading Vault from $download_url to $DOWNLOAD_PACKAGE_PATH"
+  log_info "Downloading Vault to $DOWNLOAD_PACKAGE_PATH"
   curl -o "$DOWNLOAD_PACKAGE_PATH" "$download_url" --location --silent --fail --show-error
 }
 
@@ -296,7 +296,13 @@ function install {
   install_binary "$path" "$user"
   configure_mlock
 
-  log_info "Vault install complete!"
+
+  if command -v vault; then
+    log_info "Vault install complete!"
+  else
+    log_info "Could not find vault command. Aborting.";
+    exit 1;
+  fi
 }
 
 install "$@"

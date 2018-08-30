@@ -87,7 +87,7 @@ const (
 // 3. Deploy that AMI using the example Terraform code
 // 4. SSH to a Vault node and initialize the Vault cluster
 // 5. SSH to each Vault node and unseal it
-// 5. SSH to a Vault node and make sure you can communicate with the nodes via Consul-managed DNS
+// 6. SSH to a Vault node and make sure you can communicate with the nodes via Consul-managed DNS
 func runVaultPrivateClusterTest(t *testing.T, packerBuildName string, sshUserName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_CLUSTER_PRIVATE_PATH)
 
@@ -341,7 +341,8 @@ func runVaultWithS3BackendClusterTest(t *testing.T, packerBuildName string, sshU
 // 3. Deploy that AMI using the example Terraform code
 // 4. SSH to a Vault node and initialize the Vault cluster
 // 5. SSH to each Vault node and unseal it
-// 5. SSH to a Vault node and make sure you can communicate with the nodes via Consul-managed DNS
+// 6. SSH to a Vault node and make sure you can communicate with the nodes via Consul-managed DNS
+// 7. SSH to a Vault node and check if Vault enterprise is installed properly
 func runVaultEnterpriseClusterTest(t *testing.T, packerBuildName string, sshUserName string, vaultDownloadUrl string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_CLUSTER_PRIVATE_PATH)
 

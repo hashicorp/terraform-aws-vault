@@ -3,10 +3,10 @@
   "variables": {
     "aws_region": "us-east-1",
     "vault_version": "0.10.4",
-    "consul_module_version": "v0.3.7",
+    "consul_module_version": "v0.3.10",
     "consul_version": "1.2.2",
-    "consul_download_url": "",
-    "vault_download_url": "",
+    "consul_download_url": "{{env `CONSUL_DOWNLOAD_URL`}}",
+    "vault_download_url": "{{env `VAULT_DOWNLOAD_URL`}}",
     "github_oauth_token": "{{env `GITHUB_OAUTH_TOKEN`}}",
     "ca_public_key_path": null,
     "tls_public_key_path": null,
@@ -59,7 +59,7 @@
   },{
     "type": "shell",
     "inline": [
-      "if [[ -n '{{user `vault_download_url`}}' ]]; then",
+      "if test -n \"{{user `vault_download_url`}}\"; then",
       " /tmp/terraform-aws-vault/modules/install-vault/install-vault --download-url {{user `vault_download_url`}};",
       "else",
       " /tmp/terraform-aws-vault/modules/install-vault/install-vault --version {{user `vault_version`}};",
@@ -104,7 +104,7 @@
     "type": "shell",
     "inline": [
       "git clone --branch {{user `consul_module_version`}} https://{{user `github_oauth_token`}}@github.com/hashicorp/terraform-aws-consul.git /tmp/terraform-aws-consul",
-      "if [[ -n '{{user `consul_download_url`}}' ]]; then",
+      "if test -n \"{{user `consul_download_url`}}\"; then",
       " /tmp/terraform-aws-consul/modules/install-consul/install-consul --download-url {{user `consul_download_url`}};",
       "else",
       " /tmp/terraform-aws-consul/modules/install-consul/install-consul --version {{user `consul_version`}};",

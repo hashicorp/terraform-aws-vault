@@ -41,15 +41,15 @@ examples for fully-working sample code).
 
 The `install-vault` script accepts the following arguments:
 
-* `version VERSION`: Install Vault version VERSION. Required. 
+* `version VERSION`: Install Vault version VERSION. Optional if download-url is provided.
+* `download-url URL`: Install the Vault package hosted in this url. Optional if version is provided.
 * `path DIR`: Install Vault into folder DIR. Optional.
 * `user USER`: The install dirs will be owned by user USER. Optional.
-* `url URL`: Alternative url URL to download Vault from. Optional.
 
 Example:
 
 ```
-install-vault --version 0.10.0
+install-vault --version 0.10.4
 ```
 
 
@@ -58,16 +58,16 @@ install-vault --version 0.10.0
 
 The `install-vault` script does the following:
 
-1. [Create a user and folders for Vault](#create-a-user-and-folders-for-vault)
-1. [Install Vault binaries and scripts](#install-vault-binaries-and-scripts)
-1. [Configure mlock](#configure-mlock)
-1. [Install supervisord](#install-supervisord)
+1. [Creates a user and folders for Vault](#create-a-user-and-folders-for-vault)
+1. [Installs Vault binaries and scripts](#install-vault-binaries-and-scripts)
+1. [Configures mlock](#configure-mlock)
+1. [Installs supervisord](#install-supervisord)
 1. [Follow-up tasks](#follow-up-tasks)
 
 
-### Create a user and folders for Vault
+### Creates a user and folders for Vault
 
-Create an OS user named `vault`. Create the following folders, all owned by user `vault`:
+Creates an OS user named `vault`. Creates the following folders, all owned by user `vault`:
 
 * `/opt/vault`: base directory for Vault data (configurable via the `--path` argument).
 * `/opt/vault/bin`: directory for Vault binaries.
@@ -77,25 +77,26 @@ Create an OS user named `vault`. Create the following folders, all owned by user
 * `/opt/vault/tls`: directory where the Vault will look for TLS certs.
 
 
-### Install Vault binaries and scripts
+### Installs Vault binaries and scripts
 
-Install the following:
+Installs the following:
 
-* `vault`: Download the Vault zip file from the [downloads page](https://www.vaultproject.io/downloads.html) (the 
-  version number is configurable via the `--version` argument), and extract the `vault` binary into 
-  `/opt/vault/bin`. Add a symlink to the `vault` binary in `/usr/local/bin`.
-* `run-vault`: Copy the [run-vault script](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/run-vault) into `/opt/vault/bin`. 
+* `vault`: Either downloads the Vault zip file from the [downloads page](https://www.vaultproject.io/downloads.html) (the
+  version number is configurable via the `--version` argument) , or a package hosted on a precise url configurable with `--dowload-url`
+  (useful for installing Vault Enterprise, for example), and extracts the `vault` binary into `/opt/vault/bin`. Adds a
+  symlink to the `vault` binary in `/usr/local/bin`.
+* `run-vault`: Copies the [run-vault script](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/run-vault) into `/opt/vault/bin`.
 
 
-### Configure mlock
+### Configures mlock
 
-Give Vault permissions to make the `mlock` (memory lock) syscall. This syscall is used to prevent the OS from swapping
+Gives Vault permissions to make the `mlock` (memory lock) syscall. This syscall is used to prevent the OS from swapping
 Vault's memory to disk. For more info, see: https://www.vaultproject.io/docs/configuration/#disable_mlock.
 
 
-### Install supervisord
+### Installs supervisord
 
-Install [supervisord](http://supervisord.org/). We use it as a cross-platform supervisor to ensure Vault is started
+Installs [supervisord](http://supervisord.org/). We use it as a cross-platform supervisor to ensure Vault is started
 whenever the system boots and restarted if the Vault process crashes.
 
 

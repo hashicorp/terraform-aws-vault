@@ -132,8 +132,8 @@ module "security_group_rules" {
 
   security_group_id                    = "${aws_security_group.lc_security_group.id}"
   allowed_inbound_cidr_blocks          = ["${var.allowed_inbound_cidr_blocks}"]
-  allowed_inbound_security_group_ids   = "${concat(list(aws_security_group.lc_security_group.id), var.allowed_inbound_security_group_ids)}"
-  allowed_inbound_security_group_count = "${1+var.allowed_inbound_security_group_count}"
+  allowed_inbound_security_group_ids   = "${var.allowed_inbound_security_group_ids}"
+  allowed_inbound_security_group_count = "${var.allowed_inbound_security_group_count}"
 
   api_port     = "${var.api_port}"
   cluster_port = "${var.cluster_port}"

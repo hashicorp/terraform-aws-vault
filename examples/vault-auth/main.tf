@@ -14,10 +14,20 @@ resource "aws_instance" "example_auth_to_vault" {
   key_name        = "${var.ssh_key_name}"
   security_groups = ["${module.vault_cluster.security_group_id}"]
   user_data       = "${data.template_file.user_data_auth_client.rendered}"
+  iam_instance_profile = "${aws_iam_instance_profile.example_instance_profile.name}"
 
   tags {
     Name = "${var.auth_server_name}"
   }
+}
+
+# Using the same role as vault because it has consul_iam_policies_servers,
+# Which allows DescribeTags and enables this instance to connect to find and reach consul server
+# access the DNS registry for the vault server
+resource "aws_iam_instance_profile" "example_instance_profile" {
+  name_prefix = "test"
+  path        = "/"
+  role        = "${module.vault_cluster.iam_role_name}"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -31,6 +41,7 @@ data "template_file" "user_data_auth_client" {
   vars {
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
+    vault_role_name = "dev-role"
   }
 }
 
@@ -88,6 +99,7 @@ data "template_file" "user_data_vault_cluster" {
     aws_region               = "${data.aws_region.current.name}"
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
+    vault_role_name = "dev-role"
   }
 }
 

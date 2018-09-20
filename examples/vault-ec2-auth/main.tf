@@ -4,16 +4,23 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 terraform {
-  required_version = ">= 0.9.3"
+  required_version = ">= 0.11.7"
 }
 
 resource "aws_instance" "example_auth_to_vault" {
-  ami             = "${var.ami_id}"
-  instance_type   = "t2.micro"
-  subnet_id       = "${data.aws_subnet_ids.default.ids[0]}"
-  key_name        = "${var.ssh_key_name}"
-  security_groups = ["${module.vault_cluster.security_group_id}"]
-  user_data       = "${data.template_file.user_data_auth_client.rendered}"
+  ami           = "${var.ami_id}"
+  instance_type = "t2.micro"
+  subnet_id     = "${data.aws_subnet_ids.default.ids[0]}"
+  key_name      = "${var.ssh_key_name}"
+
+  # Uses the same security group as the vault cluster
+  # Plus an additional one that opens the port to our simple web server
+  security_groups = [
+    "${module.vault_cluster.security_group_id}",
+    "${aws_security_group.auth_instance.id}",
+  ]
+
+  user_data            = "${data.template_file.user_data_auth_client.rendered}"
   iam_instance_profile = "${aws_iam_instance_profile.example_instance_profile.name}"
 
   tags {
@@ -25,9 +32,8 @@ resource "aws_instance" "example_auth_to_vault" {
 # Which allows DescribeTags and enables this instance to connect to find and reach consul server
 # access the DNS registry for the vault server
 resource "aws_iam_instance_profile" "example_instance_profile" {
-  name_prefix = "test"
-  path        = "/"
-  role        = "${module.vault_cluster.iam_role_name}"
+  path = "/"
+  role = "${module.vault_cluster.iam_role_name}"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -41,8 +47,28 @@ data "template_file" "user_data_auth_client" {
   vars {
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
-    vault_role_name = "dev-role"
+    example_role_name        = "dev-role"
   }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# ADDS A RULE TO OPEN PORT 8080 SINCE OUR EXAMPLE LAUNCHES A SIMPLE WEB SERVER
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "aws_security_group" "auth_instance" {
+  name        = "${var.auth_server_name}"
+  description = "Security group for ${var.auth_server_name}"
+  vpc_id      = "${data.aws_vpc.default.id}"
+}
+
+resource "aws_security_group_rule" "allow_inbound_api" {
+  type        = "ingress"
+  from_port   = "8080"
+  to_port     = "8080"
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = "${aws_security_group.auth_instance.id}"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -99,7 +125,9 @@ data "template_file" "user_data_vault_cluster" {
     aws_region               = "${data.aws_region.current.name}"
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
-    vault_role_name = "dev-role"
+    example_role_name        = "example-role"
+    example_secret           = "${var.example_secret}"
+    ami_id                   = "${var.ami_id}"
   }
 }
 

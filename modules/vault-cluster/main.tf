@@ -201,7 +201,8 @@ resource "aws_iam_role_policy" "vault_s3" {
 }
 
 data "aws_iam_policy_document" "vault_s3" {
-  count  = "${var.enable_s3_backend ? 1 : 0}"
+  count = "${var.enable_s3_backend ? 1 : 0}"
+
   statement {
     effect  = "Allow"
     actions = ["s3:*"]

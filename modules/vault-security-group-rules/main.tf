@@ -33,3 +33,13 @@ resource "aws_security_group_rule" "allow_cluster_inbound_from_self" {
 
   security_group_id = "${var.security_group_id}"
 }
+
+resource "aws_security_group_rule" "allow_cluster_inbound_from_self_api" {
+  type      = "ingress"
+  from_port = "${var.api_port}"
+  to_port   = "${var.api_port}"
+  protocol  = "tcp"
+  self      = true
+
+  security_group_id = "${var.security_group_id}"
+}

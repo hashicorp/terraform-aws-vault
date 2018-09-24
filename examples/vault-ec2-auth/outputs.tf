@@ -1,3 +1,7 @@
+output "auth_client_public_ip" {
+  value = "${aws_instance.example_auth_to_vault.public_ip}"
+}
+
 output "asg_name_vault_cluster" {
   value = "${module.vault_cluster.asg_name}"
 }

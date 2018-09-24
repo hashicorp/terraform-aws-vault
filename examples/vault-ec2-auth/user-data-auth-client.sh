@@ -14,8 +14,9 @@ exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
 # Retrieves the pkcs7 certificate from instance metadata
 # The vault role name is filled by terraform
-readonly pkcs7=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/pkcs7 | tr -d '\n')
-readonly data=$(cat <<EOF
+# The role itself is created when configuting the vault cluster
+pkcs7=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/pkcs7 | tr -d '\n')
+data=$(cat <<EOF
 {
   "role": "${example_role_name}",
   "pkcs7": "$pkcs7"
@@ -23,8 +24,16 @@ readonly data=$(cat <<EOF
 EOF
 )
 
-# run-consul is running on the background, so in case it fails we retry
-for i in $(seq 1 10); do login_output=$(curl --request POST --data "$data" "https://vault.service.consul:8200/v1/auth/aws/login") && s=0 && break || s=$? && sleep 20; done; (exit $s)
+# run-consul is running on the background, so we have to wait for it and
+# we also have to for wait for vault server to be booted and unsealed before it can accept this request
+# so in case this fails we retry.
+# The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
+# beginning of this script which exits the script immediatelly for error status.
+for i in $(seq 1 20); do
+  login_output=$(curl --request POST --data "$data" "https://vault.service.consul:8200/v1/auth/aws/login") && exit_status=0 || exit_status=$?
+  if [[ $exit_status -eq 0 ]]; then break; fi
+  sleep 5
+done; (exit $exit_status)
 
 # It is important to note that the default behavior is TOFU(trust on first use)
 # So if the pkcs7 certificate gets compromised, attempts to login again will be
@@ -32,7 +41,7 @@ for i in $(seq 1 10); do login_output=$(curl --request POST --data "$data" "http
 # Read more at https://www.vaultproject.io/docs/auth/aws.html#client-nonce
 #
 # nonce=$(echo $login_output | jq -r .auth.metadata.nonce)
-# readonly data=$(cat <<EOF
+# data=$(cat <<EOF
 # {
 #   "role": "${example_role_name}",
 #   "pkcs7": "$pkcs7",
@@ -43,7 +52,7 @@ for i in $(seq 1 10); do login_output=$(curl --request POST --data "$data" "http
 # curl --request POST --data "$data" "https://vault.service.consul:8200/v1/auth/aws/login"
 #
 # ==============================================================================
-# The output after login will be similar to this:
+# The output after initial login will be similar to this:
 # {
 #   "request_id": "eed334ef-30bc-44a4-2a7f-93ecd7ce23cd",
 #   "lease_id": "",
@@ -81,19 +90,21 @@ for i in $(seq 1 10); do login_output=$(curl --request POST --data "$data" "http
 # }
 
 # We can then use the client token from this output
-readonly token=$(echo $login_output | jq -r .auth.client_token)
+token=$(echo $login_output | jq -r .auth.client_token)
 
 # And use the token to perform operations on vault such as reading a secret
-readonly response=$(curl \
+response=$(curl \
   -H "X-Vault-Token: $token" \
   -X GET \
   https://vault.service.consul:8200/v1/secret/example_gruntwork)
 
-# If vault cli is installed we can also perform this operation by setting the necessary environment variables
+# If vault cli is installed we can also perform these operations with vault cli
+# The necessary environment variables have to be set
 # export VAULT_TOKEN=$token
 # export VAULT_ADDR=https://vault.service.consul:8200
 # /opt/vault/bin/vault read secret/example_gruntwork
 
-# Serves the answer in a web server
+# Serves the answer in a web server so we can test that this auth client is
+# authenticating to vault and fetching data correctly
 echo $response | jq -r .data.the_answer > index.html
-python -m SimpleHTTPServer 8080 &
+ruby -run -ehttpd . -p8080 &

@@ -19,8 +19,15 @@ readonly VAULT_TLS_KEY_FILE="/opt/vault/tls/vault.key.pem"
 /opt/vault/bin/run-vault --tls-cert-file "$VAULT_TLS_CERT_FILE"  --tls-key-file "$VAULT_TLS_KEY_FILE"
 
 # Initializes a vault server
-# run-vault is running on the background, so in case it fails we retry
-for i in $(seq 1 10); do server_output=$(/opt/vault/bin/vault operator init) && s=0 && break || s=$? && sleep 20; done; (exit $s)
+# run-vault is running on the background and we have to wait for it to be done,
+# so in case this fails we retry.
+# The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
+# beginning of this script which exits the script immediatelly for error status.
+for i in $(seq 1 20); do
+  server_output=$(/opt/vault/bin/vault operator init) && exit_status=0 || exit_status=$?
+  if [[ $exit_status -eq 0 ]]; then break; fi
+  sleep 5
+done; (exit $exit_status)
 
 # The expected output should be similar to this:
 # ==========================================================================
@@ -45,6 +52,10 @@ for i in $(seq 1 10); do server_output=$(/opt/vault/bin/vault operator init) && 
 # ==========================================================================
 
 # Unseals the server with 3 keys from this output
+# Please note that this is not how it should be done in production as it is not secure
+# Ideally it should be auto unsealed https://www.vaultproject.io/docs/enterprise/auto-unseal/index.html
+# For this quick example specifically, we are just running one vault server and unsealing it like this
+# for simplicity as this example focuses on auth and not on auto unsealing
 echo "$server_output" | head -n 3 | awk '{ print $4; }' | xargs -l /opt/vault/bin/vault operator unseal
 
 # Exports the client token environment variable necessary for running the following vault commands
@@ -60,11 +71,11 @@ path "secret/example_*" {
 }
 EOF
 
-# Creates authentication role
+# Creates an authentication role
 # The role name & ami id are being passed by terraform
 # This example uses the ami id as a criteria for whitelisting, but there are multiple
 # other settings you can pick for EC2 metadata auth.
-# Read more at:
+# Read more at: https://www.vaultproject.io/api/auth/aws/index.html#create-role
 /opt/vault/bin/vault write \
   auth/aws/role/${example_role_name}\
   auth_type=ec2 \

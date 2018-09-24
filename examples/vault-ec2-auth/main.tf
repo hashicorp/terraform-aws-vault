@@ -13,12 +13,8 @@ resource "aws_instance" "example_auth_to_vault" {
   subnet_id     = "${data.aws_subnet_ids.default.ids[0]}"
   key_name      = "${var.ssh_key_name}"
 
-  # Uses the same security group as the vault cluster
-  # Plus an additional one that opens the port to our simple web server
-  security_groups = [
-    "${module.vault_cluster.security_group_id}",
-    "${aws_security_group.auth_instance.id}",
-  ]
+  # Simple security group that opens the port to our simple web server
+  security_groups = ["${aws_security_group.auth_instance.id}"]
 
   user_data            = "${data.template_file.user_data_auth_client.rendered}"
   iam_instance_profile = "${aws_iam_instance_profile.example_instance_profile.name}"

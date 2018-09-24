@@ -107,4 +107,4 @@ response=$(curl \
 # Serves the answer in a web server so we can test that this auth client is
 # authenticating to vault and fetching data correctly
 echo $response | jq -r .data.the_answer > index.html
-ruby -run -ehttpd . -p8080 &
+python -m SimpleHTTPServer 8080 &

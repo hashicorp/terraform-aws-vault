@@ -43,7 +43,7 @@ data "template_file" "user_data_auth_client" {
   vars {
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
-    example_role_name        = "dev-role"
+    example_role_name        = "${var.example_role_name}"
   }
 }
 
@@ -121,7 +121,7 @@ data "template_file" "user_data_vault_cluster" {
     aws_region               = "${data.aws_region.current.name}"
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
-    example_role_name        = "example-role"
+    example_role_name        = "${var.example_role_name}"
     example_secret           = "${var.example_secret}"
     ami_id                   = "${var.ami_id}"
   }

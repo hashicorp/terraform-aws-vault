@@ -29,6 +29,11 @@ variable "example_secret" {
 # These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------
 
+variable "example_role_name" {
+  description = "The name of the vault role"
+  default     = "example-role"
+}
+
 variable "vault_cluster_name" {
   description = "What to name the Vault server cluster and all of its associated resources"
   default     = "vault-example"

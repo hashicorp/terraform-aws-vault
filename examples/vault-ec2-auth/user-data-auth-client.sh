@@ -29,10 +29,10 @@ EOF
 # so in case this fails we retry.
 # The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
 # beginning of this script which exits the script immediatelly for error status.
-for i in $(seq 1 20); do
+for i in $(seq 1 30); do
   login_output=$(curl --request POST --data "$data" "https://vault.service.consul:8200/v1/auth/aws/login") && exit_status=0 || exit_status=$?
   if [[ $exit_status -eq 0 ]]; then break; fi
-  sleep 5
+  sleep 10
 done; (exit $exit_status)
 
 # It is important to note that the default behavior is TOFU(trust on first use)

@@ -12,6 +12,30 @@ exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 # These variables are passed in via Terraform template interpolation
 /opt/consul/bin/run-consul --client --cluster-tag-key "${consul_cluster_tag_key}" --cluster-tag-value "${consul_cluster_tag_value}"
 
+# run-consul is running on the background, so we have to wait for it and
+# we also have to for wait for vault server to be booted and unsealed before it can accept this request
+# so in case this fails we retry.
+function retry_login {
+  local readonly data=$1
+  local readonly url=$2
+
+  for i in $(seq 1 30); do
+    echo "Attempting to authenticate to Vault..."
+    # The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
+    # beginning of this script which exits the script immediatelly for error status while not losing the exit status code
+    # The important bit is the curl request
+    login_output=$(curl --request POST --data "$data" "$url") && exit_status=0 || exit_status=$?
+    if [[ $exit_status -eq 0 ]]; then
+      return
+    fi
+    echo "Failed to auth to Vault. It may still be in the process of booting. Will sleep for 10 seconds and try again."
+    sleep 10
+  done;
+
+  echo "Failed to authenticate to Vault."
+  exit $exit_status
+}
+
 # Retrieves the pkcs7 certificate from instance metadata
 # The vault role name is filled by terraform
 # The role itself is created when configuting the vault cluster
@@ -23,17 +47,7 @@ data=$(cat <<EOF
 }
 EOF
 )
-
-# run-consul is running on the background, so we have to wait for it and
-# we also have to for wait for vault server to be booted and unsealed before it can accept this request
-# so in case this fails we retry.
-# The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
-# beginning of this script which exits the script immediatelly for error status.
-for i in $(seq 1 30); do
-  login_output=$(curl --request POST --data "$data" "https://vault.service.consul:8200/v1/auth/aws/login") && exit_status=0 || exit_status=$?
-  if [[ $exit_status -eq 0 ]]; then break; fi
-  sleep 10
-done; (exit $exit_status)
+retry_login "$data" "https://vault.service.consul:8200/v1/auth/aws/login"
 
 # It is important to note that the default behavior is TOFU(trust on first use)
 # So if the pkcs7 certificate gets compromised, attempts to login again will be

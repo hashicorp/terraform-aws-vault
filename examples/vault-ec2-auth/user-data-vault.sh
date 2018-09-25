@@ -21,13 +21,24 @@ readonly VAULT_TLS_KEY_FILE="/opt/vault/tls/vault.key.pem"
 # Initializes a vault server
 # run-vault is running on the background and we have to wait for it to be done,
 # so in case this fails we retry.
-# The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
-# beginning of this script which exits the script immediatelly for error status.
-for i in $(seq 1 20); do
-  server_output=$(/opt/vault/bin/vault operator init) && exit_status=0 || exit_status=$?
-  if [[ $exit_status -eq 0 ]]; then break; fi
-  sleep 5
-done; (exit $exit_status)
+function retry_init {
+  for i in $(seq 1 20); do
+    echo "Initializing Vault agent..."
+    # The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
+    # beginning of this script which exits the script immediatelly for error status while not losing the exit status code
+    server_output=$(/opt/vault/bin/vault operator init) && exit_status=0 || exit_status=$?
+    if [[ $exit_status -eq 0 ]]; then
+      return
+    fi
+    echo "Failed to auth initialize Vault. Will sleep for 5 seconds and try again."
+    sleep 5
+  done
+
+  echo "Failed to initialize Vault."
+  exit $exit_status
+}
+
+retry_init
 
 # The expected output should be similar to this:
 # ==========================================================================
@@ -52,10 +63,11 @@ done; (exit $exit_status)
 # ==========================================================================
 
 # Unseals the server with 3 keys from this output
-# Please note that this is not how it should be done in production as it is not secure
+# Please note that this is not how it should be done in production as it is not secure and and we are
+# not storing any of the tokens, so in case it gets resealed, the tokens are lost and we wouldn't be able to unseal it again
 # Ideally it should be auto unsealed https://www.vaultproject.io/docs/enterprise/auto-unseal/index.html
 # For this quick example specifically, we are just running one vault server and unsealing it like this
-# for simplicity as this example focuses on auth and not on auto unsealing
+# for simplicity as this example focuses on authentication and not on unsealing
 echo "$server_output" | head -n 3 | awk '{ print $4; }' | xargs -l /opt/vault/bin/vault operator unseal
 
 # Exports the client token environment variable necessary for running the following vault commands
@@ -84,4 +96,6 @@ EOF
   bound_ami_id=${ami_id}
 
 # Writes some secret, this secret is being written by terraform for test purposes
+# Please note that normally we would never pass a secret this way
+# This is just so we can verify that our example instance is authenticating correctly
 /opt/vault/bin/vault write secret/example_gruntwork the_answer=${example_secret}

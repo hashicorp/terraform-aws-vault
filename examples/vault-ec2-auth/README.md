@@ -34,14 +34,13 @@ server cluster for service discovery and thereby access Vault via DNS using the 
    instructions. Make sure to note down the ID of the AMI.
 1. Install [Terraform](https://www.terraform.io/).
 1. Open `vars.tf`, set the environment variables specified at the top of the file, and fill in any other variables that
-   don't have a default. If you built a custom AMI, put the AMI ID into the `ami_id` variable. Otherwise, one of our
-   public example AMIs will be used by default. These AMIs are great for learning/experimenting, but are NOT
-   recommended for production use.
+   don't have a default. Put the AMI ID you previously took note into the `ami_id` variable.
 1. Run `terraform init`.
 1. Run `terraform apply`.
-1. Run the [vault-examples-helper.sh script](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-examples-helper/vault-examples-helper.sh) to
+1. Run the [vault-examples-helper.sh script][examples_helper] to
    print out the IP addresses of the Vault server and some example commands you can run to interact with the cluster:
    `../vault-examples-helper/vault-examples-helper.sh`.
+1. Run `curl <auth-instance-ip>:8080` to check if the client instance is fetching the secret from Vault properly
 
 
 ## EC2 Auth
@@ -67,24 +66,29 @@ permissions.
 
 ### Configuring a Vault server
 
-Before we try to authenticate, we must be sure that the server is prepared to
-receive requests. Besides enabling the AWS auth method with `vault auth enable
-aws` (after making sure that server is already initialized and unsealed), it is
-necessary to define the correct policies and roles for authenticating.
+Before we try to authenticate, we must be sure that the Vault Server is configured
+properly and prepared to receive requests. First, we must make sure the Vault server
+has been initialized (using `vault operator init`) and unsealed (using `vault operator unseal`).
+Next, we must enable Vault to support the AWS auth method (using `vault auth enable aws`).
+Finally, we must define the correct Vault Policies and Roles to declare which EC2
+Instances will have access to which resources in Vault.
 
 Policies are rules that grant or forbid access and actions to certain paths in
 Vault. You can read more about them [here][policies_doc]. With one or more
 policies on hand, you can then finally create the authentication role.
 
-When creating a role, you can define which set of policies are atteched to that
-role, how you wish to configure reauthentication and expiration of tokens issues
-by this role, as well as define which set of criteria related to the EC2 instance
-metadata upon which you wish to allow access.
+When you create a Role in Vault, you define the Policies that are attached to that
+Role, how principals who assume that Role will re-authenticate, and for how long
+tokens issued for that role will be valid. When your Role uses the EC2 AWS Auth
+method, you also specify which of the EC2 Instance Metadata properties will be
+required by the principal (in this case, the EC2 Instance) in order to successfully
+authenticate.
 
-In our example we create a simple policy that allows writing and reading from a
-namespaced backend and then create a role that allows authentication from all
-instances with a specific `ami id`. You can read more about role
-creation and check which other instance metadata you can use on auth [here][create_role].
+In our example we create a simple Vault Policy that allows writing and reading from
+secrets in the path `secret` namespaced with the prefix `example_`, and then create
+a Vault Role that allows authentication from all instances with a specific `ami id`.
+You can read more about role creation and check which other instance metadata you can
+use on auth [here][create_role].
 
 
 ```bash
@@ -102,15 +106,22 @@ vault write \
   bound_ami_id=$ami_id
 ```
 
-See the whole example script at [user-data-vault.sh](user-data-vault.sh).
+See the whole example script at [user-data-vault.sh][user_data_vault].
 
 
 ### Authenticating from an instance
 
 The signature used to authenticate to Vault is a PKCS7 certificate that is part of the AWS
-[Instance Identity document][instance_identity]. This certificate can be fetched from the EC2
+[Instance Identity Document][instance_identity]. This certificate can be fetched from the EC2
 metadata API with `$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/pkcs7 | tr -d '\n')`
 and will then be part of the body of data sent with the login request.
+
+The Instance Identity Document describes various features of the EC2 Instance like its Instance Type,
+region, IAM Role and a "signature" for this document that is signed by AWS. The signature can be used
+to prove that the Instance Identity Document was produced by AWS, and not a malicious third party. By
+sending the Instance Identity Document and signature to Vault, you are proving to Vault that you are
+an EC2 Instance that genuinely has the properties described in the Instance Identity Document. Vault
+can then use these properties to help decide whether to authenticate you.
 
 ```bash
 data=$(cat <<EOF
@@ -153,19 +164,21 @@ curl --request POST --data "$data" "https://vault.service.consul:8200/v1/auth/aw
 It is up to the client to decide how it handles the nonce. To read more about
 it, refer to the [Vault documentation on client nonce][nonce].
 
-To see the full script for authenticating check the [client user data
-script](user-data-auth-client.sh).
+To see the full script for authenticating check the [client user data script][user_data_auth_client].
 
 
 [ami]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html
-[dnsmasq]: http://www.thekelleys.org.uk/dnsmasq/doc.html
-[dnsmasq_module]: https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq
-[vault_consul_ami]: https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-consul-ami
-[vault_cluster]: ../../modules/vault-cluster
-[policies_doc]: https://www.vaultproject.io/docs/concepts/policies.html
 [auth_methods]: https://www.vaultproject.io/docs/auth/index.html
-[create_role]: https://www.vaultproject.io/api/auth/aws/index.html#create-role
-[consul_policy]: https://github.com/hashicorp/terraform-aws-consul/blob/master/modules/consul-iam-policies/main.tf
-[instance_identity]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html
 [aws_auth]:https://www.vaultproject.io/docs/auth/aws.html
+[consul_policy]: https://github.com/hashicorp/terraform-aws-consul/blob/master/modules/consul-iam-policies/main.tf
+[create_role]: https://www.vaultproject.io/api/auth/aws/index.html#create-role
+[dnsmasq_module]: https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq
+[dnsmasq]: http://www.thekelleys.org.uk/dnsmasq/doc.html
+[examples_helper]: https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-examples-helper/vault-examples-helper.sh
+[instance_identity]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html
 [nonce]: https://www.vaultproject.io/docs/auth/aws.html#client-nonce
+[policies_doc]: https://www.vaultproject.io/docs/concepts/policies.html
+[user_data_auth_client]: https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-ec2-auth/user-data-auth-client.sh
+[user_data_vault]: https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-ec2-auth/user-data-vault.sh
+[vault_cluster]: https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster
+[vault_consul_ami]: https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-consul-ami

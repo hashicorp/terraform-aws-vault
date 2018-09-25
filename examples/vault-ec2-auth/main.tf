@@ -4,7 +4,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 terraform {
-  required_version = ">= 0.11.7"
+  required_version = ">= 0.11.0"
 }
 
 resource "aws_instance" "example_auth_to_vault" {
@@ -14,7 +14,7 @@ resource "aws_instance" "example_auth_to_vault" {
   key_name      = "${var.ssh_key_name}"
 
   # Security group that opens the necessary ports for consul
-  # And simple security group that opens the port to our simple web server
+  # And security group that opens the port to our simple web server
   security_groups = [
     "${module.consul_cluster.security_group_id}",
     "${aws_security_group.auth_instance.id}",
@@ -126,6 +126,8 @@ data "template_file" "user_data_vault_cluster" {
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
     example_role_name        = "${var.example_role_name}"
+    # Please note that normally we would never pass a secret this way
+    # This is just for test purposes so we can verify that our example instance is authenticating correctly
     example_secret           = "${var.example_secret}"
     ami_id                   = "${var.ami_id}"
   }

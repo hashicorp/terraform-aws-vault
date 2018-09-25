@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/http-helper"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/retry"
-	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/gruntwork-io/terratest/modules/test-structure"
@@ -515,27 +515,9 @@ func initializeAndUnsealVaultCluster(t *testing.T, asgNameOutputVar string, sshU
 
 func testRequestSecret(t *testing.T, terraformOptions *terraform.Options, expectedResponse string) {
 	instanceIP := terraform.Output(t, terraformOptions, OUTPUT_AUTH_CLIENT_IP)
+	url := fmt.Sprintf("http://%s:%s", instanceIP, "8080")
 
-	curlCommand := shell.Command{
-		Command: "curl",
-		Args:    []string{"-s", fmt.Sprintf("%s:%s", instanceIP, "8080")},
-	}
-
-	description := fmt.Sprintf("Trying to fetch response from %s", instanceIP)
-	logger.Logf(t, description)
-
-	maxRetries := 30
-	sleepBetweenRetries := 10 * time.Second
-
-	retry.DoWithRetry(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {
-		stdOut, err := shell.RunCommandAndGetOutputE(t, curlCommand)
-		if err != nil {
-			return "", fmt.Errorf("Failed to execute ssh command: %s\n", err.Error())
-		} else if stdOut != expectedResponse {
-			return "", fmt.Errorf("Response %s different from expected response %s\n", stdOut, expectedResponse)
-		}
-		return "", nil
-	})
+	http_helper.HttpGetWithRetry(t, url, 200, expectedResponse, 30, 10*time.Second)
 }
 
 // Find the nodes in the given Vault ASG and return them in a VaultCluster struct

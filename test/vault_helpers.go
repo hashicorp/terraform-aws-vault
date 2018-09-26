@@ -1,23 +1,25 @@
 package test
 
 import (
-	"testing"
-	"os"
-	"time"
+	"errors"
 	"fmt"
+	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
-	"github.com/hashicorp/vault/api"
-	"net/http"
-	"errors"
-	"github.com/gruntwork-io/terratest/modules/ssh"
-	"github.com/gruntwork-io/terratest/modules/test-structure"
-	"github.com/gruntwork-io/terratest/modules/terraform"
+	"testing"
+	"time"
+
 	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/http-helper"
 	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/retry"
+	"github.com/gruntwork-io/terratest/modules/ssh"
+	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/hashicorp/vault/api"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,11 +31,15 @@ const VAR_AMI_ID = "ami_id"
 const VAR_VAULT_CLUSTER_NAME = "vault_cluster_name"
 const VAR_CONSUL_CLUSTER_NAME = "consul_cluster_name"
 const VAR_CONSUL_CLUSTER_TAG_KEY = "consul_cluster_tag_key"
+const VAR_VAULT_AUTH_SERVER_NAME = "auth_server_name"
 const VAR_SSH_KEY_NAME = "ssh_key_name"
+const VAR_VAULT_SECRET_NAME = "example_secret"
 const OUTPUT_VAULT_CLUSTER_ASG_NAME = "asg_name_vault_cluster"
+const OUTPUT_AUTH_CLIENT_IP = "auth_client_public_ip"
 
 const VAULT_CLUSTER_PRIVATE_PATH = "examples/vault-cluster-private"
 const VAULT_CLUSTER_S3_BACKEND_PATH = "examples/vault-s3-backend"
+const VAULT_EC2_AUTH_PATH = "examples/vault-ec2-auth"
 const VAULT_CLUSTER_PUBLIC_PATH = REPO_ROOT
 
 const VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY = "create_dns_entry"
@@ -230,7 +236,7 @@ func runVaultPublicClusterTest(t *testing.T, packerBuildName string, sshUserName
 	})
 }
 
-// Test the Vault public cluster example by:
+// Test the Vault with S3 Backend example by:
 //
 // 1. Copy the code in this repo to a temp folder so tests on the Terraform code can run in parallel without the
 //    state files overwriting each other.
@@ -409,6 +415,78 @@ func runVaultEnterpriseClusterTest(t *testing.T, packerBuildName string, sshUser
 	})
 }
 
+// Test the Vault EC2 authentication example by:
+//
+// 1. Copying the code in this repo to a temp folder so tests on the Terraform code can run in parallel without the
+//    state files overwriting each other.
+// 2. Building the AMI in the vault-consul-ami example with the given build name
+// 3. Deploying that AMI using the example Terraform code setting an example secret
+// 4. Waiting for Vault to boot, unseal and the client to fetch the secret
+// 5. Making a request to the webserver started by the auth client user data script to see if the secret was properly fetched
+func runVaultEC2AuthTest(t *testing.T, packerBuildName string) {
+	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_EC2_AUTH_PATH)
+	exampleSecret := "42"
+
+	defer test_structure.RunTestStage(t, "teardown", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		terraform.Destroy(t, terraformOptions)
+
+		amiId := test_structure.LoadAmiId(t, examplesDir)
+		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
+		aws.DeleteAmi(t, awsRegion, amiId)
+
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+		aws.DeleteEC2KeyPair(t, keyPair)
+
+		tlsCert := loadTlsCert(t, examplesDir)
+		cleanupTlsCertFiles(tlsCert)
+	})
+
+	test_structure.RunTestStage(t, "setup_ami", func() {
+		awsRegion := aws.GetRandomRegion(t, nil, nil)
+		test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
+
+		tlsCert := generateSelfSignedTlsCert(t)
+		saveTlsCert(t, examplesDir, tlsCert)
+
+		amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, awsRegion)
+		test_structure.SaveAmiId(t, examplesDir, amiId)
+	})
+
+	test_structure.RunTestStage(t, "deploy", func() {
+		uniqueId := random.UniqueId()
+		amiId := test_structure.LoadAmiId(t, examplesDir)
+		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
+
+		keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
+		test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
+
+		terraformOptions := &terraform.Options{
+			TerraformDir: examplesDir,
+			Vars: map[string]interface{}{
+				VAR_AMI_ID:                 amiId,
+				VAR_VAULT_CLUSTER_NAME:     fmt.Sprintf("vault-test-%s", uniqueId),
+				VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
+				VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
+				VAR_VAULT_AUTH_SERVER_NAME: fmt.Sprintf("vault-auth-test-%s", uniqueId),
+				VAR_VAULT_SECRET_NAME:      exampleSecret,
+				VAR_SSH_KEY_NAME:           keyPair.Name,
+			},
+			EnvVars: map[string]string{
+				ENV_VAR_AWS_REGION: awsRegion,
+			},
+		}
+		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
+
+		terraform.InitAndApply(t, terraformOptions)
+	})
+
+	test_structure.RunTestStage(t, "validate", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		testRequestSecret(t, terraformOptions, exampleSecret)
+	})
+}
+
 // Initialize the Vault cluster and unseal each of the nodes by connecting to them over SSH and executing Vault
 // commands. The reason we use SSH rather than using the Vault client remotely is we want to verify that the
 // self-signed TLS certificate is properly configured on each server so when you're on that server, you don't
@@ -433,6 +511,13 @@ func initializeAndUnsealVaultCluster(t *testing.T, asgNameOutputVar string, sshU
 	assertStatus(t, cluster.Standby2, Standby)
 
 	return cluster
+}
+
+func testRequestSecret(t *testing.T, terraformOptions *terraform.Options, expectedResponse string) {
+	instanceIP := terraform.Output(t, terraformOptions, OUTPUT_AUTH_CLIENT_IP)
+	url := fmt.Sprintf("http://%s:%s", instanceIP, "8080")
+
+	http_helper.HttpGetWithRetry(t, url, 200, expectedResponse, 30, 10*time.Second)
 }
 
 // Find the nodes in the given Vault ASG and return them in a VaultCluster struct

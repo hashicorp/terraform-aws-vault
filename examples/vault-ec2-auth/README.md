@@ -145,9 +145,10 @@ However, as a security measure, Vault operates with a TOFU (Trust on First Use)
 mechanism. That means that once an instance logins, all other logins with the
 same signature will fail. The reason is to prevent unintended logins in case the
 PKCS7 signature gets compromised by another process in the instance. For this
-reason, when the instance does its first login, it also receives a crytographic
-`nonce` and this `nonce` has to be provided in the future login attempts.
-
+reason, when the instance does its first login, it also receives a cryptographic
+`nonce` (number used once) and this `nonce` has to be provided in the future
+login attempts. Only one unique principal (i.e. one unique EC2 Instance ID) can
+use that nonce.
 
 ```bash
 data=$(cat <<EOF

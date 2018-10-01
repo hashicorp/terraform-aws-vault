@@ -186,7 +186,7 @@ variable "force_destroy_s3_bucket" {
   default     = false
 }
 
-variable "enable_ec2_iam_auth" {
+variable "create_aws_auth_backend_iam_policies" {
   description = "If set to true, create IAM policies required by the AWS Auth backend, and apply the policies via IAM Instance Profiles. Note that this does NOT actually enable the backend, but merely sets policies that will permit it to function as expected."
   default     = false
 }

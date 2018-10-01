@@ -183,7 +183,7 @@ data "aws_iam_policy_document" "instance_role" {
 }
 
 resource "aws_s3_bucket" "vault_storage" {
-  count         = "${var.enable_s3_backend ? 1 : 0}"
+  count         = "${var.enable_s3_backend}"
   bucket        = "${var.s3_bucket_name}"
   force_destroy = "${var.force_destroy_s3_bucket}"
 
@@ -194,14 +194,14 @@ resource "aws_s3_bucket" "vault_storage" {
 }
 
 resource "aws_iam_role_policy" "vault_s3" {
-  count  = "${var.enable_s3_backend ? 1 : 0}"
+  count  = "${var.enable_s3_backend}"
   name   = "vault_s3"
   role   = "${aws_iam_role.instance_role.id}"
   policy = "${element(concat(data.aws_iam_policy_document.vault_s3.*.json, list("")), 0)}"
 }
 
 data "aws_iam_policy_document" "vault_s3" {
-  count = "${var.enable_s3_backend ? 1 : 0}"
+  count = "${var.enable_s3_backend}"
 
   statement {
     effect  = "Allow"
@@ -215,7 +215,7 @@ data "aws_iam_policy_document" "vault_s3" {
 }
 
 resource "aws_iam_role_policy" "vault_aws_ec2_iam_auth" {
-  count  = "${var.create_aws_auth_backend_iam_policies ? 1 : 0}"
+  count  = "${var.create_aws_auth_backend_iam_policies}"
   name   = "vault_aws_ec2_iam_auth"
   role   = "${aws_iam_role.instance_role.id}"
   policy = "${element(concat(data.aws_iam_policy_document.vault_aws_ec2_iam_auth.*.json, list("")), 0)}"
@@ -225,7 +225,7 @@ resource "aws_iam_role_policy" "vault_aws_ec2_iam_auth" {
 # TODO: Add Cross Account Access stanza, enumerating all roles with cross-account access
 
 data "aws_iam_policy_document" "vault_aws_ec2_iam_auth" {
-  count = "${var.create_aws_auth_backend_iam_policies ? 1 : 0}"
+  count = "${var.create_aws_auth_backend_iam_policies}"
 
   statement {
     effect = "Allow"

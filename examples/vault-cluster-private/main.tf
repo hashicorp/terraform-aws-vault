@@ -36,6 +36,7 @@ module "vault_cluster" {
   allowed_inbound_security_group_ids   = []
   allowed_inbound_security_group_count = 0
   ssh_key_name                         = "${var.ssh_key_name}"
+  enable_EC2_IAM_Auth                  = "${var.enable_EC2_IAM_Auth}"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -74,11 +75,11 @@ data "template_file" "user_data_vault_cluster" {
 module "security_group_rules" {
   source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-client-security-group-rules?ref=v0.3.3"
 
-  security_group_id           = "${module.vault_cluster.security_group_id}"
+  security_group_id = "${module.vault_cluster.security_group_id}"
 
   # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
   # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
-  
+
   allowed_inbound_cidr_blocks = ["0.0.0.0/0"]
 }
 
@@ -139,6 +140,10 @@ data "aws_vpc" "default" {
 
 data "aws_subnet_ids" "default" {
   vpc_id = "${data.aws_vpc.default.id}"
+
+  tags {
+    SubnetType = "private"
+  }
 }
 
 data "aws_region" "current" {}

@@ -64,3 +64,8 @@ variable "vpc_id" {
   description = "The ID of the VPC to deploy into. Leave an empty string to use the Default VPC in this region."
   default     = ""
 }
+
+variable "enable_EC2_IAM_Auth" {
+  description = "Configure IAM Instance Profile on Vault cluster members to permit the user to enable AWS Auth backend. Note that this does NOT actually enable the backend, but merely sets policies that will permit it to function as expected."
+  default     = false
+}

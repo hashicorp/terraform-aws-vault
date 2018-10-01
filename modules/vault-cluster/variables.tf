@@ -197,3 +197,8 @@ variable "force_destroy_s3_bucket" {
   description = "If 'configure_s3_backend' is enabled and you set this to true, when you run terraform destroy, this tells Terraform to delete all the objects in the S3 bucket used for backend storage. You should NOT set this to true in production or you risk losing all your data! This property is only here so automated tests of this module can clean up after themselves. Only used if 'enable_s3_backend' is set to true."
   default     = false
 }
+
+variable "create_aws_auth_backend_iam_policies" {
+  description = "If set to true, create IAM policies required by the AWS Auth backend, and apply the policies via IAM Instance Profiles. Note that this does NOT actually enable the backend, but merely sets policies that will permit it to function as expected."
+  default     = false
+}

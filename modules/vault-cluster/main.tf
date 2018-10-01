@@ -222,6 +222,9 @@ resource "aws_iam_role_policy" "vault_aws_ec2_iam_auth" {
   policy = "${element(concat(data.aws_iam_policy_document.vault_aws_ec2_iam_auth.*.json, list("")), 0)}"
 }
 
+# Source for IAM policies: https://www.vaultproject.io/docs/auth/aws.html#recommended-vault-iam-policy
+# TODO: Add Cross Account Access stanza, enumerating all roles with cross-account access
+
 data "aws_iam_policy_document" "vault_aws_ec2_iam_auth" {
   count = "${var.create_aws_auth_backend_iam_policies ? 1 : 0}"
 

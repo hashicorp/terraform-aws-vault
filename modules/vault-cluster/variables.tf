@@ -198,19 +198,31 @@ variable "force_destroy_s3_bucket" {
   default     = false
 }
 
+# Launch Template Extensions
+
+variable "asg_launch_mechanism" {
+  description = "Select between launch_config-driven or launch_template-driven autoscaling group."
+  default     = "launch_config"
+}
+
 variable "launch_template_tags" {
   description = "A list of tags to add to the launch template."
   type        = "map"
   default     = {}
 }
 
+variable "root_volume_ebs_encryption" {
+  description = "If true, the launched EC2 instance's root volume will be encrypted."
+  default     = ""
+}
+
+variable "launch_template_version" {
+  default = "Launch template verison to be used by the autoscaling group."
+  default = "$Latest"
+}
+
 variable "volume_extra_tags" {
   description = "A list of additional tags to add to each Instance's volumes in the ASG. Only applicable when use_launch_template is true."
   type        = "map"
   default     = {}
-}
-
-variable "ebs_encryption" {
-  description = "Value of 'encrypted' attribute on the launch template's block device definition."
-  default     = false
 }

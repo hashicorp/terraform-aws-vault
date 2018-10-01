@@ -11,25 +11,60 @@ terraform {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_autoscaling_group" "autoscaling_group" {
+  count       = "${var.asg_launch_mechanism == "launch_configuration" ? 1 : 0}"
   name_prefix = "${var.cluster_name}"
 
-  # launch_configuration = "${aws_launch_configuration.launch_configuration.name}"
+  launch_configuration = "${aws_launch_configuration.launch_configuration.name}"
 
   depends_on = ["aws_iam_instance_profile.instance_profile", "aws_launch_template.launch_template"]
-  launch_template {
-    id      = "${aws_launch_template.launch_template.id}"
-    version = "$$Latest"
-  }
+
   availability_zones  = ["${var.availability_zones}"]
   vpc_zone_identifier = ["${var.subnet_ids}"]
+
   # Use a fixed-size cluster
-  min_size                  = "${var.cluster_size}"
-  max_size                  = "${var.cluster_size}"
-  desired_capacity          = "${var.cluster_size}"
-  termination_policies      = ["${var.termination_policies}"]
+  min_size             = "${var.cluster_size}"
+  max_size             = "${var.cluster_size}"
+  desired_capacity     = "${var.cluster_size}"
+  termination_policies = ["${var.termination_policies}"]
+
   health_check_type         = "${var.health_check_type}"
   health_check_grace_period = "${var.health_check_grace_period}"
   wait_for_capacity_timeout = "${var.wait_for_capacity_timeout}"
+
+  tags = ["${concat(
+    var.cluster_extra_tags,
+    list(
+      map("key", var.cluster_tag_key, "value", var.cluster_name, "propagate_at_launch", true)
+      )
+    )
+  }"]
+}
+
+# An alternate autoscaling group that uses a launch_template
+resource "aws_autoscaling_group" "lt_autoscaling_group" {
+  count       = "${var.asg_launch_mechanism == "launch_template" ? 1 : 0}"
+  name_prefix = "${var.cluster_name}"
+
+  launch_template {
+    id      = "${aws_launch_template.launch_template.id}"
+    version = "${var.launch_template_version}"
+  }
+
+  depends_on = ["aws_iam_instance_profile.instance_profile", "aws_launch_template.launch_template"]
+
+  availability_zones  = ["${var.availability_zones}"]
+  vpc_zone_identifier = ["${var.subnet_ids}"]
+
+  # Use a fixed-size cluster
+  min_size             = "${var.cluster_size}"
+  max_size             = "${var.cluster_size}"
+  desired_capacity     = "${var.cluster_size}"
+  termination_policies = ["${var.termination_policies}"]
+
+  health_check_type         = "${var.health_check_type}"
+  health_check_grace_period = "${var.health_check_grace_period}"
+  wait_for_capacity_timeout = "${var.wait_for_capacity_timeout}"
+
   tags = ["${concat(
     var.cluster_extra_tags,
     list(
@@ -40,10 +75,11 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# CREATE LAUNCH TEMPLATE TO DEFINE WHAT RUNS ON EACH INSTANCE IN THE ASG
+# CREATE LAUNCH CONFIGURATION TO DEFINE WHAT RUNS ON EACH INSTANCE IN THE ASG
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_launch_configuration" "launch_configuration" {
+  count         = "${var.asg_launch_mechanism == "launch_configuration" ? 1 : 0}"
   name_prefix   = "${var.cluster_name}-"
   image_id      = "${var.ami_id}"
   instance_type = "${var.instance_type}"
@@ -75,6 +111,10 @@ resource "aws_launch_configuration" "launch_configuration" {
   }
 }
 
+# ---------------------------------------------------------------------------------------------------------------------
+# CREATE LAUNCH TEMPLATE TO DEFINE WHAT RUNS ON EACH INSTANCE IN THE ASG
+# ---------------------------------------------------------------------------------------------------------------------
+
 data "aws_ami" "ami" {
   filter {
     name   = "image-id"
@@ -83,6 +123,7 @@ data "aws_ami" "ami" {
 }
 
 resource "aws_launch_template" "launch_template" {
+  count         = "${var.asg_launch_mechanism == "launch_template" ? 1 : 0}"
   name_prefix   = "${var.cluster_name}-"
   image_id      = "${var.ami_id}"
   instance_type = "${var.instance_type}"
@@ -96,8 +137,7 @@ resource "aws_launch_template" "launch_template" {
 
   key_name = "${var.ssh_key_name}"
 
-  # Don't use vpc_security_group_ids when network_interfaces
-  # includes security_groups.
+  # Don't use vpc_security_group_ids when network_interfaces includes security_groups.
   # vpc_security_group_ids = ["${concat(list(aws_security_group.lc_security_group.id), var.additional_security_group_ids)}"]
 
   placement {
@@ -113,7 +153,7 @@ resource "aws_launch_template" "launch_template" {
     device_name = "${data.aws_ami.ami.root_device_name}"
 
     ebs {
-      encrypted             = "${var.ebs_encryption}"
+      encrypted             = "${var.root_volume_ebs_encryption}"
       volume_type           = "${var.root_volume_type}"
       volume_size           = "${var.root_volume_size}"
       delete_on_termination = "${var.root_volume_delete_on_termination}"
@@ -139,23 +179,6 @@ resource "aws_launch_template" "launch_template" {
   # https://terraform.io/docs/configuration/resources.html
   lifecycle {
     create_before_destroy = true
-  }
-}
-
-resource "null_resource" "update_launch_template" {
-  #
-  # Any time the launch configuration changes we need to use the CLI to create a
-  # new version of the template without the encryption method. I have only tested
-  # this where var.ebs_encryption is false.
-  # Got the idea & code from:
-  #   https://github.com/terraform-providers/terraform-provider-aws/issues/4553#issuecomment-414716171
-  #
-  triggers {
-    launch_template_version = "${aws_launch_template.launch_template.latest_version}"
-  }
-
-  provisioner "local-exec" {
-    command = "${var.ebs_encryption} || (sleep 5; aws ec2 create-launch-template-version --launch-template-id ${aws_launch_template.launch_template.id} --version-description turnOffEncryption --source-version '$$Latest' --launch-template-data '{\"BlockDeviceMappings\": [{\"DeviceName\": \"${data.aws_ami.ami.root_device_name}\", \"Ebs\": { \"VolumeSize\": ${var.root_volume_size}, \"VolumeType\": \"${var.root_volume_type}\" }}]}')"
   }
 }
 

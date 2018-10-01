@@ -91,6 +91,11 @@ variable "health_check_path" {
   default     = "/v1/sys/health?standbyok=true"
 }
 
+variable "health_check_port" {
+  description = "The port to use for health checks if not vault_api_port."
+  default     = 0
+}
+
 variable "health_check_interval" {
   description = "The amount of time, in seconds, between health checks."
   default     = 15
@@ -109,4 +114,15 @@ variable "health_check_unhealthy_threshold" {
 variable "health_check_timeout" {
   description = "The amount of time, in seconds, before a health check times out."
   default     = 5
+}
+
+variable "load_balancer_tags" {
+  description = "Tags to be applied to the ELB."
+  default     = {}
+}
+
+variable "security_group_tags" {
+  description = "Tags to be applied to the ELB security group."
+  type        = "map"
+  default     = {}
 }

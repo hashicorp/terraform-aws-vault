@@ -28,27 +28,29 @@ To build the Vault and Consul AMI:
 
 1. Install [Packer](https://www.packer.io/).
 
-1. Configure your AWS credentials using one of the [options supported by the AWS 
+1. Configure your AWS credentials using one of the [options supported by the AWS
    SDK](http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html). Usually, the easiest option is to
    set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
 
-1. Use the [private-tls-cert module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/private-tls-cert) to generate a CA cert and public and private keys for a 
-   TLS cert: 
-   
-    1. Set the `dns_names` parameter to `vault.service.consul`. If you're using the [vault-cluster-public
-       example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) and want a public domain name (e.g. `vault.example.com`), add that 
-       domain name here too.
-    1. Set the `ip_addresses` to `127.0.0.1`. 
-    1. For production usage, you should take care to protect the private key by encrypting it (see [Using TLS 
-       certs](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/private-tls-cert#using-tls-certs) for more info). 
+1. Use the [private-tls-cert module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/private-tls-cert) to generate a CA cert and public and private keys for a
+   TLS cert:
 
-1. Update the `variables` section of the `vault-consul.json` Packer template to specify the AWS region, Vault 
-   version, Consul version, and the paths to the TLS cert files you just generated. 
+    1. Set the `dns_names` parameter to `vault.service.consul`. If you're using the [vault-cluster-public
+       example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) and want a public domain name (e.g. `vault.example.com`), add that
+       domain name here too.
+    1. Set the `ip_addresses` to `127.0.0.1`.
+    1. For production usage, you should take care to protect the private key by encrypting it (see [Using TLS
+       certs](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/private-tls-cert#using-tls-certs) for more info).
+
+1. Update the `variables` section of the `vault-consul.json` Packer template to specify the AWS region, Vault
+   version, Consul version, and the paths to the TLS cert files you just generated. If you want to install Consul Enterprise or Vault Enterprise,
+   skip the version variables and instead set the `consul_download_url` and `vault_download_url` to the full urls that point to the respective
+   enterprise zipped packages.
 
 1. Run `packer build vault-consul.json`.
 
-When the build finishes, it will output the IDs of the new AMIs. To see how to deploy one of these AMIs, check out the 
-[vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) and [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) 
+When the build finishes, it will output the IDs of the new AMIs. To see how to deploy one of these AMIs, check out the
+[vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) and [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public)
 examples.
 
 

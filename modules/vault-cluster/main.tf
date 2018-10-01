@@ -215,15 +215,15 @@ data "aws_iam_policy_document" "vault_s3" {
   }
 }
 
-resource "aws_iam_role_policy" "vault_aws_EC2_IAM_Auth" {
-  count  = "${var.enable_EC2_IAM_Auth ? 1 : 0}"
-  name   = "vault_aws_EC2_IAM_Auth"
+resource "aws_iam_role_policy" "vault_aws_ec2_iam_auth" {
+  count  = "${var.enable_ec2_iam_auth ? 1 : 0}"
+  name   = "vault_aws_ec2_iam_auth"
   role   = "${aws_iam_role.instance_role.id}"
-  policy = "${element(concat(data.aws_iam_policy_document.vault_aws_EC2_IAM_Auth.*.json, list("")), 0)}"
+  policy = "${element(concat(data.aws_iam_policy_document.vault_aws_ec2_iam_auth.*.json, list("")), 0)}"
 }
 
-data "aws_iam_policy_document" "vault_aws_EC2_IAM_Auth" {
-  count = "${var.enable_EC2_IAM_Auth ? 1 : 0}"
+data "aws_iam_policy_document" "vault_aws_ec2_iam_auth" {
+  count = "${var.enable_ec2_iam_auth ? 1 : 0}"
 
   statement {
     effect = "Allow"

@@ -1,4 +1,17 @@
 #!/usr/bin/env python
+# -What-------------------------------------------------------------------------
+# This script creates a request to the AWS Security Token Service API
+# with the action "GetCallerIdentity" and then signs the request using the
+# AWS credentials.
+# -Why--------------------------------------------------------------------------
+# We are using python here instead of bash to take advantage of the boto3 library
+# which facilitates this work by an order of magnitude
+# -What-for---------------------------------------------------------------------
+# This is useful for authenticating to Vault, because a client can use
+# this script to generate this request and this request is sent with the
+# login attempt to the Vault server. Vault then executes this request and gets
+# the response from GetCallerIdentity, which tells who is trying to authenticate
+# ------------------------------------------------------------------------------
 
 import botocore.session
 from botocore.awsrequest import create_request_object

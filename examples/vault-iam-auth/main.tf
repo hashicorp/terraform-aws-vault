@@ -29,18 +29,6 @@ resource "aws_instance" "example_auth_to_vault" {
   tags {
     Name = "${var.auth_server_name}"
   }
-
-  # These two blocks below exist to provision a script that uses an AWS SDK to sign a request
-  provisioner "file" {
-    source      = "${path.module}/auth-signature-scripts"
-    destination = "/tmp"
-  }
-
-  connection {
-    type        = "ssh"
-    user        = "${var.ssh_username}"
-    private_key = "${file("${var.ssh_key_path}")}"
-  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -95,6 +83,7 @@ data "template_file" "user_data_auth_client" {
 
 # ---------------------------------------------------------------------------------------------------------------------
 # ADDS A RULE TO OPEN PORT 8080 SINCE OUR EXAMPLE LAUNCHES A SIMPLE WEB SERVER
+# This is here just for automated tests, not something that should be done with prod
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_security_group" "auth_instance" {

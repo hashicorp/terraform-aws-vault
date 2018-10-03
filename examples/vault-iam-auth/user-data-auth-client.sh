@@ -2,6 +2,9 @@
 # This script is meant to be run in the User Data of each EC2 Instance while it's booting. The script uses the
 # run-consul script to configure and start Consul in client mode. Note that this script assumes it's running in an AMI
 # built from the Packer template in examples/vault-consul-ami/vault-consul.json.
+# It then uses a python script to create a signed request to the AWS STS API and sends this encrypted request
+# to the Vault server when authenticating. After login, it reads a secret and exposes it in a simple web server for
+# test purposes.
 
 set -e
 
@@ -9,39 +12,45 @@ set -e
 # From: https://alestic.com/2010/12/ec2-user-data-output/
 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
-# These variables are passed in via Terraform template interpolation
-/opt/consul/bin/run-consul --client --cluster-tag-key "${consul_cluster_tag_key}" --cluster-tag-value "${consul_cluster_tag_value}"
+# Log the given message at the given level. All logs are written to stderr with a timestamp.
+function log {
+ local readonly message="$1"
+ local readonly timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+ >&2 echo -e "$timestamp $message"
+}
 
-
+# A retry function that attempts to run a command a number of times and returns the output
 function retry {
   local readonly cmd=$1
   local readonly description=$2
 
   for i in $(seq 1 30); do
-    echo "$description"
+    log "$description"
 
     # The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
     # beginning of this script which exits the script immediatelly for error status while not losing the exit status code
     output=$(eval "$cmd") && exit_status=0 || exit_status=$?
     if [[ $exit_status -eq 0 ]]; then
+      echo "$output"
       return
     fi
-    echo "$description failed. Will sleep for 10 seconds and try again."
+    log "$description failed. Will sleep for 10 seconds and try again."
     sleep 10
   done;
 
-  echo "$description failed."
+  log "$description failed after 30 attempts."
   exit $exit_status
 }
 
-# Retrying this just in case terraform is still connecting and provisioning these files
-retry "chmod +x /tmp/auth-signature-scripts/install-dependencies.sh" "Chmod'ing signature script"
-/tmp/auth-signature-scripts/install-dependencies.sh
+# These variables are passed in via Terraform template interpolation
+/opt/consul/bin/run-consul --client --cluster-tag-key "${consul_cluster_tag_key}" --cluster-tag-value "${consul_cluster_tag_value}"
 
-# Creating a signed request to AWS STS API with header of server ID "vault.service.consul"
-# This request is to the method GetCallerIdentity of the AWS Security Token Service, which answers the question "who am I?"
-# This script uses python's AWS SDK boto3 to get necessary credentials and sign the request
-signed_request=$(python /tmp/auth-signature-scripts/sign-request.py vault.service.consul)
+# Creating a signed request to AWS Security Token Service (STS) API with header of server ID "vault.service.consul"
+# This request is to the method GetCallerIdentity of STS, which answers the question "who am I?"
+# This python script creates the STS request, gets the necessary AWS credentials and signs the request with them
+# Using python here instead of doing this in bash to take advantage of python's AWS SDK boto3, which facilitates this work a lot
+# You can find this script at /examples/vault-consul-ami/auth/sign-request.py
+signed_request=$(python /opt/vault/scripts/sign-request.py vault.service.consul)
 
 iam_request_url=$(echo $signed_request | jq -r .iam_request_url)
 iam_request_body=$(echo $signed_request | jq -r .iam_request_body)
@@ -64,7 +73,9 @@ EOF
 # And the Vault server will execute this request to validate this origin with AWS
 # Retry in case the vault server is still booting and unsealing
 # Or in case run-consul running on the background didn't finish yet
-retry "curl --request POST --data '$data' https://vault.service.consul:8200/v1/auth/aws/login" "Trying to login to vault"
+login_output=$(retry \
+  "curl --request POST --data '$data' https://vault.service.consul:8200/v1/auth/aws/login" \
+  "Trying to login to vault")
 
 
 # If vault cli is installed we can also perform these operations with vault cli
@@ -85,7 +96,7 @@ retry "curl --request POST --data '$data' https://vault.service.consul:8200/v1/a
 
 
 # We can then use the client token from the login output once login was successful
-token=$(echo $output | jq -r .auth.client_token)
+token=$(echo $login_output | jq -r .auth.client_token)
 
 # And use the token to perform operations on vault such as reading a secret
 response=$(curl \

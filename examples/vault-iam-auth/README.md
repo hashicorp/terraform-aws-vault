@@ -10,6 +10,15 @@ if an authentication source such as an EC2 Instance or other resources like a
 Lambda Function are legitimate sources or not. Basically, if AWS trusts the
 origin, then so do we.
 
+Vault provides multiple ways to authenticate a human or machine to Vault, known as
+[auth methods][auth_methods]. For example, a human can authenticate with a Username
+& Password or with GitHub. In this example, we demonstrate the [AWS Auth Method][aws_auth].
+
+The way it works is that Vault understands [AWS][aws_auth] as a trusted third party, and
+relies on AWS itself for affirming if an authentication source such as an EC2 Instance or
+other resources like a Lambda Function are legitimate sources or not. Basically, if AWS
+trusts the origin, then so do we.
+
 There are currently two ways an AWS resource can authenticatate: `ec2` and `iam`. In
 this example, we will explore the second option.
 
@@ -20,12 +29,15 @@ production usage, we strongly recommend deploying the Vault cluster into the pri
 of a custom VPC.
 
 ## Running this example
-You will need to create an [Amazon Machine Image (AMI)][ami] that has Vault and Consul installed,
-which you can do using the [vault-consul-ami example][vault_consul_ami]). Each of the servers
-in this example, including the instance that is authenticating to Vault has [Dnsmasq][dnsmasq]
-installed (via the [install-dnsmasq module][dnsmasq_module]) which allows it to use the Consul
-server cluster for service discovery and thereby access Vault via DNS using the domain name
-`vault.service.consul`.
+You will need to create an [Amazon Machine Image (AMI)][ami] that has both Vault and Consul
+installed, which you can do using the [vault-consul-ami example][vault_consul_ami]). All the EC2
+Instances in this example (including the EC2 Instance that authenticates to Vault) install
+[Dnsmasq][dnsmasq] (via the [install-dnsmasq module][dnsmasq_module]) so that all DNS queries
+for `*.consul` will be directed to the Consul Server cluster. Because Consul has knowledge of
+all the Vault nodes (and in some cases, of other services as well), this setup allows the EC2
+Instance to use Consul's DNS server for service discovery, and thereby to discover the IP addresses
+of the Vault nodes.
+
 
 ### Quick start
 
@@ -56,9 +68,8 @@ Next, we must enable Vault to support the AWS auth method (using `vault auth ena
 Finally, we must define the correct Vault Policies and Roles to declare which EC2
 Instances will have access to which resources in Vault.
 
-Policies are rules that grant or forbid access and actions to certain paths in
-Vault. You can read more about them [here][policies_doc]. With one or more
-policies on hand, you can then finally create the authentication role.
+[Policies][policies_doc] are rules that grant or forbid access and actions to certain paths in
+Vault. With one or more policies on hand, you can then finally create the authentication role.
 
 When you create a Role in Vault, you define the Policies that are attached to that
 Role, how principals who assume that Role will re-authenticate, and for how long
@@ -67,7 +78,7 @@ tokens issued for that role will be valid.
 In our example we create a simple Vault Policy that allows writing and reading from
 secrets in the path `secret` namespaced with the prefix `example_`, and then create
 a Vault Role that allows authentication from all instances with a specific `ami id`.
-You can read more about role creation and check which other instance metadata you can
+You can read more about Role creation and check which other instance metadata you can
 use on auth [here][create_role].
 
 
@@ -80,7 +91,7 @@ EOF
 
 vault write \
   auth/aws/role/example-role
-  auth_type=ec2 \
+  auth_type=iam \
   policies=example-policy \
   max_ttl=500h \
   bound_iam_principal_arn=<ARN>

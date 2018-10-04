@@ -150,8 +150,9 @@ function install_dependencies {
 
   if $(has_apt_get); then
     sudo apt-get update -y
-    sudo apt-get install -y awscli curl unzip jq
+    sudo apt-get install -y awscli curl unzip jq python-pip
     install_supervisord_debian
+    LC_ALL=C && sudo pip install boto3
   elif $(has_yum); then
     sudo yum update -y
     sudo yum install -y awscli curl unzip jq
@@ -189,6 +190,7 @@ function create_vault_install_paths {
   sudo mkdir -p "$path/data"
   sudo mkdir -p "$path/log"
   sudo mkdir -p "$path/tls"
+  sudo mkdir -p "$path/scripts"
   sudo chmod 755 "$path"
   sudo chmod 755 "$path/bin"
 

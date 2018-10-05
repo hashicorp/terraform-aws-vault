@@ -213,3 +213,27 @@ data "aws_iam_policy_document" "vault_s3" {
     ]
   }
 }
+
+resource "aws_iam_role_policy" "vault_aws_EC2_IAM_Auth" {
+  count   = "${var.enable_EC2_IAM_Auth ? 1 : 0}"
+  name    = "vault_aws_EC2_IAM_Auth"
+  role    = "${aws_iam_role.instance_role.id}"
+  policy  = "${element(concat(data.aws_iam_policy_document.vault_aws_EC2_IAM_Auth.*.json, list("")), 0)}"
+}
+
+data "aws_iam_policy_document" "vault_aws_EC2_IAM_Auth" {
+  count   = "${var.enable_EC2_IAM_Auth ? 1 : 0}"
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ec2:DescribeInstances",
+      "iam:GetInstanceProfile",
+      "iam:GetUser",
+      "iam:GetRole"
+    ]
+
+    resources = ["*"]
+  }
+}
+

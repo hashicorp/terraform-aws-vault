@@ -214,7 +214,8 @@ data "template_file" "user_data_consul" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 data "aws_vpc" "default" {
-  default = "${var.use_default_vpc}"
+  default = "${var.vpc_id == "" ? true : false}"
+  id = "${var.vpc_id}"
   tags    = "${var.vpc_tags}"
 }
 

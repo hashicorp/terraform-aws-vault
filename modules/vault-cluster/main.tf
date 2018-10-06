@@ -16,7 +16,7 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 
   launch_configuration = "${aws_launch_configuration.launch_configuration.name}"
 
-  depends_on = ["aws_iam_instance_profile.instance_profile", "aws_launch_template.launch_template"]
+  depends_on = ["aws_iam_instance_profile.instance_profile", "aws_launch_configuration.launch_configuration"]
 
   availability_zones  = ["${var.availability_zones}"]
   vpc_zone_identifier = ["${var.subnet_ids}"]

@@ -202,8 +202,7 @@ variable "force_destroy_s3_bucket" {
 
 variable "asg_launch_mechanism" {
   # Choices are launch_configuration and launch_template.
-  # launch_template gives you the opportunithy to declare volume encryption and
-  # set tags on instance volumes.
+  # launch_template gives you the opportunithy to set tags on instance volumes.
   #
   description = "Select between launch_config-driven or launch_template-driven autoscaling group."
 

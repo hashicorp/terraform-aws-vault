@@ -15,7 +15,7 @@ output "cluster_tag_value" {
 output "cluster_size" {
   # This is safe because asg_launch_mechanism will only allow one of aws_autoscaling_group.autoscaling_group.*
   # or aws_autoscaling_group.lt_autoscaling_group.* to be non-empty.
-  value = "${join("",concat(aws_autoscaling_group.autoscaling_group.*.desired_capacity,aws_autoscaling_group.lt_autoscaling_group.*.desired_capacity))}"
+  value = "${element(concat(aws_autoscaling_group.autoscaling_group.*.desired_capacity, aws_autoscaling_group.lt_autoscaling_group.*.desired_capacity), 0)}"
 }
 
 output "iam_role_arn" {

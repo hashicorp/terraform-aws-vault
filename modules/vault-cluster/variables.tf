@@ -46,6 +46,16 @@ variable "cluster_size" {
 # These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------
 
+variable "enable_auto_unseal" {
+  description = "(Vault Enterprise only) Emable auto unseal of the Vault cluster"
+  default     = false
+}
+
+variable "auto_unseal_kms_key_arn" {
+  description = "(Vault Enterprise only) The arn of the KMS key used for unsealing the Vault cluster"
+  default     = ""
+}
+
 variable "subnet_ids" {
   description = "The subnet IDs into which the EC2 Instances should be deployed. You should typically pass in one subnet ID per node in the cluster_size variable. We strongly recommend that you run Vault in private subnets. At least one of var.subnet_ids or var.availability_zones must be non-empty."
   type        = "list"

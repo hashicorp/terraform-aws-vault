@@ -37,6 +37,12 @@ function print_usage {
   echo -e "  --s3-bucket\tSpecifies the S3 bucket to use to store Vault data. Only used if '--enable-s3-backend' is set."
   echo -e "  --s3-bucket-region\tSpecifies the AWS region where `--s3-bucket` lives. Only used if `--enable-s3-backend` is set."
   echo
+  echo "Optional Arguments for enabling the AWS KMS seal (Vault Enterprise only):"
+  echo
+  echo -e "  --enable-auto-unseal\tIf this flag is set, enable the AWS KMS Auto-unseal feature. Default is false."
+  echo -e "  --auto-unseal-kms-key-id\tThe key id of the AWS KMS key to be used for encryption and decryption. Required if --enable-auto-unseal is enabled."
+  echo -e "  --auto-unseal-region\tThe AWS region where the encryption key lives. Required if --enable-auto-unseal is enabled."
+  echo
   echo "Examples:"
   echo
   echo "  run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem"
@@ -137,10 +143,24 @@ function generate_vault_config {
   local readonly enable_s3_backend="$8"
   local readonly s3_bucket="$9"
   local readonly s3_bucket_region="${10}"
+  local readonly enable_auto_unseal="${11}"
+  local readonly auto_unseal_kms_key_id="${12}"
+  local readonly auto_unseal_kms_key_region="${13}"
   local readonly config_path="$config_dir/$VAULT_CONFIG_FILE"
 
   local instance_ip_address
   instance_ip_address=$(get_instance_ip_address)
+
+  local auto_unseal_config=""
+  if [[ "$enable_auto_unseal" == "true" ]]; then
+    auto_unseal_config=$(cat <<EOF
+seal "awskms" {
+  kms_key_id = "$auto_unseal_kms_key_id"
+  region = "$auto_unseal_kms_key_region"
+}\n
+EOF
+)
+  fi
 
   log_info "Creating default Vault config file in $config_path"
   local readonly ui_config=$(cat <<EOF
@@ -188,6 +208,8 @@ EOF
 )
 
   vault_version_at_least "$config_path" "$ui_config"
+
+  echo -e "$auto_unseal_config" >> "$config_path"
   echo -e "$listener_config" >> "$config_path"
   echo -e "$s3_config" >> "$config_path"
   echo -e "$consul_storage" >> "$config_path"
@@ -244,6 +266,10 @@ function run {
   local enable_s3_backend="false"
   local s3_bucket=""
   local s3_bucket_region=""
+  local enable_auto_unseal="false"
+  local auto_unseal_region=""
+  local auto_unseal_kms_key_id=""
+  local auto_unseal_kms_key_region=""
   local all_args=()
 
   while [[ $# > 0 ]]; do
@@ -312,6 +338,21 @@ function run {
         s3_bucket_region="$2"
         shift
         ;;
+      --enable-auto-unseal)
+        enable_auto_unseal="true"
+        ;;
+      --auto-unseal-region)
+        auto_unseal_region="$2"
+        shift
+        ;;
+      --auto-unseal-kms-key-id)
+        auto_unseal_kms_key_id="$2"
+        shift
+        ;;
+      --auto-unseal-kms-key-region)
+        auto_unseal_kms_key_region="$2"
+        shift
+        ;;
       --help)
         print_usage
         exit
@@ -363,10 +404,29 @@ function run {
     api_addr="https://$(get_instance_ip_address):${port}"
   fi
 
+  if [[ "$enable_auto_unseal" == "true" ]]; then
+    log_info "The --enable-auto-unseal flag is set to true"
+    assert_not_empty "--auto-unseal-kms-key-id" "$auto_unseal_kms_key_id"
+    assert_not_empty "--auto-unseal-kms-key-region" "$auto_unseal_kms_key_region"
+  fi
+
   if [[ "$skip_vault_config" == "true" ]]; then
     log_info "The --skip-vault-config flag is set, so will not generate a default Vault config file."
   else
-    generate_vault_config "$tls_cert_file" "$tls_key_file" "$port" "$cluster_port" "$api_addr" "$config_dir" "$user" "$enable_s3_backend" "$s3_bucket" "$s3_bucket_region"
+    generate_vault_config \
+      "$tls_cert_file" \
+      "$tls_key_file" \
+      "$port" \
+      "$cluster_port" \
+      "$api_addr" \
+      "$config_dir" \
+      "$user" \
+      "$enable_s3_backend" \
+      "$s3_bucket" \
+      "$s3_bucket_region" \
+      "$enable_auto_unseal" \
+      "$auto_unseal_kms_key_id" \
+      "$auto_unseal_kms_key_region"
   fi
 
   generate_supervisor_config "$SUPERVISOR_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_dir" "$log_level" "$user"

@@ -20,16 +20,12 @@ variable "ssh_key_name" {
   description = "The name of an EC2 Key Pair that can be used to SSH to the EC2 Instances in this cluster. Set to an empty string to not associate a Key Pair."
 }
 
-variable "example_secret" {
-  description = "Example secret to be written into vault server"
+variable "auto_unseal_kms_key_arn" {
+  description = "ARN of AWS KMS key used for encryption and decryption"
 }
 
-variable "ssh_username" {
-  description = "Username for provisioning files to example instance"
-}
-
-variable "ssh_key_path" {
-  description = "Path of EC2 secret key for provisioning files to example isntance"
+variable "auto_unseal_kms_key_id" {
+  description = "Key id of AWS KMS key used for encryption and decryption"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

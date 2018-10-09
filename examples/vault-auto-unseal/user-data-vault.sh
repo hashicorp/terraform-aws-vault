@@ -20,5 +20,5 @@ readonly VAULT_TLS_KEY_FILE="/opt/vault/tls/vault.key.pem"
   --tls-cert-file "$VAULT_TLS_CERT_FILE" \
   --tls-key-file "$VAULT_TLS_KEY_FILE" \
   --enable-auto-unseal \
-  --auto-unseal-kms-key "${kms_key}" \
+  --auto-unseal-kms-key-id "${kms_key_id}" \
   --auto-unseal-kms-key-region "${aws_region}"

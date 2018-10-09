@@ -40,8 +40,8 @@ function print_usage {
   echo "Optional Arguments for enabling the AWS KMS seal (Vault Enterprise only):"
   echo
   echo -e "  --enable-auto-unseal\tIf this flag is set, enable the AWS KMS Auto-unseal feature. Default is false."
-  echo -e "  --auto-unseal-kms-key\tThe id of the AWS KMS key to be used for encryption and decryption."
-  echo -e "  --auto-unseal-region\tThe AWS region where the encryption key lives."
+  echo -e "  --auto-unseal-kms-key-id\tThe key id of the AWS KMS key to be used for encryption and decryption. Required if --enable-auto-unseal is enabled."
+  echo -e "  --auto-unseal-region\tThe AWS region where the encryption key lives. Required if --enable-auto-unseal is enabled."
   echo
   echo "Examples:"
   echo
@@ -144,7 +144,7 @@ function generate_vault_config {
   local readonly s3_bucket="$9"
   local readonly s3_bucket_region="${10}"
   local readonly enable_auto_unseal="${11}"
-  local readonly auto_unseal_kms_key="${12}"
+  local readonly auto_unseal_kms_key_id="${12}"
   local readonly auto_unseal_kms_key_region="${13}"
   local readonly config_path="$config_dir/$VAULT_CONFIG_FILE"
 
@@ -155,17 +155,12 @@ function generate_vault_config {
   if [[ "$enable_auto_unseal" == "true" ]]; then
     auto_unseal_config=$(cat <<EOF
 seal "awskms" {
-  kms_key_id = "$auto_unseal_kms_key"
+  kms_key_id = "$auto_unseal_kms_key_id"
   region = "$auto_unseal_kms_key_region"
 }\n
 EOF
 )
   fi
-
-  # kms_key_id = "d7c1ffd9-8cce-45e7-be4a-bb38dd205966"
-  # region      = "$auto_unseal_region"
-  # access_key = "AKIAIOSFODNN7EXAMPLE"
-  # secret_key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
 
   log_info "Creating default Vault config file in $config_path"
   local readonly ui_config=$(cat <<EOF
@@ -273,7 +268,7 @@ function run {
   local s3_bucket_region=""
   local enable_auto_unseal="false"
   local auto_unseal_region=""
-  local auto_unseal_kms_key=""
+  local auto_unseal_kms_key_id=""
   local auto_unseal_kms_key_region=""
   local all_args=()
 
@@ -350,8 +345,8 @@ function run {
         auto_unseal_region="$2"
         shift
         ;;
-      --auto-unseal-kms-key)
-        auto_unseal_kms_key="$2"
+      --auto-unseal-kms-key-id)
+        auto_unseal_kms_key_id="$2"
         shift
         ;;
       --auto-unseal-kms-key-region)
@@ -409,6 +404,12 @@ function run {
     api_addr="https://$(get_instance_ip_address):${port}"
   fi
 
+  if [[ "$enable_auto_unseal" == "true" ]]; then
+    log_info "The --enable-auto-unseal flag is set to true"
+    assert_not_empty "--auto-unseal-kms-key-id" "$auto_unseal_kms_key_id"
+    assert_not_empty "--auto-unseal-kms-key-region" "$auto_unseal_kms_key_region"
+  fi
+
   if [[ "$skip_vault_config" == "true" ]]; then
     log_info "The --skip-vault-config flag is set, so will not generate a default Vault config file."
   else
@@ -424,7 +425,7 @@ function run {
       "$s3_bucket" \
       "$s3_bucket_region" \
       "$enable_auto_unseal" \
-      "$auto_unseal_kms_key" \
+      "$auto_unseal_kms_key_id" \
       "$auto_unseal_kms_key_region"
   fi
 

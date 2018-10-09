@@ -35,11 +35,13 @@ we strongly recommend deploying the Vault cluster into the private subnets of a 
   documentation for instructions. Don't forget to set the variable `vault_download_url`
   with the url of the enterprise version of Vault. Make sure to note down the ID of the AMI.
 1. Install [Terraform][terraform].
-1. [Create an AWS KMS key][key_creation]. Take note of the key id and ARN.
+1. [Create an AWS KMS key][key_creation]. Take note of the key alias.
 1. Open `vars.tf`, set the environment variables specified at the top of the file,
   and fill in any other variables that don't have a default. Put the AMI ID you
-  previously took note into the `ami_id` variable and the KMS key id and ARN into
-  `auto_unseal_kms_key_id` and `auto_unseal_kms_key_arn`.
+  previously took note into the `ami_id` variable and the KMS key alias into
+  `auto_unseal_kms_key_alias`. You should also set `vault_enterprise_license_key` with
+  your Vault Enterprise license. If you leave it blank, Vault will re-seal after 30
+  minutes and you won't be able to write or read secrets anymore. 
 1. Run `terraform init`.
 1. Run `terraform apply`.
 1. Run the [vault-examples-helper.sh script][examples_helper] to

@@ -7,6 +7,10 @@ terraform {
   required_version = ">= 0.11.0"
 }
 
+data "aws_kms_alias" "vault-example" {
+  name = "alias/${var.auto_unseal_kms_key_alias}"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY THE VAULT SERVER CLUSTER
 # ---------------------------------------------------------------------------------------------------------------------
@@ -30,7 +34,7 @@ module "vault_cluster" {
   # This setting will create the AWS policy that allows the vault cluster to
   # access KMS and use this key for encryption and decryption
   enable_auto_unseal = true
-  auto_unseal_kms_key_arn = "${var.auto_unseal_kms_key_arn}"
+  auto_unseal_kms_key_arn = "${data.aws_kms_alias.vault-example.target_key_arn}"
 
   # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
   # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
@@ -66,8 +70,9 @@ data "template_file" "user_data_vault_cluster" {
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
 
-    kms_key_id = "${var.auto_unseal_kms_key_id}"
-    aws_region = "${data.aws_region.current.name}"
+    kms_key_id                   = "${data.aws_kms_alias.vault-example.target_key_id}"
+    aws_region                   = "${data.aws_region.current.name}"
+    vault_enterprise_license_key = "${var.vault_enterprise_license_key}"
   }
 }
 

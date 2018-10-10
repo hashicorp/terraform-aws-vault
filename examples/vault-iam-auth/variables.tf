@@ -24,14 +24,6 @@ variable "example_secret" {
   description = "Example secret to be written into vault server"
 }
 
-variable "ssh_username" {
-  description = "Username for provisioning files to example instance"
-}
-
-variable "ssh_key_path" {
-  description = "Path of EC2 secret key for provisioning files to example isntance"
-}
-
 # ---------------------------------------------------------------------------------------------------------------------
 # OPTIONAL PARAMETERS
 # These parameters have reasonable defaults.

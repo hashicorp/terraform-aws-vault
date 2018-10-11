@@ -39,9 +39,7 @@ we strongly recommend deploying the Vault cluster into the private subnets of a 
 1. Open `vars.tf`, set the environment variables specified at the top of the file,
   and fill in any other variables that don't have a default. Put the AMI ID you
   previously took note into the `ami_id` variable and the KMS key alias into
-  `auto_unseal_kms_key_alias`. You should also set `vault_enterprise_license_key` with
-  your Vault Enterprise license. If you leave it blank, Vault will re-seal after 30
-  minutes and you won't be able to write or read secrets anymore. 
+  `auto_unseal_kms_key_alias`.
 1. Run `terraform init`.
 1. Run `terraform apply`.
 1. Run the [vault-examples-helper.sh script][examples_helper] to
@@ -50,7 +48,9 @@ we strongly recommend deploying the Vault cluster into the private subnets of a 
 1. Ssh to an instance in the vault cluster and run `vault operator init` to initialize
   the cluster, then `vault status` to check that it is unsealed. (If you ssh to a
   different node in the cluster, you might have to restart Vault first with
-  `sudo supervisorctl restart vault`)
+  `sudo supervisorctl restart vault`). You should apply your Vault Enterprise License
+  with `vault write /sys/license "text=$LICENSE_KEY_TEXT"`. If you don't do that,
+  Vault will re-seal after 30 minutes and you won't be able to write or read secrets anymore.
 
 [ami]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html
 [auto_unseal]: https://www.vaultproject.io/docs/enterprise/auto-unseal/index.html

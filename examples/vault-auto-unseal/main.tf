@@ -72,7 +72,6 @@ data "template_file" "user_data_vault_cluster" {
 
     kms_key_id                   = "${data.aws_kms_alias.vault-example.target_key_id}"
     aws_region                   = "${data.aws_region.current.name}"
-    vault_enterprise_license_key = "${var.vault_enterprise_license_key}"
   }
 }
 

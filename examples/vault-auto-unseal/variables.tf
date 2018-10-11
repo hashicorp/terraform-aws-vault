@@ -24,10 +24,6 @@ variable "auto_unseal_kms_key_alias" {
   description = "The alias of AWS KMS key used for encryption and decryption"
 }
 
-variable "vault_enterprise_license_key" {
-  description = "The Vault Enterprise license key"
-}
-
 # ---------------------------------------------------------------------------------------------------------------------
 # OPTIONAL PARAMETERS
 # These parameters have reasonable defaults.

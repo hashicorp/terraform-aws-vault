@@ -49,7 +49,7 @@ module "vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_iam_policies_servers" {
-  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-iam-policies?ref=v0.3.3"
+  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-iam-policies?ref=v0.4.0"
 
   iam_role_id = "${module.vault_cluster.iam_role_id}"
 }
@@ -77,13 +77,13 @@ data "template_file" "user_data_vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "security_group_rules" {
-  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-client-security-group-rules?ref=v0.3.3"
+  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-client-security-group-rules?ref=v0.4.0"
 
   security_group_id           = "${module.vault_cluster.security_group_id}"
 
   # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
   # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
-  
+
   allowed_inbound_cidr_blocks = ["0.0.0.0/0"]
 }
 
@@ -92,7 +92,7 @@ module "security_group_rules" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_cluster" {
-  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-cluster?ref=v0.3.3"
+  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-cluster?ref=v0.4.0"
 
   cluster_name  = "${var.consul_cluster_name}"
   cluster_size  = "${var.consul_cluster_size}"

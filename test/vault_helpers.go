@@ -34,12 +34,14 @@ const VAR_CONSUL_CLUSTER_TAG_KEY = "consul_cluster_tag_key"
 const VAR_VAULT_AUTH_SERVER_NAME = "auth_server_name"
 const VAR_SSH_KEY_NAME = "ssh_key_name"
 const VAR_VAULT_SECRET_NAME = "example_secret"
+const VAR_VAULT_IAM_AUTH_ROLE = "example_role_name"
 const OUTPUT_VAULT_CLUSTER_ASG_NAME = "asg_name_vault_cluster"
 const OUTPUT_AUTH_CLIENT_IP = "auth_client_public_ip"
 
 const VAULT_CLUSTER_PRIVATE_PATH = "examples/vault-cluster-private"
 const VAULT_CLUSTER_S3_BACKEND_PATH = "examples/vault-s3-backend"
 const VAULT_EC2_AUTH_PATH = "examples/vault-ec2-auth"
+const VAULT_IAM_AUTH_PATH = "examples/vault-iam-auth"
 const VAULT_CLUSTER_PUBLIC_PATH = REPO_ROOT
 
 const VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY = "create_dns_entry"
@@ -98,55 +100,15 @@ func runVaultPrivateClusterTest(t *testing.T, packerBuildName string, sshUserNam
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_CLUSTER_PRIVATE_PATH)
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
-		terraform.Destroy(t, terraformOptions)
-
-		amiId := test_structure.LoadAmiId(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
-		aws.DeleteAmi(t, awsRegion, amiId)
-
-		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
-		aws.DeleteEC2KeyPair(t, keyPair)
-
-		tlsCert := loadTlsCert(t, examplesDir)
-		cleanupTlsCertFiles(tlsCert)
+		teardownResources(t, examplesDir)
 	})
 
 	test_structure.RunTestStage(t, "setup_ami", func() {
-		awsRegion := aws.GetRandomRegion(t, nil, nil)
-		test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
-
-		tlsCert := generateSelfSignedTlsCert(t)
-		saveTlsCert(t, examplesDir, tlsCert)
-
-		amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, awsRegion)
-		test_structure.SaveAmiId(t, examplesDir, amiId)
+		setupAmi(t, examplesDir, packerBuildName)
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
-		uniqueId := random.UniqueId()
-		amiId := test_structure.LoadAmiId(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
-
-		keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
-		test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
-
-		terraformOptions := &terraform.Options{
-			TerraformDir: examplesDir,
-			Vars: map[string]interface{}{
-				VAR_AMI_ID:                 amiId,
-				VAR_VAULT_CLUSTER_NAME:     fmt.Sprintf("vault-test-%s", uniqueId),
-				VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
-				VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
-				VAR_SSH_KEY_NAME:           keyPair.Name,
-			},
-			EnvVars: map[string]string{
-				ENV_VAR_AWS_REGION: awsRegion,
-			},
-		}
-		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
-
-		terraform.InitAndApply(t, terraformOptions)
+		deployCluster(t, examplesDir, random.UniqueId(), nil)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
@@ -172,58 +134,20 @@ func runVaultPublicClusterTest(t *testing.T, packerBuildName string, sshUserName
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, ".")
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
-		terraform.Destroy(t, terraformOptions)
-
-		amiId := test_structure.LoadAmiId(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
-		aws.DeleteAmi(t, awsRegion, amiId)
-
-		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
-		aws.DeleteEC2KeyPair(t, keyPair)
-
-		tlsCert := loadTlsCert(t, examplesDir)
-		cleanupTlsCertFiles(tlsCert)
+		teardownResources(t, examplesDir)
 	})
 
 	test_structure.RunTestStage(t, "setup_ami", func() {
-		awsRegion := aws.GetRandomRegion(t, nil, nil)
-		test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
-
-		tlsCert := generateSelfSignedTlsCert(t)
-		saveTlsCert(t, examplesDir, tlsCert)
-
-		amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, awsRegion)
-		test_structure.SaveAmiId(t, examplesDir, amiId)
+		setupAmi(t, examplesDir, packerBuildName)
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
-		uniqueId := random.UniqueId()
-		amiId := test_structure.LoadAmiId(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
-
-		keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
-		test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
-
-		terraformOptions := &terraform.Options{
-			TerraformDir: examplesDir,
-			Vars: map[string]interface{}{
-				VAR_AMI_ID:                                       amiId,
-				VAR_VAULT_CLUSTER_NAME:                           fmt.Sprintf("vault-test-%s", uniqueId),
-				VAR_CONSUL_CLUSTER_NAME:                          fmt.Sprintf("consul-test-%s", uniqueId),
-				VAR_CONSUL_CLUSTER_TAG_KEY:                       fmt.Sprintf("consul-test-%s", uniqueId),
-				VAR_SSH_KEY_NAME:                                 keyPair.Name,
-				VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY:        boolToTerraformVar(false),
-				VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME: "",
-				VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME:       "",
-			},
-			EnvVars: map[string]string{
-				ENV_VAR_AWS_REGION: awsRegion,
-			},
+		terraformVars := map[string]interface{}{
+			VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY:        boolToTerraformVar(false),
+			VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME: "",
+			VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME:       "",
 		}
-		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
-
-		terraform.InitAndApply(t, terraformOptions)
+		deployCluster(t, examplesDir, random.UniqueId(), terraformVars)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
@@ -249,18 +173,7 @@ func runVaultWithS3BackendClusterTest(t *testing.T, packerBuildName string, sshU
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_CLUSTER_S3_BACKEND_PATH)
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
-		terraform.Destroy(t, terraformOptions)
-
-		amiId := test_structure.LoadAmiId(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
-		aws.DeleteAmi(t, awsRegion, amiId)
-
-		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
-		aws.DeleteEC2KeyPair(t, keyPair)
-
-		tlsCert := loadTlsCert(t, examplesDir)
-		cleanupTlsCertFiles(tlsCert)
+		teardownResources(t, examplesDir)
 	})
 
 	defer test_structure.RunTestStage(t, "logs", func() {
@@ -290,43 +203,17 @@ func runVaultWithS3BackendClusterTest(t *testing.T, packerBuildName string, sshU
 	})
 
 	test_structure.RunTestStage(t, "setup_ami", func() {
-		awsRegion := aws.GetRandomRegion(t, nil, nil)
-		test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
-
-		tlsCert := generateSelfSignedTlsCert(t)
-		saveTlsCert(t, examplesDir, tlsCert)
-
-		amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, awsRegion)
-		test_structure.SaveAmiId(t, examplesDir, amiId)
+		setupAmi(t, examplesDir, packerBuildName)
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
 		uniqueId := random.UniqueId()
-		amiId := test_structure.LoadAmiId(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
-
-		keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
-		test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
-
-		terraformOptions := &terraform.Options{
-			TerraformDir: examplesDir,
-			Vars: map[string]interface{}{
-				VAR_AMI_ID:                  amiId,
-				VAR_VAULT_CLUSTER_NAME:      fmt.Sprintf("vault-test-%s", uniqueId),
-				VAR_CONSUL_CLUSTER_NAME:     fmt.Sprintf("consul-test-%s", uniqueId),
-				VAR_CONSUL_CLUSTER_TAG_KEY:  fmt.Sprintf("consul-test-%s", uniqueId),
-				VAR_SSH_KEY_NAME:            keyPair.Name,
-				VAR_ENABLE_S3_BACKEND:       boolToTerraformVar(true),
-				VAR_S3_BUCKET_NAME:          s3BucketName(uniqueId),
-				VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
-			},
-			EnvVars: map[string]string{
-				ENV_VAR_AWS_REGION: awsRegion,
-			},
+		terraformVars := map[string]interface{}{
+			VAR_ENABLE_S3_BACKEND:       boolToTerraformVar(true),
+			VAR_S3_BUCKET_NAME:          s3BucketName(uniqueId),
+			VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
 		}
-		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
-
-		terraform.InitAndApply(t, terraformOptions)
+		deployCluster(t, examplesDir, uniqueId, terraformVars)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
@@ -353,18 +240,7 @@ func runVaultEnterpriseClusterTest(t *testing.T, packerBuildName string, sshUser
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_CLUSTER_PRIVATE_PATH)
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
-		terraform.Destroy(t, terraformOptions)
-
-		amiId := test_structure.LoadAmiId(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
-		aws.DeleteAmi(t, awsRegion, amiId)
-
-		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
-		aws.DeleteEC2KeyPair(t, keyPair)
-
-		tlsCert := loadTlsCert(t, examplesDir)
-		cleanupTlsCertFiles(tlsCert)
+		teardownResources(t, examplesDir)
 	})
 
 	test_structure.RunTestStage(t, "setup_ami", func() {
@@ -379,29 +255,7 @@ func runVaultEnterpriseClusterTest(t *testing.T, packerBuildName string, sshUser
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
-		uniqueId := random.UniqueId()
-		amiId := test_structure.LoadAmiId(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
-
-		keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
-		test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
-
-		terraformOptions := &terraform.Options{
-			TerraformDir: examplesDir,
-			Vars: map[string]interface{}{
-				VAR_AMI_ID:                 amiId,
-				VAR_VAULT_CLUSTER_NAME:     fmt.Sprintf("vault-test-%s", uniqueId),
-				VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
-				VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
-				VAR_SSH_KEY_NAME:           keyPair.Name,
-			},
-			EnvVars: map[string]string{
-				ENV_VAR_AWS_REGION: awsRegion,
-			},
-		}
-		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
-
-		terraform.InitAndApply(t, terraformOptions)
+		deployCluster(t, examplesDir, random.UniqueId(), nil)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
@@ -421,70 +275,141 @@ func runVaultEnterpriseClusterTest(t *testing.T, packerBuildName string, sshUser
 //    state files overwriting each other.
 // 2. Building the AMI in the vault-consul-ami example with the given build name
 // 3. Deploying that AMI using the example Terraform code setting an example secret
-// 4. Waiting for Vault to boot, unseal and the client to fetch the secret
-// 5. Making a request to the webserver started by the auth client user data script to see if the secret was properly fetched
+// 4. Waiting for Vault to boot, then unsealing the server, creating a Vault Role to allow logins from instances with a specific EC2 property and writing the example secret
+// 5. Waiting for the client to login, read the secret and launch a simple web server with the contents read
+// 6. Making a request to the webserver started by the auth client
 func runVaultEC2AuthTest(t *testing.T, packerBuildName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_EC2_AUTH_PATH)
 	exampleSecret := "42"
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
-		terraform.Destroy(t, terraformOptions)
-
-		amiId := test_structure.LoadAmiId(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
-		aws.DeleteAmi(t, awsRegion, amiId)
-
-		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
-		aws.DeleteEC2KeyPair(t, keyPair)
-
-		tlsCert := loadTlsCert(t, examplesDir)
-		cleanupTlsCertFiles(tlsCert)
+		teardownResources(t, examplesDir)
 	})
 
 	test_structure.RunTestStage(t, "setup_ami", func() {
-		awsRegion := aws.GetRandomRegion(t, nil, nil)
-		test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
-
-		tlsCert := generateSelfSignedTlsCert(t)
-		saveTlsCert(t, examplesDir, tlsCert)
-
-		amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, awsRegion)
-		test_structure.SaveAmiId(t, examplesDir, amiId)
+		setupAmi(t, examplesDir, packerBuildName)
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
 		uniqueId := random.UniqueId()
-		amiId := test_structure.LoadAmiId(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
-
-		keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
-		test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
-
-		terraformOptions := &terraform.Options{
-			TerraformDir: examplesDir,
-			Vars: map[string]interface{}{
-				VAR_AMI_ID:                 amiId,
-				VAR_VAULT_CLUSTER_NAME:     fmt.Sprintf("vault-test-%s", uniqueId),
-				VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
-				VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
-				VAR_VAULT_AUTH_SERVER_NAME: fmt.Sprintf("vault-auth-test-%s", uniqueId),
-				VAR_VAULT_SECRET_NAME:      exampleSecret,
-				VAR_SSH_KEY_NAME:           keyPair.Name,
-			},
-			EnvVars: map[string]string{
-				ENV_VAR_AWS_REGION: awsRegion,
-			},
+		terraformVars := map[string]interface{}{
+			VAR_VAULT_AUTH_SERVER_NAME: fmt.Sprintf("vault-auth-test-%s", uniqueId),
+			VAR_VAULT_SECRET_NAME:      exampleSecret,
 		}
-		test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
-
-		terraform.InitAndApply(t, terraformOptions)
+		deployCluster(t, examplesDir, uniqueId, terraformVars)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
 		testRequestSecret(t, terraformOptions, exampleSecret)
 	})
+}
+
+// Test the Vault IAM authentication example by:
+//
+// 1. Copying the code in this repo to a temp folder so tests on the Terraform code can run in parallel without the
+//    state files overwriting each other.
+// 2. Building the AMI in the vault-consul-ami example with the given build name
+// 3. Deploying that AMI using the example Terraform code setting an example secret
+// 4. Waiting for Vault to boot, then unsealing the server, creating a Vault Role to allow logins from resources with a specific AWS IAM Role and writing the example secret
+// 5. Waiting for the client to login, read the secret and launch a simple web server with the contents read
+// 6. Making a request to the webserver started by the auth client
+func runVaultIAMAuthTest(t *testing.T, packerBuildName string) {
+	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_IAM_AUTH_PATH)
+	exampleSecret := "42"
+
+	defer test_structure.RunTestStage(t, "teardown", func() {
+		teardownResources(t, examplesDir)
+	})
+
+	test_structure.RunTestStage(t, "setup_ami", func() {
+		setupAmi(t, examplesDir, packerBuildName)
+	})
+
+	test_structure.RunTestStage(t, "deploy", func() {
+		uniqueId := random.UniqueId()
+		terraformVars := map[string]interface{}{
+			VAR_VAULT_AUTH_SERVER_NAME: fmt.Sprintf("vault-auth-test-%s", uniqueId),
+			VAR_VAULT_IAM_AUTH_ROLE:    fmt.Sprintf("vault-auth-role-test-%s", uniqueId),
+			VAR_VAULT_SECRET_NAME:      exampleSecret,
+		}
+		deployCluster(t, examplesDir, uniqueId, terraformVars)
+	})
+
+	test_structure.RunTestStage(t, "validate", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		testRequestSecret(t, terraformOptions, exampleSecret)
+	})
+}
+
+func setupAmi(t *testing.T, examplesDir string, packerBuildName string) {
+	awsRegion := aws.GetRandomRegion(t, nil, nil)
+	test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
+
+	tlsCert := generateSelfSignedTlsCert(t)
+	saveTlsCert(t, examplesDir, tlsCert)
+
+	amiId := buildAmi(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, awsRegion)
+	test_structure.SaveAmiId(t, examplesDir, amiId)
+}
+
+func teardownResources(t *testing.T, examplesDir string) {
+	terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+	terraform.Destroy(t, terraformOptions)
+
+	amiId := test_structure.LoadAmiId(t, examplesDir)
+	awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
+	aws.DeleteAmi(t, awsRegion, amiId)
+
+	keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+	aws.DeleteEC2KeyPair(t, keyPair)
+
+	tlsCert := loadTlsCert(t, examplesDir)
+	cleanupTlsCertFiles(tlsCert)
+}
+
+// merges map A and B into new map
+// if maps are nil, returns an empty map
+func mergeMaps(mapA map[string]interface{}, mapB map[string]interface{}) map[string]interface{} {
+	result := map[string]interface{}{}
+
+	if mapA != nil {
+		for key, value := range mapA {
+			result[key] = value
+		}
+	}
+
+	if mapB != nil {
+		for key, value := range mapB {
+			result[key] = value
+		}
+	}
+
+	return result
+}
+
+func deployCluster(t *testing.T, examplesDir string, uniqueId string, terraformVars map[string]interface{}) {
+	amiId := test_structure.LoadAmiId(t, examplesDir)
+	awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
+
+	keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
+	test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
+
+	terraformOptions := &terraform.Options{
+		TerraformDir: examplesDir,
+		Vars: mergeMaps(terraformVars, map[string]interface{}{
+			VAR_AMI_ID:                 amiId,
+			VAR_VAULT_CLUSTER_NAME:     fmt.Sprintf("vault-test-%s", uniqueId),
+			VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
+			VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
+			VAR_SSH_KEY_NAME:           keyPair.Name,
+		}),
+		EnvVars: map[string]string{
+			ENV_VAR_AWS_REGION: awsRegion,
+		},
+	}
+	test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
+	terraform.InitAndApply(t, terraformOptions)
 }
 
 // Initialize the Vault cluster and unseal each of the nodes by connecting to them over SSH and executing Vault

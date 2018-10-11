@@ -1,8 +1,8 @@
 #!/bin/bash
 # This script is meant to be run in the User Data of each EC2 Instance while it's booting. The script uses the
-# run-consul script to configure and start Consul in client mode and then the run-vault script to configure and start
-# Vault in server mode. Note that this script assumes it's running in an AMI built from the Packer template in
-# examples/vault-consul-ami/vault-consul.json.
+# run-consul script to configure and start Consul in client mode and then the run-vault script to configure
+# the auto unsealing on server init
+
 
 set -e
 
@@ -22,3 +22,13 @@ readonly VAULT_TLS_KEY_FILE="/opt/vault/tls/vault.key.pem"
   --enable-auto-unseal \
   --auto-unseal-kms-key-id "${kms_key_id}" \
   --auto-unseal-kms-key-region "${aws_region}"
+
+# When you ssh to one of the instances in the vault cluster and initialize the server
+# You will notice it will now boot unsealed
+# /opt/vault/bin/vault operator init
+# /opt/vault/bin/vault status
+#
+# If the enterprise license isn't applied, it will however reseal after 30 minutes
+# This is how you apply the license, please note that the VAULT_TOKEN environment
+# variable needs to be set with the root token obtained when you initialized the server
+# /opt/vault/bin/vault write /sys/license "text=<vault_enterprise_license_key>"

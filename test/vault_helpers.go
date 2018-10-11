@@ -108,7 +108,7 @@ func runVaultPrivateClusterTest(t *testing.T, packerBuildName string, sshUserNam
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
-		deployCluster(t, examplesDir, random.UniqueId(), map[string]interface{}{})
+		deployCluster(t, examplesDir, random.UniqueId(), nil)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
@@ -255,7 +255,7 @@ func runVaultEnterpriseClusterTest(t *testing.T, packerBuildName string, sshUser
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
-		deployCluster(t, examplesDir, random.UniqueId(), map[string]interface{}{})
+		deployCluster(t, examplesDir, random.UniqueId(), nil)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
@@ -275,8 +275,9 @@ func runVaultEnterpriseClusterTest(t *testing.T, packerBuildName string, sshUser
 //    state files overwriting each other.
 // 2. Building the AMI in the vault-consul-ami example with the given build name
 // 3. Deploying that AMI using the example Terraform code setting an example secret
-// 4. Waiting for Vault to boot, unseal and the client to fetch the secret
-// 5. Making a request to the webserver started by the auth client user data script to see if the secret was properly fetched
+// 4. Waiting for Vault to boot, then unsealing the server, creating a Vault Role to allow logins from instances with a specific EC2 property and writing the example secret
+// 5. Waiting for the client to login, read the secret and launch a simple web server with the contents read
+// 6. Making a request to the webserver started by the auth client
 func runVaultEC2AuthTest(t *testing.T, packerBuildName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_EC2_AUTH_PATH)
 	exampleSecret := "42"
@@ -310,8 +311,9 @@ func runVaultEC2AuthTest(t *testing.T, packerBuildName string) {
 //    state files overwriting each other.
 // 2. Building the AMI in the vault-consul-ami example with the given build name
 // 3. Deploying that AMI using the example Terraform code setting an example secret
-// 4. Waiting for Vault to boot, unseal and the client to fetch the secret
-// 5. Making a request to the webserver started by the auth client user data script to see if the secret was properly fetched
+// 4. Waiting for Vault to boot, then unsealing the server, creating a Vault Role to allow logins from resources with a specific AWS IAM Role and writing the example secret
+// 5. Waiting for the client to login, read the secret and launch a simple web server with the contents read
+// 6. Making a request to the webserver started by the auth client
 func runVaultIAMAuthTest(t *testing.T, packerBuildName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_IAM_AUTH_PATH)
 	exampleSecret := "42"
@@ -366,6 +368,26 @@ func teardownResources(t *testing.T, examplesDir string) {
 	cleanupTlsCertFiles(tlsCert)
 }
 
+// merges map A and B into new map
+// if maps are nil, returns an empty map
+func mergeMaps(mapA map[string]interface{}, mapB map[string]interface{}) map[string]interface{} {
+	result := map[string]interface{}{}
+
+	if mapA != nil {
+		for key, value := range mapA {
+			result[key] = value
+		}
+	}
+
+	if mapB != nil {
+		for key, value := range mapB {
+			result[key] = value
+		}
+	}
+
+	return result
+}
+
 func deployCluster(t *testing.T, examplesDir string, uniqueId string, terraformVars map[string]interface{}) {
 	amiId := test_structure.LoadAmiId(t, examplesDir)
 	awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
@@ -373,19 +395,15 @@ func deployCluster(t *testing.T, examplesDir string, uniqueId string, terraformV
 	keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
 	test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
 
-	for key, value := range map[string]interface{}{
-		VAR_AMI_ID:                 amiId,
-		VAR_VAULT_CLUSTER_NAME:     fmt.Sprintf("vault-test-%s", uniqueId),
-		VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
-		VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
-		VAR_SSH_KEY_NAME:           keyPair.Name,
-	} {
-		terraformVars[key] = value
-	}
-
 	terraformOptions := &terraform.Options{
 		TerraformDir: examplesDir,
-		Vars:         terraformVars,
+		Vars: mergeMaps(terraformVars, map[string]interface{}{
+			VAR_AMI_ID:                 amiId,
+			VAR_VAULT_CLUSTER_NAME:     fmt.Sprintf("vault-test-%s", uniqueId),
+			VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
+			VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
+			VAR_SSH_KEY_NAME:           keyPair.Name,
+		}),
 		EnvVars: map[string]string{
 			ENV_VAR_AWS_REGION: awsRegion,
 		},

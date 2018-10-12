@@ -24,6 +24,13 @@ import (
 )
 
 const REPO_ROOT = "../"
+
+// This is the alias of a KMS key we have previously created that lives in the
+// AWS account where our CI tests run. We have one with the same alias in
+// every region. This key is necessary for the test of an Enterprise Vault feature
+// called auto unseal. If you wish to run test this locally, replace this with
+// the alias of an KMS key you already have on the AWS account you use for running
+// your tests or create a new one. Beware that creating an AWS KMS key costs money.
 const AUTO_UNSEAL_KMS_KEY_ALIAS = "dedicated-test-key"
 
 const ENV_VAR_AWS_REGION = "AWS_DEFAULT_REGION"

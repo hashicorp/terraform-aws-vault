@@ -15,7 +15,7 @@ If you're unfamiliar with how TLS certificates work, check out the [Background s
 
 1. Copy this module to your computer.
 
-1. Open `vars.tf` and fill in the variables that do not have a default.
+1. Open `variables.tf` and fill in the variables that do not have a default.
 
 1. DO NOT configure Terraform remote state storage for this code. You do NOT want to store the state files as they 
    will contain the private keys for the certificates.

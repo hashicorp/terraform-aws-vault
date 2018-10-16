@@ -46,11 +46,15 @@ we strongly recommend deploying the Vault cluster into the private subnets of a 
    print out the IP addresses of the Vault server and some example commands you
    can run to interact with the cluster: `../vault-examples-helper/vault-examples-helper.sh`.
 1. Ssh to an instance in the vault cluster and run `vault operator init` to initialize
-  the cluster, then `vault status` to check that it is unsealed. (If you ssh to a
+  the cluster, then `vault status` to check that it is unsealed. If you ssh to a
   different node in the cluster, you might have to restart Vault first with
-  `sudo supervisorctl restart vault`). You should apply your Vault Enterprise License
-  with `vault write /sys/license "text=$LICENSE_KEY_TEXT"`. If you don't do that,
-  Vault will re-seal after 30 minutes and you won't be able to write or read secrets anymore.
+  `sudo supervisorctl restart vault` so it will rejoin the cluster and unseal.
+  To avoid doing that, you can start your cluster with initially just one node and
+  start the server, then change the `vault_cluster_size` variable back to 3 and and
+  run `terraform apply again`. The new nodes will join the cluster already unsealed
+  in this case. You should apply your Vault Enterprise License with
+  `vault write /sys/license "text=$LICENSE_KEY_TEXT"`. If you don't do that, Vault
+  will re-seal after 30 minutes and you won't be able to write or read secrets anymore.
 
 [ami]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html
 [auto_unseal]: https://www.vaultproject.io/docs/enterprise/auto-unseal/index.html

@@ -25,6 +25,14 @@ import (
 
 const REPO_ROOT = "../"
 
+// This is the alias of a KMS key we have previously created that lives in the
+// AWS account where our CI tests run. We have one with the same alias in
+// every region. This key is necessary for the test of an Enterprise Vault feature
+// called auto unseal. If you wish to run test this locally, replace this with
+// the alias of an KMS key you already have on the AWS account you use for running
+// your tests or create a new one. Beware that creating an AWS KMS key costs money.
+const AUTO_UNSEAL_KMS_KEY_ALIAS = "dedicated-test-key"
+
 const ENV_VAR_AWS_REGION = "AWS_DEFAULT_REGION"
 
 const VAR_AMI_ID = "ami_id"
@@ -35,6 +43,8 @@ const VAR_VAULT_AUTH_SERVER_NAME = "auth_server_name"
 const VAR_SSH_KEY_NAME = "ssh_key_name"
 const VAR_VAULT_SECRET_NAME = "example_secret"
 const VAR_VAULT_IAM_AUTH_ROLE = "example_role_name"
+const VAR_VAULT_AUTO_UNSEAL_KMS_KEY_ALIAS = "auto_unseal_kms_key_alias"
+const VAR_VAULT_CLUSTER_SIZE = "vault_cluster_size"
 const OUTPUT_VAULT_CLUSTER_ASG_NAME = "asg_name_vault_cluster"
 const OUTPUT_AUTH_CLIENT_IP = "auth_client_public_ip"
 
@@ -42,6 +52,7 @@ const VAULT_CLUSTER_PRIVATE_PATH = "examples/vault-cluster-private"
 const VAULT_CLUSTER_S3_BACKEND_PATH = "examples/vault-s3-backend"
 const VAULT_EC2_AUTH_PATH = "examples/vault-ec2-auth"
 const VAULT_IAM_AUTH_PATH = "examples/vault-iam-auth"
+const VAULT_AUTO_UNSEAL_AUTH_PATH = "examples/vault-auto-unseal"
 const VAULT_CLUSTER_PUBLIC_PATH = REPO_ROOT
 
 const VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY = "create_dns_entry"
@@ -342,6 +353,50 @@ func runVaultIAMAuthTest(t *testing.T, packerBuildName string) {
 	})
 }
 
+// Test the Vault auto unseal example by:
+//
+// 1. Copying the code in this repo to a temp folder so tests on the Terraform code can run in parallel without the
+//    state files overwriting each other.
+// 2. Building the AMI in the vault-consul-ami example with the given build name
+// 3. Deploying a cluster of 1 vault server using the example Terraform code
+// 4. Sshing into vault node to initialize the server and check that it booted unsealed
+// 5. Increasing the the cluster size to 3 and check that new nodes are unsealed when they boot and join the cluster
+func runVaultAutoUnsealTest(t *testing.T, packerBuildName string, sshUserName string, vaultDownloadUrl string) {
+	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_AUTO_UNSEAL_AUTH_PATH)
+
+	defer test_structure.RunTestStage(t, "teardown", func() {
+		teardownResources(t, examplesDir)
+	})
+
+	test_structure.RunTestStage(t, "setup_ami", func() {
+		awsRegion := aws.GetRandomRegion(t, nil, nil)
+		test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
+
+		tlsCert := generateSelfSignedTlsCert(t)
+		saveTlsCert(t, examplesDir, tlsCert)
+
+		amiId := buildAmiWithDownloadEnv(t, AMI_EXAMPLE_PATH, packerBuildName, tlsCert, awsRegion, vaultDownloadUrl)
+		test_structure.SaveAmiId(t, examplesDir, amiId)
+	})
+
+	test_structure.RunTestStage(t, "deploy", func() {
+		uniqueId := random.UniqueId()
+		terraformVars := map[string]interface{}{
+			VAR_VAULT_AUTO_UNSEAL_KMS_KEY_ALIAS: AUTO_UNSEAL_KMS_KEY_ALIAS,
+			VAR_VAULT_CLUSTER_SIZE:              1,
+		}
+		deployCluster(t, examplesDir, uniqueId, terraformVars)
+	})
+
+	test_structure.RunTestStage(t, "validate", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		awsRegion := test_structure.LoadString(t, examplesDir, SAVED_AWS_REGION)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+
+		testAutoUnseal(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
+	})
+}
+
 func setupAmi(t *testing.T, examplesDir string, packerBuildName string) {
 	awsRegion := aws.GetRandomRegion(t, nil, nil)
 	test_structure.SaveString(t, examplesDir, SAVED_AWS_REGION, awsRegion)
@@ -412,6 +467,39 @@ func deployCluster(t *testing.T, examplesDir string, uniqueId string, terraformV
 	terraform.InitAndApply(t, terraformOptions)
 }
 
+func testAutoUnseal(t *testing.T, asgNameOutputVar string, sshUserName string, terraformOptions *terraform.Options, awsRegion string, keyPair *aws.Ec2Keypair) {
+	asgName := terraform.OutputRequired(t, terraformOptions, asgNameOutputVar)
+	nodeIpAddresses := getIpAddressesOfAsgInstances(t, asgName, awsRegion)
+	logger.Logf(t, fmt.Sprintf("IP ADDRESS OF INSTANCE %s", nodeIpAddresses[0]))
+	initialCluster := VaultCluster{
+		Leader: ssh.Host{
+			Hostname:    nodeIpAddresses[0],
+			SshUserName: sshUserName,
+			SshKeyPair:  keyPair.KeyPair,
+		},
+	}
+
+	establishConnectionToCluster(t, initialCluster)
+	waitForVaultToBoot(t, initialCluster)
+
+	logger.Logf(t, "Initializing the cluster")
+	ssh.CheckSshCommand(t, initialCluster.Leader, "vault operator init")
+	assertStatus(t, initialCluster.Leader, Leader)
+
+	logger.Logf(t, "Increasing the cluster size and running 'terraform apply' again")
+	terraformOptions.Vars[VAR_VAULT_CLUSTER_SIZE] = 3
+	terraform.Apply(t, terraformOptions)
+
+	logger.Logf(t, "The cluster now should be bigger and the new nodes should boot unsealed (on standby mode already)")
+	newCluster := findVaultClusterNodes(t, asgNameOutputVar, sshUserName, terraformOptions, awsRegion, keyPair)
+	establishConnectionToCluster(t, newCluster)
+	for _, node := range newCluster.Nodes() {
+		if node.Hostname != initialCluster.Leader.Hostname {
+			assertStatus(t, node, Standby)
+		}
+	}
+}
+
 // Initialize the Vault cluster and unseal each of the nodes by connecting to them over SSH and executing Vault
 // commands. The reason we use SSH rather than using the Vault client remotely is we want to verify that the
 // self-signed TLS certificate is properly configured on each server so when you're on that server, you don't
@@ -478,15 +566,17 @@ func findVaultClusterNodes(t *testing.T, asgNameOutputVar string, sshUserName st
 // Wait until we can connect to each of the Vault cluster EC2 Instances
 func establishConnectionToCluster(t *testing.T, cluster VaultCluster) {
 	for _, node := range cluster.Nodes() {
-		description := fmt.Sprintf("Trying to establish SSH connection to %s", node.Hostname)
-		logger.Logf(t, description)
+		if node.Hostname != "" {
+			description := fmt.Sprintf("Trying to establish SSH connection to %s", node.Hostname)
+			logger.Logf(t, description)
 
-		maxRetries := 30
-		sleepBetweenRetries := 10 * time.Second
+			maxRetries := 30
+			sleepBetweenRetries := 10 * time.Second
 
-		retry.DoWithRetry(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {
-			return "", ssh.CheckSshConnectionE(t, node)
-		})
+			retry.DoWithRetry(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {
+				return "", ssh.CheckSshConnectionE(t, node)
+			})
+		}
 	}
 }
 
@@ -494,8 +584,10 @@ func establishConnectionToCluster(t *testing.T, cluster VaultCluster) {
 // wait for the leader to boot and assume if it's up, the other nodes will be too.
 func waitForVaultToBoot(t *testing.T, cluster VaultCluster) {
 	for _, node := range cluster.Nodes() {
-		logger.Logf(t, "Waiting for Vault to boot the first time on host %s. Expecting it to be in uninitialized status (%d).", node.Hostname, int(Uninitialized))
-		assertStatus(t, node, Uninitialized)
+		if node.Hostname != "" {
+			logger.Logf(t, "Waiting for Vault to boot the first time on host %s. Expecting it to be in uninitialized status (%d).", node.Hostname, int(Uninitialized))
+			assertStatus(t, node, Uninitialized)
+		}
 	}
 }
 
@@ -504,6 +596,12 @@ func initializeVault(t *testing.T, vaultCluster *VaultCluster) {
 	logger.Logf(t, "Initializing the cluster")
 	output := ssh.CheckSshCommand(t, vaultCluster.Leader, "vault operator init")
 	vaultCluster.UnsealKeys = parseUnsealKeysFromVaultInitResponse(t, output)
+}
+
+// Restart vault
+func restartVault(t *testing.T, host ssh.Host) {
+	logger.Logf(t, "Restarting vault on host %s", host)
+	ssh.CheckSshCommand(t, host, "sudo supervisorctl restart vault")
 }
 
 // Parse the unseal keys from the stdout returned from the vault init command.

@@ -3,15 +3,17 @@
 This example shows how to use the metadata from an EC2 instance to authenticate
 to a [vault cluster][vault_cluster].
 
-Vault provides multiple [auth methods][auth_methods] such as Username & Password, GitHub
-etc. Among those methods you will find AWS. The way it works is that it
-understands [AWS][aws_auth] as a trusted third party, and relies on AWS itself for affirming
-if an authentication source such as an EC2 Instance or other resources like a
-Lambda Function are legitimate sources or not. Basically, if AWS trusts the
-origin, then so do we.
+Vault provides multiple ways to authenticate a human or machine to Vault, known as
+[auth methods][auth_methods]. For example, a human can authenticate with a Username
+& Password or with GitHub.
 
-There are currently two ways an AWS resource can authenticatate: `ec2` and `iam`. In
-this example, we will explore the first option.
+Among those methods you will find [AWS][aws_auth]. The way it works is that Vault
+understands AWS as a trusted third party, and relies on AWS itself for affirming
+if an authentication source such as an EC2 Instance or other resources like a Lambda
+Function are legitimate sources or not.
+
+There are currently two ways an AWS resource can authenticatate to Vault: `ec2` and `iam`.
+In this example, we demonstrate the [AWS EC2 Auth Method][ec2_auth].
 
 **Note**: To keep this example as simple to deploy and test as possible and because we are
 focusing on authentication, it deploys the Vault cluster into your default VPC and default subnets,
@@ -49,7 +51,7 @@ of the Vault nodes.
 
 EC2 auth is a process in which Vault relies on information about an EC2 instance
 trying to assume a desired authentication role. For different resources that are
-not EC2 instances, please refer to the `iam` auth method.
+not EC2 instances, please refer to the [`iam` auth method example][iam_example].
 
 The workflow is that the client trying to authenticate itself will send a
 signature in its login request, Vault verifies the signature with AWS, checks
@@ -176,7 +178,9 @@ To see the full script for authenticating check the [client user data script][us
 [create_role]: https://www.vaultproject.io/api/auth/aws/index.html#create-role
 [dnsmasq_module]: https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq
 [dnsmasq]: http://www.thekelleys.org.uk/dnsmasq/doc.html
+[ec2_auth]: https://www.vaultproject.io/docs/auth/aws.html#ec2-auth-method
 [examples_helper]: https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-examples-helper/vault-examples-helper.sh
+[iam_example]: https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-iam-auth
 [instance_identity]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html
 [nonce]: https://www.vaultproject.io/docs/auth/aws.html#client-nonce
 [policies_doc]: https://www.vaultproject.io/docs/concepts/policies.html

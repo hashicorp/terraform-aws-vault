@@ -2,7 +2,9 @@
 # -What-------------------------------------------------------------------------
 # This script creates a request to the AWS Security Token Service API
 # with the action "GetCallerIdentity" and then signs the request using the
-# AWS credentials.
+# AWS credentials. It was modified from the python 2.x example published by
+# J. Thompson, the author of the Vault IAM auth method, at the vault support
+# mailing list. https://groups.google.com/forum/#!topic/vault-tool/Mfi3O-lW60I
 # -Why--------------------------------------------------------------------------
 # We are using python here instead of bash to take advantage of the boto3 library
 # which facilitates this work by an order of magnitude

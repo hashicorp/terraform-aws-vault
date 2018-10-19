@@ -79,20 +79,11 @@ login_output=$(retry \
 
 
 # If vault cli is installed we can also perform these operations with vault cli
-# The necessary VAULT_TOKEN and VAULT_ADDR environment variables have to be set
-# This assumes you have AWS credentials configured in the standard locations AWS SDKs
-# search for credentials (environment variables (), ~/.aws/credentials, IAM instance profile,
-# or ECS task role, in that order).
-# export VAULT_TOKEN=$token
+# The VAULT_ADDR environment variable has to be set
+# This assumes you have AWS credentials configured in the standard locations
+# (environment variables, ~/.aws/credentials, IAM instance profile, or ECS task role, in that order).
 # export VAULT_ADDR=https://vault.service.consul:8200
-# vault login -method=aws header_value=vault.service.consul role=aws-role-name
-
-# Example of getting temporary credentials with iam role from instance metadata
-# The AWS session token is necessary here because these credentials are temporary
-# creds=$(curl http://169.254.169.254/latest/meta-data/iam/security-credentials/<AWS-IAM-ROLE-NAME>)
-# export AWS_ACCESS_KEY_ID=$(echo $creds | jq -r .AccessKeyId)
-# export AWS_SECRET_ACCESS_KEY=$(echo $creds | jq -r .SecretAccessKey)
-# export AWS_SESSION_TOKEN=$(echo $creds | jq -r .Token)
+# vault login -method=aws header_value=vault.service.consul role=vault-role-name
 
 
 # We can then use the client token from the login output once login was successful

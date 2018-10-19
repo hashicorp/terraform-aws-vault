@@ -67,6 +67,11 @@ The `run-vault` script accepts the following arguments:
 * `--s3-bucket` (optional): Specifies the S3 bucket to use to store Vault data. Only used if `--enable-s3-backend` is set.
 * `--s3-bucket-region` (optional): Specifies the AWS region where `--s3-bucket` lives. Only used if `--enable-s3-backend` is set.
 
+Optional Arguments for enabling the AWS KMS seal (Vault Enterprise only):
+ * `--enable-auto-unseal`: If this flag is set, enable the AWS KMS Auto-unseal feature. Default is false.
+ * `--auto-unseal-kms-key-id`: The key id of the AWS KMS key to be used for encryption and decryption. Required if `--enable-auto-unseal` is enabled.
+ * `--auto-unseal-region`: The AWS region where the encryption key lives. Required if --enable-auto-unseal is enabled.
+
 Example:
 
 ```

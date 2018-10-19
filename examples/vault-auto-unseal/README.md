@@ -4,7 +4,7 @@
 
 This folder shows an example of Terraform code that deploys a [Vault][vault] cluster
 in AWS with [auto unseal][auto_unseal]. Auto unseal is a Vault Enterprise feature
-that automatically [unseals][seal] each node in the cluster at boot using Amazon KMS.
+that automatically [unseals][seal] each node in the cluster at boot using [Amazon KMS][kms].
 Without auto unseal, Vault operators are expected to manually unseal each Vault node
 after it boots, a cumbersome process that typically requires multiple Vault operators
 to each enter a Vault master key shard.
@@ -25,6 +25,9 @@ documentation.
 the Vault cluster into your default VPC and default subnets, all of which are publicly
 accessible. This is OK for learning and experimenting, but for production usage,
 we strongly recommend deploying the Vault cluster into the private subnets of a custom VPC.
+
+**Billing Warning**: Every time you create a KMS key, you're charged $1 for the month,
+even if you immediately delete it.
 
 
 ### Quick start
@@ -51,32 +54,34 @@ we strongly recommend deploying the Vault cluster into the private subnets of a 
   To avoid doing that, you can start your cluster with initially just one node and
   start the server, then change the `vault_cluster_size` variable back to 3 and and
   run `terraform apply again`. The new nodes will join the cluster already unsealed
-  in this case. You should apply your Vault Enterprise License with
-  `vault write /sys/license "text=$LICENSE_KEY_TEXT"`. If you don't do that, Vault
-  will re-seal after 30 minutes and you won't be able to write or read secrets anymore.
+  in this case.
 
 ### Seal
 
-Vault servers boot sealed, which means it can access its storage, but can't decrypt it.
-So you can't really do anything apart from unsealing it or checking the server status.
-When you unseal, it recreates the master key, which isn't stored anywhere and is
-used to read the stored decryption key, which then can decrypt the data, and then
-you can start performing other operations on Vault.
+All data stored by Vault is encrypted with a Master Key which is not stored anywhere
+and Vault only ever keeps in memory. When Vault first boots, it does not have the
+Master Key in memory, and therefore it can access its storage, but it cannot decrypt
+its own data. So you can't really do anything apart from unsealing it or checking
+the server status. While Vault is at this state, we say it is "sealed".
 
 Since vault uses [Shamir's Secret Sharing][shamir], which splits the master key into
 pieces, running `vault operator unseal <unseal key>` adds piece by piece until there
 are enough parts to reconstruct the master key. This is done on different machines in the
-vault cluster for better security. Vault remains unsealed until it reboots or until
-someone manually reseals it.
+vault cluster for better security. When Vault is unsealed and it has the recreated
+master key in memory, it can then be used to read the stored decryption keys, which
+can decrypt the data, and then you can start performing other operations on Vault.
+Vault remains unsealed until it reboots or until someone manually reseals it.
 
 ### Auto-unseal
 
 Vault Enterprise has a feature that allows automatic unsealing via Amazon KMS. It
 allows operators to delegate the unsealing process to AWS, which is useful for failure
-situations or creation of ephemeral clusters. This process uses an AWS KMS key as
-a [seal wrap][seal_wrap] mechanism: it encrypts and decrypts Vault's master key.
+situations where the server has to restart and then it will be already unsealed or
+for the creation of ephemeral clusters. This process uses an AWS KMS key as
+a [seal wrap][seal_wrap] mechanism: it encrypts and decrypts Vault's master key
+(and it does so with the whole key, replacing the Shamir's Secret Sharing method).
 
-This feature is enabled by adding a `awskms` stanza at vault's configuration. This
+This feature is enabled by adding a `awskms` stanza at Vault's configuration. This
 module takes this into consideration on the [`run-vault`][run_vault] binary, allowing
 you to pass the following flags to it:
  * `--enable-auto-unseal`: Enables the AWS KMS Auto-unseal feature and adds the `awskms`
@@ -85,7 +90,7 @@ you to pass the following flags to it:
  * `--auto-unseal-region`: The AWS region where the KMS key lives
 
 In this example, like in other examples, we execute `run-vault` at the [`user-data`
-script][user_data], which runs at the boot of every node in the Vault cluster. The
+script][user_data], which runs on boot for every node in the Vault cluster. The
 `key-id` is passed to this script by Terraform, after Terraform reads this value from a
 data source through the key alias. This means that the AWS key has to be previously
 manually created and we are using Terraform just to find this resource, not to
@@ -98,6 +103,11 @@ data "aws_kms_alias" "vault-example" {
 }
 ```
 
+Since Auto-unseal is a Vault Enterprise feature, you still need to apply your Vault
+Enterprise License to the cluster with `vault write /sys/license "text=$LICENSE_KEY_TEXT"`.
+If you don't do that, Vault will re-seal after 30 minutes and you won't be able
+to write or read secrets anymore.
+
 [ami]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html
 [auto_unseal]: https://www.vaultproject.io/docs/enterprise/auto-unseal/index.html
 [consul_cluster]: https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/consul-cluster
@@ -106,6 +116,7 @@ data "aws_kms_alias" "vault-example" {
 [dnsmasq]: http://www.thekelleys.org.uk/dnsmasq/doc.html
 [examples_helper]: https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-examples-helper/vault-examples-helper.sh
 [key_creation]: https://docs.aws.amazon.com/kms/latest/developerguide/create-keys.html
+[kms]: https://aws.amazon.com/kms/
 [kms_pricing]: https://aws.amazon.com/kms/pricing/
 [run_vault]: https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/run-vault
 [seal_wrap]: https://www.vaultproject.io/docs/enterprise/sealwrap/index.html

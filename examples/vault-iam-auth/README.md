@@ -50,7 +50,7 @@ of the Vault nodes.
 
 ### Vault Authentication using IAM user or role
 
-IAM auth is a process in which Vault leverages on AWS STS (Security Token Service) to
+IAM auth is a process in which Vault leverages AWS STS (Security Token Service) to
 identify the AWS IAM principal (user or role) attached to an AWS resource such as
 an ECS Task or a Lambda Function that originates the login request. You can still
 use the `iam` method for EC2 instances attached to a role, like we do in this example,
@@ -58,14 +58,15 @@ but for a login method specifically for EC2 instances, please refer to the
 [`ec2` auth method example][ec2_example].
 
 The workflow is that the client trying to authenticate will create a request to
-the method `GetCallerIdentity` of the AWS STS API. This method basically answers
-the question "Who am I?". This request is then signed with the AWS credentials of
-the client. The signed result is then sent with the login request to the Vault Server.
-When the Vault server receives a login request with the `iam` method, it can execute
-the STS request without actually knowing the contents of the signed part. It then
-receives a response from STS identifying who signed it, which the Vault Server then
-can check against the ARN of the IAM principal bounded to a previously created Vault
-Role and decide if it should be allowed to authenticate or not.
+the method `GetCallerIdentity` of the AWS STS API (but not yet send it). This
+method basically answers the question "Who am I?". This request is then signed
+with the AWS credentials of the client. The signed result is then sent with the
+login request to the Vault Server. When the Vault server receives a login request
+with the `iam` method, it can execute the STS request without actually knowing
+the contents of the signed part. It then receives a response from STS identifying
+who signed it, which the Vault Server then can check against the ARN of the IAM
+principal bounded to a previously created Vault Role and decide if it should be
+allowed to authenticate or not.
 
 It is important to notice that, when the Vault Server receives this encrypted STS
 API request attached to a login request, to be able to execute it and perform the
@@ -118,13 +119,14 @@ See the whole example script at [user-data-vault.sh][user_data_vault].
 #### With an HTTP request
 
 The [vault-consul-ami][vault_consul_ami] includes a [python script][py_sign] called
-`sign-request.py`. We use python here instead of bash so we take advantage of the
+`sign-request.py`. We use python here instead of bash to take advantage of the
 `boto3` AWS SDK library. This script is a modified version of the Python 2.x example
 posted by J. Thompson, the author of Vault's IAM auth method, at the Vault mailing
 list. It uses `boto3` to create a request to the AWS Security Token Service API
 with the action "GetCallerIdentity" and then signs the request using the AWS credentials.
-For more details on the IAM auth method, there's a talk by J. Thompson called
-[Deep Dive into Vault's AWS Auth Backend][talk].
+The same pattern should work with the AWS SDK in any other supported language such
+as Go, Java or Ruby, for example. For more details on the IAM auth method, there's
+a talk by J. Thompson called [Deep Dive into Vault's AWS Auth Backend][talk].
 
 ```bash
 signed_request=$(python /opt/vault/scripts/sign-request.py vault.service.consul)
@@ -171,18 +173,12 @@ The vault cli will look for credentials configured in the standard locations suc
 environment variables, ~/.aws/credentials, IAM instance profile, or ECS task role, in
 that order. The way the it works is the same as with an HTTP request. The vault cli
 tool uses the golang AWS SDK to the create the STS API request and sign it with the
-credentials for you.
+credentials for you. It's important to note that the `role` value being passed is
+the Vault Role name, not the AWS IAM Role name.
 
 ```bash
-# Example with getting credentials from instance metadata
-# The AWS session token is necessary here because these credentials are temporary
-creds=$(curl http://169.254.169.254/latest/meta-data/iam/security-credentials/<AWS-IAM-ROLE-NAME>)
-export AWS_ACCESS_KEY_ID=$(echo $creds | jq -r .AccessKeyId)
-export AWS_SECRET_ACCESS_KEY=$(echo $creds | jq -r .SecretAccessKey)
-export AWS_SESSION_TOKEN=$(echo $creds | jq -r .Token)
-
 export VAULT_ADDR=https://vault.service.consul:8200
-vault login -method=aws header_value=vault.service.consul role=aws-role-name
+vault login -method=aws header_value=vault.service.consul role=vault-role-name
 ```
 
 [ami]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html

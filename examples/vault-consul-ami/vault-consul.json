@@ -86,6 +86,7 @@
 },{
     "type": "shell",
     "inline": [
+      "sudo mkdir /opt/vault/scripts/",
       "sudo mv /tmp/sign-request.py /opt/vault/scripts/",
       "sudo mv /tmp/ca.crt.pem /opt/vault/tls/",
       "sudo mv /tmp/vault.crt.pem /opt/vault/tls/",

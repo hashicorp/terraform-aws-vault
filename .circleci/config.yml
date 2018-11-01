@@ -21,6 +21,7 @@ jobs:
       - run: gruntwork-install --module-name "build-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.12.2"
       - run: gruntwork-install --module-name "aws-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.12.2"
       - run: gruntwork-install --module-name "git-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.12.2"
+      - run: gruntwork-install --binary-name "terratest_log_parser" --repo "https://github.com/gruntwork-io/terratest" --tag v0.13.10
       - run: configure-environment-for-gruntwork-module --go-src-path test --use-go-dep --terraform-version 0.11.7 --circle-ci-2
 
       - save_cache:
@@ -33,9 +34,15 @@ jobs:
           key: dep-{{ checksum "test/Gopkg.lock" }}
           paths:
             - $HOME/.go_workspace/src/github.com/hashicorp/terraform-aws-vault/test/vendor
-      # To create AMIs for the first time in a new AWS account, make the code changes (e.g. updating AWS account number)
-      # in the appropriate .tf files) in a branch named "publish-amis". This will bypass tests but still build the AMIs.
-      - run: if [[ "$CIRCLE_BRANCH" != "publish-amis" ]]; then run-go-tests --path test; fi
+      - run: mkdir -p /tmp/logs
+      - run: run-go-tests --path test | tee /tmp/logs/all.log
+      - run:
+          command: terratest_log_parser --testlog /tmp/logs/all.log --outputdir /tmp/logs
+          when: always
+      - store_artifacts:
+          path: /tmp/logs
+      - store_test_results:
+          path: /tmp/logs
 
       # We generally only want to build AMIs on new releases, but when we are setting up AMIs in a new account for the
       # first time, we want to build the AMIs but NOT run automated tests, since those tests will fail without an existing
@@ -46,4 +53,3 @@ jobs:
               ./_ci/publish-amis.sh "ubuntu16-ami"
               ./_ci/publish-amis.sh "amazon-linux-ami"
             fi
-

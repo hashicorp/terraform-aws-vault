@@ -34,6 +34,13 @@ resource "aws_autoscaling_group" "autoscaling_group" {
     ),
     var.cluster_extra_tags)
   }"]
+
+  # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
+  # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
+  # when you try to do a terraform destroy.
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

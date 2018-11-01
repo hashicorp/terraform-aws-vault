@@ -57,13 +57,11 @@ var testCases = []testCase{
 
 func TestMainVaultCluster(t *testing.T) {
 	t.Parallel()
-
 	amiIds := map[string]string{}
 
 	test_structure.RunTestStage(t, "setup_amis", func() {
-		//awsRegion := aws.GetRandomRegion(t, nil, nil)
-		awsRegion := "eu-west-1"
-		test_structure.SaveString(t, WORK_DIR, "awsRegion", awsRegion)
+		awsRegion := aws.GetRandomRegion(t, nil, nil)
+		test_structure.SaveString(t, WORK_DIR, SAVED_AWS_REGION, awsRegion)
 
 		tlsCert := generateSelfSignedTlsCert(t)
 		saveTlsCert(t, WORK_DIR, tlsCert)
@@ -82,7 +80,7 @@ func TestMainVaultCluster(t *testing.T) {
 	})
 
 	defer test_structure.RunTestStage(t, "delete_amis", func() {
-		awsRegion := test_structure.LoadString(t, WORK_DIR, "awsRegion")
+		awsRegion := test_structure.LoadString(t, WORK_DIR, SAVED_AWS_REGION)
 		for _, amiId := range amiIds {
 			aws.DeleteAmi(t, awsRegion, amiId)
 		}
@@ -97,7 +95,6 @@ func TestMainVaultCluster(t *testing.T) {
 }
 
 func runTestsOnDifferentPlatforms(t *testing.T, testCases []testCase, amiIds map[string]string) {
-	t.Parallel()
 	var amiId string
 	for _, testCase := range testCases {
 		testCase := testCase

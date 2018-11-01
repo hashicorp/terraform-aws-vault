@@ -22,8 +22,7 @@ import (
 // called auto unseal. If you wish to run test this locally, replace this with
 // the alias of an KMS key you already have on the AWS account you use for running
 // your tests or create a new one. Beware that creating an AWS KMS key costs money.
-// const AUTO_UNSEAL_KMS_KEY_ALIAS = "dedicated-test-key"
-const AUTO_UNSEAL_KMS_KEY_ALIAS = "etiene-vault-test"
+const AUTO_UNSEAL_KMS_KEY_ALIAS = "dedicated-test-key"
 
 const VAULT_AUTO_UNSEAL_AUTH_PATH = "examples/vault-auto-unseal"
 const VAR_VAULT_AUTO_UNSEAL_KMS_KEY_ALIAS = "auto_unseal_kms_key_alias"
@@ -65,7 +64,7 @@ func runVaultAutoUnsealTest(t *testing.T, amiId string, sshUserName string) {
 
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, WORK_DIR, "awsRegion")
+		awsRegion := test_structure.LoadString(t, WORK_DIR, SAVED_AWS_REGION)
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
 
 		testAutoUnseal(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)

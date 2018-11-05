@@ -36,8 +36,6 @@ const OUTPUT_VAULT_CLUSTER_ASG_NAME = "asg_name_vault_cluster"
 const VAULT_CLUSTER_PUBLIC_OUTPUT_FQDN = "vault_fully_qualified_domain_name"
 const VAULT_CLUSTER_PUBLIC_OUTPUT_ELB_DNS_NAME = "vault_elb_dns_name"
 
-const SAVED_AWS_REGION = "AwsRegion"
-
 var UnsealKeyRegex = regexp.MustCompile("^Unseal Key \\d: (.+)$")
 
 const vaultStdOutLogFilePath = "/opt/vault/log/vault-stdout.log"
@@ -95,9 +93,7 @@ func mergeMaps(mapA map[string]interface{}, mapB map[string]interface{}) map[str
 	return result
 }
 
-func deployCluster(t *testing.T, amiId string, examplesDir string, uniqueId string, terraformVars map[string]interface{}) {
-	awsRegion := test_structure.LoadString(t, WORK_DIR, SAVED_AWS_REGION)
-
+func deployCluster(t *testing.T, amiId string, awsRegion string, examplesDir string, uniqueId string, terraformVars map[string]interface{}) {
 	keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
 	test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
 

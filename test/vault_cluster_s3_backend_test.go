@@ -26,7 +26,7 @@ const VAR_FORCE_DESTROY_S3_BUCKET = "force_destroy_s3_bucket"
 // 4. SSH to a Vault node and initialize the Vault cluster
 // 5. SSH to each Vault node and unseal it
 // 6. Connect to the Vault cluster via the ELB
-func runVaultWithS3BackendClusterTest(t *testing.T, amiId string, sshUserName string) {
+func runVaultWithS3BackendClusterTest(t *testing.T, amiId string, awsRegion, sshUserName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_CLUSTER_S3_BACKEND_PATH)
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
@@ -35,7 +35,6 @@ func runVaultWithS3BackendClusterTest(t *testing.T, amiId string, sshUserName st
 
 	defer test_structure.RunTestStage(t, "logs", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, WORK_DIR, SAVED_AWS_REGION)
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
 		asgName := terraform.OutputRequired(t, terraformOptions, OUTPUT_VAULT_CLUSTER_ASG_NAME)
 
@@ -66,12 +65,11 @@ func runVaultWithS3BackendClusterTest(t *testing.T, amiId string, sshUserName st
 			VAR_S3_BUCKET_NAME:          s3BucketName(uniqueId),
 			VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
 		}
-		deployCluster(t, amiId, examplesDir, uniqueId, terraformVars)
+		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, WORK_DIR, SAVED_AWS_REGION)
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
 
 		cluster := initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)

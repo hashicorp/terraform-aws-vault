@@ -29,7 +29,7 @@ const OUTPUT_AUTH_CLIENT_IP = "auth_client_public_ip"
 // 4. Waiting for Vault to boot, then unsealing the server, creating a Vault Role to allow logins from instances with a specific EC2 property and writing the example secret
 // 5. Waiting for the client to login, read the secret and launch a simple web server with the contents read
 // 6. Making a request to the webserver started by the auth client
-func runVaultEC2AuthTest(t *testing.T, amiId string, sshUserName string) {
+func runVaultEC2AuthTest(t *testing.T, amiId string, awsRegion string, sshUserName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_EC2_AUTH_PATH)
 	exampleSecret := "42"
 
@@ -43,7 +43,7 @@ func runVaultEC2AuthTest(t *testing.T, amiId string, sshUserName string) {
 			VAR_VAULT_AUTH_SERVER_NAME: fmt.Sprintf("vault-auth-test-%s", uniqueId),
 			VAR_VAULT_SECRET_NAME:      exampleSecret,
 		}
-		deployCluster(t, amiId, examplesDir, uniqueId, terraformVars)
+		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
@@ -61,7 +61,7 @@ func runVaultEC2AuthTest(t *testing.T, amiId string, sshUserName string) {
 // 4. Waiting for Vault to boot, then unsealing the server, creating a Vault Role to allow logins from resources with a specific AWS IAM Role and writing the example secret
 // 5. Waiting for the client to login, read the secret and launch a simple web server with the contents read
 // 6. Making a request to the webserver started by the auth client
-func runVaultIAMAuthTest(t *testing.T, amiId string, sshUserName string) {
+func runVaultIAMAuthTest(t *testing.T, amiId string, awsRegion string, sshUserName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_IAM_AUTH_PATH)
 	exampleSecret := "42"
 
@@ -76,7 +76,7 @@ func runVaultIAMAuthTest(t *testing.T, amiId string, sshUserName string) {
 			VAR_VAULT_IAM_AUTH_ROLE:    fmt.Sprintf("vault-auth-role-test-%s", uniqueId),
 			VAR_VAULT_SECRET_NAME:      exampleSecret,
 		}
-		deployCluster(t, amiId, examplesDir, uniqueId, terraformVars)
+		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {

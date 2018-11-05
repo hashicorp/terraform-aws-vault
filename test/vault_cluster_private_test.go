@@ -18,7 +18,7 @@ const VAULT_CLUSTER_PRIVATE_PATH = "examples/vault-cluster-private"
 // 4. SSH to a Vault node and initialize the Vault cluster
 // 5. SSH to each Vault node and unseal it
 // 6. SSH to a Vault node and make sure you can communicate with the nodes via Consul-managed DNS
-func runVaultPrivateClusterTest(t *testing.T, amiId string, sshUserName string) {
+func runVaultPrivateClusterTest(t *testing.T, amiId string, awsRegion string, sshUserName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_CLUSTER_PRIVATE_PATH)
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
@@ -26,12 +26,11 @@ func runVaultPrivateClusterTest(t *testing.T, amiId string, sshUserName string) 
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
-		deployCluster(t, amiId, examplesDir, random.UniqueId(), nil)
+		deployCluster(t, amiId, awsRegion, examplesDir, random.UniqueId(), nil)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, WORK_DIR, SAVED_AWS_REGION)
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
 
 		cluster := initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)

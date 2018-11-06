@@ -30,7 +30,8 @@ function retry {
     # The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
     # beginning of this script which exits the script immediatelly for error status while not losing the exit status code
     output=$(eval "$cmd") && exit_status=0 || exit_status=$?
-    if [[ $exit_status -eq 0 ]]; then
+    log "$output"
+    if [[ $exit_status -eq 0 ]] && test -n "$output"; then
       echo "$output"
       return
     fi
@@ -90,13 +91,11 @@ login_output=$(retry \
 token=$(echo $login_output | jq -r .auth.client_token)
 
 # And use the token to perform operations on vault such as reading a secret
-sleep 10
-response=$(curl \
-  -H "X-Vault-Token: $token" \
-  -X GET \
-  https://vault.service.consul:8200/v1/secret/example_gruntwork)
+# These is being retried because race conditions were causing this to come up null sometimes
+response=$(retry \
+  "curl -H 'X-Vault-Token: $token' -X GET https://vault.service.consul:8200/v1/secret/example_gruntwork" \
+  "Trying to read secret from vault")
 
-log "$response"
 # Vault cli alternative:
 # export VAULT_TOKEN=$token
 # export VAULT_ADDR=https://vault.service.consul:8200

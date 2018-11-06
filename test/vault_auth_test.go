@@ -44,6 +44,11 @@ func runVaultEC2AuthTest(t *testing.T, amiId string, awsRegion string, sshUserNa
 		teardownResources(t, examplesDir)
 	})
 
+	defer test_structure.RunTestStage(t, "log", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		getSyslogs(t, terraformOptions, amiId, awsRegion, "vaultEc2Auth")
+	})
+
 	test_structure.RunTestStage(t, "deploy", func() {
 		uniqueId := random.UniqueId()
 		terraformVars := map[string]interface{}{
@@ -76,6 +81,11 @@ func runVaultIAMAuthTest(t *testing.T, amiId string, awsRegion string, sshUserNa
 		teardownResources(t, examplesDir)
 	})
 
+	defer test_structure.RunTestStage(t, "log", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		getSyslogs(t, terraformOptions, amiId, awsRegion, "vaultIamAuth")
+	})
+
 	test_structure.RunTestStage(t, "deploy", func() {
 		uniqueId := random.UniqueId()
 		terraformVars := map[string]interface{}{
@@ -90,32 +100,6 @@ func runVaultIAMAuthTest(t *testing.T, amiId string, awsRegion string, sshUserNa
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
 		testRequestSecret(t, terraformOptions, exampleSecret)
 	})
-
-	defer test_structure.RunTestStage(t, "log", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
-		clientInstanceId := terraform.OutputRequired(t, terraformOptions, OUTPUT_AUTH_CLIENT_INSTANCE_ID)
-		serverAsgName := terraform.OutputRequired(t, terraformOptions, OUTPUT_VAULT_CLUSTER_ASG_NAME)
-
-		serverLogs, err := aws.GetSyslogForInstancesInAsgE(t, serverAsgName, awsRegion)
-		if err != nil {
-			logger.Logf(t, fmt.Sprintf("Error getting vault server syslog: %s", err.Error()))
-		}
-
-		clientLog, err := aws.GetSyslogForInstanceE(t, clientInstanceId, awsRegion)
-		if err != nil {
-			logger.Logf(t, fmt.Sprintf("Error getting vault client syslog: %s", err.Error()))
-		}
-
-		localDestDir := filepath.Join("/tmp/logs/vaultIamAuth", amiId)
-		if !files.FileExists(localDestDir) {
-			os.MkdirAll(localDestDir, 0755)
-		}
-
-		for id, buf := range serverLogs {
-			writeLogFile(t, buf, filepath.Join(localDestDir, fmt.Sprintf("vault-server-%s-syslog.log", id)))
-		}
-		writeLogFile(t, clientLog, filepath.Join(localDestDir, "auth-client-syslog.log"))
-	})
 }
 
 func testRequestSecret(t *testing.T, terraformOptions *terraform.Options, expectedResponse string) {
@@ -123,6 +107,31 @@ func testRequestSecret(t *testing.T, terraformOptions *terraform.Options, expect
 	url := fmt.Sprintf("http://%s:%s", instanceIP, "8080")
 
 	http_helper.HttpGetWithRetry(t, url, 200, expectedResponse, 30, 10*time.Second)
+}
+
+func getSyslogs(t *testing.T, terraformOptions *terraform.Options, amiId string, awsRegion string, testName string) {
+	clientInstanceId := terraform.OutputRequired(t, terraformOptions, OUTPUT_AUTH_CLIENT_INSTANCE_ID)
+	serverAsgName := terraform.OutputRequired(t, terraformOptions, OUTPUT_VAULT_CLUSTER_ASG_NAME)
+
+	serverLogs, err := aws.GetSyslogForInstancesInAsgE(t, serverAsgName, awsRegion)
+	if err != nil {
+		logger.Logf(t, fmt.Sprintf("Error getting vault server syslog: %s", err.Error()))
+	}
+
+	clientLog, err := aws.GetSyslogForInstanceE(t, clientInstanceId, awsRegion)
+	if err != nil {
+		logger.Logf(t, fmt.Sprintf("Error getting vault client syslog: %s", err.Error()))
+	}
+
+	localDestDir := filepath.Join("/tmp/logs", testName, amiId)
+	if !files.FileExists(localDestDir) {
+		os.MkdirAll(localDestDir, 0755)
+	}
+
+	for id, buf := range serverLogs {
+		writeLogFile(t, buf, filepath.Join(localDestDir, fmt.Sprintf("vault-server-%s-syslog.log", id)))
+	}
+	writeLogFile(t, clientLog, filepath.Join(localDestDir, "auth-client-syslog.log"))
 }
 
 func writeLogFile(t *testing.T, buffer string, destination string) {

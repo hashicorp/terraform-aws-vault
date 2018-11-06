@@ -2,10 +2,16 @@ package test
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"testing"
 	"time"
 
+	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/files"
 	"github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/gruntwork-io/terratest/modules/test-structure"
@@ -19,6 +25,7 @@ const VAR_VAULT_SECRET_NAME = "example_secret"
 const VAR_VAULT_IAM_AUTH_ROLE = "example_role_name"
 
 const OUTPUT_AUTH_CLIENT_IP = "auth_client_public_ip"
+const OUTPUT_AUTH_CLIENT_INSTANCE_ID = "auth_client_instance_id"
 
 // Test the Vault EC2 authentication example by:
 //
@@ -83,11 +90,47 @@ func runVaultIAMAuthTest(t *testing.T, amiId string, awsRegion string, sshUserNa
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
 		testRequestSecret(t, terraformOptions, exampleSecret)
 	})
+
+	defer test_structure.RunTestStage(t, "log", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		clientInstanceId := terraform.OutputRequired(t, terraformOptions, OUTPUT_AUTH_CLIENT_INSTANCE_ID)
+		serverAsgName := terraform.OutputRequired(t, terraformOptions, OUTPUT_VAULT_CLUSTER_ASG_NAME)
+
+		serverLogs, err := aws.GetSyslogForInstancesInAsgE(t, serverAsgName, awsRegion)
+		if err != nil {
+			logger.Logf(t, fmt.Sprintf("Error getting vault server syslog: %s", err.Error()))
+		}
+
+		clientLog, err := aws.GetSyslogForInstanceE(t, clientInstanceId, awsRegion)
+		if err != nil {
+			logger.Logf(t, fmt.Sprintf("Error getting vault client syslog: %s", err.Error()))
+		}
+
+		localDestDir := filepath.Join("/tmp/logs/vaultIamAuth", amiId)
+		if !files.FileExists(localDestDir) {
+			os.MkdirAll(localDestDir, 0755)
+		}
+
+		for id, buf := range serverLogs {
+			writeLogFile(t, buf, filepath.Join(localDestDir, fmt.Sprintf("vault-server-%s-syslog.log", id)))
+		}
+		writeLogFile(t, clientLog, filepath.Join(localDestDir, "auth-client-syslog.log"))
+	})
 }
 
 func testRequestSecret(t *testing.T, terraformOptions *terraform.Options, expectedResponse string) {
 	instanceIP := terraform.Output(t, terraformOptions, OUTPUT_AUTH_CLIENT_IP)
 	url := fmt.Sprintf("http://%s:%s", instanceIP, "8080")
 
-	http_helper.HttpGetWithRetry(t, url, 200, expectedResponse, 60, 10*time.Second)
+	http_helper.HttpGetWithRetry(t, url, 200, expectedResponse, 30, 10*time.Second)
+}
+
+func writeLogFile(t *testing.T, buffer string, destination string) {
+	file, err := os.Create(destination)
+	if err != nil {
+		logger.Logf(t, fmt.Sprintf("Error creating log file on disk: %s", err.Error()))
+	}
+	defer file.Close()
+
+	file.WriteString(buffer)
 }

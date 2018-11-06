@@ -2,6 +2,10 @@ output "auth_client_public_ip" {
   value = "${aws_instance.example_auth_to_vault.public_ip}"
 }
 
+output "auth_client_instance_id" {
+  value = "${aws_instance.example_auth_to_vault.id}"
+}
+
 output "auth_role_arn" {
   value = "${aws_iam_role.example_instance_role.arn}"
 }

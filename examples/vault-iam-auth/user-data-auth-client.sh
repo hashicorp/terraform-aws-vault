@@ -90,11 +90,13 @@ login_output=$(retry \
 token=$(echo $login_output | jq -r .auth.client_token)
 
 # And use the token to perform operations on vault such as reading a secret
+sleep 10
 response=$(curl \
   -H "X-Vault-Token: $token" \
   -X GET \
   https://vault.service.consul:8200/v1/secret/example_gruntwork)
 
+log "$response"
 # Vault cli alternative:
 # export VAULT_TOKEN=$token
 # export VAULT_ADDR=https://vault.service.consul:8200

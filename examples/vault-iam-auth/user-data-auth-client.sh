@@ -30,8 +30,11 @@ function retry {
     # The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
     # beginning of this script which exits the script immediatelly for error status while not losing the exit status code
     output=$(eval "$cmd") && exit_status=0 || exit_status=$?
+    errors=$(echo "$output") | grep '^{' | jq -r .errors
+
     log "$output"
-    if [[ $exit_status -eq 0 ]] && test -n "$output"; then
+
+    if [[ $exit_status -eq 0 ]] && test -n "$output" && test -z "$errors"; then
       echo "$output"
       return
     fi

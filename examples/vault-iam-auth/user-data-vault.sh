@@ -98,7 +98,7 @@ export VAULT_TOKEN=$(echo "$server_output" | head -n 7 | tail -n 1 | awk '{ prin
 # This is an http request, and sometimes fails, hence we retry
 retry \
   "/opt/vault/bin/vault auth enable aws" \
-  "Trying to enable aws auth")
+  "Trying to enable aws auth"
 
 # Creates a policy that allows writing and reading from an "example_" prefix at "secret" backend
 /opt/vault/bin/vault policy write "example-policy" -<<EOF

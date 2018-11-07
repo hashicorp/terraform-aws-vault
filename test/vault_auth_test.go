@@ -133,13 +133,3 @@ func getSyslogs(t *testing.T, terraformOptions *terraform.Options, amiId string,
 	}
 	writeLogFile(t, clientLog, filepath.Join(localDestDir, "auth-client-syslog.log"))
 }
-
-func writeLogFile(t *testing.T, buffer string, destination string) {
-	file, err := os.Create(destination)
-	if err != nil {
-		logger.Logf(t, fmt.Sprintf("Error creating log file on disk: %s", err.Error()))
-	}
-	defer file.Close()
-
-	file.WriteString(buffer)
-}

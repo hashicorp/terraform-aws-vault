@@ -18,27 +18,43 @@ readonly VAULT_TLS_KEY_FILE="/opt/vault/tls/vault.key.pem"
 /opt/consul/bin/run-consul --client --cluster-tag-key "${consul_cluster_tag_key}" --cluster-tag-value "${consul_cluster_tag_value}"
 /opt/vault/bin/run-vault --tls-cert-file "$VAULT_TLS_CERT_FILE"  --tls-key-file "$VAULT_TLS_KEY_FILE"
 
-# Initializes a vault server
-# run-vault is running on the background and we have to wait for it to be done,
-# so in case this fails we retry.
-function retry_init {
-  for i in $(seq 1 20); do
-    echo "Initializing Vault agent..."
+# Log the given message at the given level. All logs are written to stderr with a timestamp.
+function log {
+ local readonly message="$1"
+ local readonly timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+ >&2 echo -e "$timestamp $message"
+}
+
+# A retry function that attempts to run a command a number of times and returns the output
+function retry {
+  local readonly cmd=$1
+  local readonly description=$2
+
+  for i in $(seq 1 30); do
+    log "$description"
+
     # The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
-    # beginning of this script which exits the script immediatelly for error status, while not losing the exit status code
-    server_output=$(/opt/vault/bin/vault operator init) && exit_status=0 || exit_status=$?
+    # beginning of this script which exits the script immediatelly for error status while not losing the exit status code
+    output=$(eval "$cmd") && exit_status=0 || exit_status=$?
+    log "$output"
     if [[ $exit_status -eq 0 ]]; then
+      echo "$output"
       return
     fi
-    echo "Failed to auth initialize Vault. Will sleep for 5 seconds and try again."
-    sleep 5
-  done
+    log "$description failed. Will sleep for 10 seconds and try again."
+    sleep 10
+  done;
 
-  echo "Failed to initialize Vault."
+  log "$description failed after 30 attempts."
   exit $exit_status
 }
 
-retry_init
+# Initializes a vault server
+# run-vault is running on the background and we have to wait for it to be done,
+# so in case this fails we retry.
+server_output=$(retry \
+  "/opt/vault/bin/vault operator init" \
+  "Trying to initialize vault")
 
 # The expected output should be similar to this:
 # ==========================================================================
@@ -79,7 +95,10 @@ export VAULT_TOKEN=$(echo "$server_output" | head -n 7 | tail -n 1 | awk '{ prin
 # ==========================================================================
 
 # Enables AWS authentication
-/opt/vault/bin/vault auth enable aws
+# This is an http request, and sometimes fails, hence we retry
+retry \
+  "/opt/vault/bin/vault auth enable aws" \
+  "Trying to enable aws auth")
 
 # Creates a policy that allows writing and reading from an "example_" prefix at "secret" backend
 /opt/vault/bin/vault policy write "example-policy" -<<EOF

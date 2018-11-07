@@ -116,8 +116,9 @@ func testAutoUnseal(t *testing.T, asgNameOutputVar string, sshUserName string, t
 	establishConnectionToCluster(t, initialCluster)
 	waitForVaultToBoot(t, initialCluster)
 
-	logger.Logf(t, "Initializing the cluster")
-	ssh.CheckSshCommand(t, initialCluster.Leader, "vault operator init")
+	retry.DoWithRetry(t, "Initializing the cluster", 10, 10*time.Second, func() (string, error) {
+		return ssh.CheckSshCommandE(t, initialCluster.Leader, "vault operator init")
+	})
 	assertStatus(t, initialCluster.Leader, Leader)
 
 	logger.Logf(t, "Increasing the cluster size and running 'terraform apply' again")

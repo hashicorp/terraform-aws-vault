@@ -111,7 +111,10 @@ func deployCluster(t *testing.T, amiId string, awsRegion string, examplesDir str
 		},
 	}
 	test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
-	terraform.InitAndApply(t, terraformOptions)
+	retry.DoWithRetry(t, "Running terraform Init", 3, 10*time.Second, func() (string, error) {
+		return terraform.InitE(t, terraformOptions)
+	})
+	terraform.Apply(t, terraformOptions)
 }
 
 // Initialize the Vault cluster and unseal each of the nodes by connecting to them over SSH and executing Vault
@@ -200,15 +203,18 @@ func waitForVaultToBoot(t *testing.T, cluster VaultCluster) {
 
 // Initialize the Vault cluster, filling in the unseal keys in the given vaultCluster struct
 func initializeVault(t *testing.T, vaultCluster *VaultCluster) {
-	logger.Logf(t, "Initializing the cluster")
-	output := ssh.CheckSshCommand(t, vaultCluster.Leader, "vault operator init")
+	output := retry.DoWithRetry(t, "Initializing the cluster", 10, 10*time.Second, func() (string, error) {
+		return ssh.CheckSshCommandE(t, vaultCluster.Leader, "vault operator init")
+	})
 	vaultCluster.UnsealKeys = parseUnsealKeysFromVaultInitResponse(t, output)
 }
 
 // Restart vault
 func restartVault(t *testing.T, host ssh.Host) {
-	logger.Logf(t, "Restarting vault on host %s", host)
-	ssh.CheckSshCommand(t, host, "sudo supervisorctl restart vault")
+	description := fmt.Sprintf("Restarting vault on host %s", host.Hostname)
+	retry.DoWithRetry(t, description, 10, 10*time.Second, func() (string, error) {
+		return ssh.CheckSshCommandE(t, host, "sudo supervisorctl restart vault")
+	})
 }
 
 // Parse the unseal keys from the stdout returned from the vault init command.
@@ -320,9 +326,10 @@ func unsealVaultNode(t *testing.T, host ssh.Host, unsealKeys []string) {
 	}
 
 	unsealCommand := strings.Join(unsealCommands, " && ")
-
-	logger.Logf(t, "Unsealing Vault on host %s", host.Hostname)
-	ssh.CheckSshCommand(t, host, unsealCommand)
+	description := fmt.Sprintf("Unsealing Vault on host %s", host.Hostname)
+	retry.DoWithRetryE(t, description, 10, 10*time.Second, func() (string, error) {
+		return ssh.CheckSshCommandE(t, host, unsealCommand)
+	})
 }
 
 // Parse an unseal key from a single line of the stdout of the vault init command, which should be of the format:

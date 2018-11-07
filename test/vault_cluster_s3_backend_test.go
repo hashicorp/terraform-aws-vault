@@ -54,7 +54,7 @@ func runVaultWithS3BackendClusterTest(t *testing.T, amiId string, awsRegion, ssh
 			require.Contains(t, filePathToContents, vaultStdErrLogFilePath)
 			require.Contains(t, filePathToContents, sysLogPath)
 
-			localDestDir := filepath.Join("/tmp/logs/ClusterWithS3Backend/", amiId, instanceID)
+			localDestDir := filepath.Join("/tmp/logs/vaultClusterWithS3Backend/", amiId, instanceID)
 			if !files.FileExists(localDestDir) {
 				os.MkdirAll(localDestDir, 0755)
 			}

@@ -3,21 +3,84 @@
 
 [[projects]]
   name = "github.com/aws/aws-sdk-go"
-  packages = ["aws","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/sdkio","internal/sdkrand","internal/shareddefaults","private/protocol","private/protocol/ec2query","private/protocol/json/jsonutil","private/protocol/jsonrpc","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/restxml","private/protocol/xml/xmlutil","service/acm","service/autoscaling","service/cloudwatchlogs","service/ec2","service/iam","service/kms","service/s3","service/sns","service/sqs","service/sts"]
-  revision = "cb873de7862ba08c63e82f37ffebc5ba02d87d26"
-  version = "v1.13.38"
+  packages = [
+    "aws",
+    "aws/awserr",
+    "aws/awsutil",
+    "aws/client",
+    "aws/client/metadata",
+    "aws/corehandlers",
+    "aws/credentials",
+    "aws/credentials/ec2rolecreds",
+    "aws/credentials/endpointcreds",
+    "aws/credentials/stscreds",
+    "aws/csm",
+    "aws/defaults",
+    "aws/ec2metadata",
+    "aws/endpoints",
+    "aws/request",
+    "aws/session",
+    "aws/signer/v4",
+    "internal/s3err",
+    "internal/sdkio",
+    "internal/sdkrand",
+    "internal/sdkuri",
+    "internal/shareddefaults",
+    "private/protocol",
+    "private/protocol/ec2query",
+    "private/protocol/eventstream",
+    "private/protocol/eventstream/eventstreamapi",
+    "private/protocol/json/jsonutil",
+    "private/protocol/jsonrpc",
+    "private/protocol/query",
+    "private/protocol/query/queryutil",
+    "private/protocol/rest",
+    "private/protocol/restxml",
+    "private/protocol/xml/xmlutil",
+    "service/acm",
+    "service/autoscaling",
+    "service/cloudwatchlogs",
+    "service/ec2",
+    "service/iam",
+    "service/kms",
+    "service/rds",
+    "service/s3",
+    "service/s3/s3iface",
+    "service/s3/s3manager",
+    "service/sns",
+    "service/sqs",
+    "service/sts"
+  ]
+  revision = "2324d8a7db41970a80d19791bd30b94f632ce0cc"
+  version = "v1.15.58"
 
 [[projects]]
   name = "github.com/boombuler/barcode"
-  packages = [".","qr","utils"]
+  packages = [
+    ".",
+    "qr",
+    "utils"
+  ]
   revision = "3cfea5ab600ae37946be2b763b8ec2c1cf2d272d"
   version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
 
 [[projects]]
   name = "github.com/go-ini/ini"
   packages = ["."]
   revision = "6529cf7c58879c08d927016dde4477f18a0634cb"
   version = "v1.36.0"
+
+[[projects]]
+  name = "github.com/go-sql-driver/mysql"
+  packages = ["."]
+  revision = "d523deb1b23d913de5bdada721a6071e71283618"
+  version = "v1.4.0"
 
 [[projects]]
   branch = "master"
@@ -33,9 +96,23 @@
 
 [[projects]]
   name = "github.com/gruntwork-io/terratest"
-  packages = ["modules/aws","modules/collections","modules/files","modules/logger","modules/packer","modules/random","modules/retry","modules/shell","modules/ssh","modules/terraform","modules/test-structure"]
-  revision = "8bcb4e1ad409e19aac4ad7fab99fe632326a1884"
-  version = "v0.9.17"
+  packages = [
+    "modules/aws",
+    "modules/collections",
+    "modules/customerrors",
+    "modules/files",
+    "modules/http-helper",
+    "modules/logger",
+    "modules/packer",
+    "modules/random",
+    "modules/retry",
+    "modules/shell",
+    "modules/ssh",
+    "modules/terraform",
+    "modules/test-structure"
+  ]
+  revision = "987fbe40e5b6702a3602403d2519bdb5f2f362e9"
+  version = "v0.13.10"
 
 [[projects]]
   branch = "master"
@@ -70,12 +147,28 @@
 [[projects]]
   branch = "master"
   name = "github.com/hashicorp/hcl"
-  packages = [".","hcl/ast","hcl/parser","hcl/scanner","hcl/strconv","hcl/token","json/parser","json/scanner","json/token"]
+  packages = [
+    ".",
+    "hcl/ast",
+    "hcl/parser",
+    "hcl/scanner",
+    "hcl/strconv",
+    "hcl/token",
+    "json/parser",
+    "json/scanner",
+    "json/token"
+  ]
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
   name = "github.com/hashicorp/vault"
-  packages = ["api","helper/compressutil","helper/jsonutil","helper/parseutil","helper/strutil"]
+  packages = [
+    "api",
+    "helper/compressutil",
+    "helper/jsonutil",
+    "helper/parseutil",
+    "helper/strutil"
+  ]
   revision = "756fdc4587350daf1c65b93647b2cc31a6f119cd"
   version = "v0.10.1"
 
@@ -97,8 +190,18 @@
   revision = "00c29f56e2386353d58c599509e8dc3801b0d716"
 
 [[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/pquerna/otp"
-  packages = [".","hotp","totp"]
+  packages = [
+    ".",
+    "hotp",
+    "totp"
+  ]
   revision = "b7b89250c468c06871d3837bee02e2d5c155ae19"
   version = "v1.0.0"
 
@@ -115,26 +218,71 @@
   revision = "38b020c58c99152830334916f25375e6bdbf9567"
 
 [[projects]]
+  name = "github.com/stretchr/testify"
+  packages = [
+    "assert",
+    "require"
+  ]
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["curve25519","ed25519","ed25519/internal/edwards25519","internal/chacha20","poly1305","ssh"]
+  packages = [
+    "curve25519",
+    "ed25519",
+    "ed25519/internal/edwards25519",
+    "internal/chacha20",
+    "poly1305",
+    "ssh",
+    "ssh/agent"
+  ]
   revision = "b49d69b5da943f7ef3c9cf91c8777c1f78a0cc3c"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["context","http/httpguts","http2","http2/hpack","idna","lex/httplex"]
+  packages = [
+    "context",
+    "http/httpguts",
+    "http2",
+    "http2/hpack",
+    "idna",
+    "lex/httplex"
+  ]
   revision = "5f9ae10d9af5b1c89ae6904293b14b064d4ada23"
 
 [[projects]]
   name = "golang.org/x/text"
-  packages = ["collate","collate/build","internal/colltab","internal/gen","internal/tag","internal/triegen","internal/ucd","language","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable"]
+  packages = [
+    "collate",
+    "collate/build",
+    "internal/colltab",
+    "internal/gen",
+    "internal/tag",
+    "internal/triegen",
+    "internal/ucd",
+    "language",
+    "secure/bidirule",
+    "transform",
+    "unicode/bidi",
+    "unicode/cldr",
+    "unicode/norm",
+    "unicode/rangetable"
+  ]
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
+
+[[projects]]
+  name = "google.golang.org/appengine"
+  packages = ["cloudsql"]
+  revision = "ae0ab99deb4dc413a2b4bd6c8bdd0eb67f1e4d06"
+  version = "v1.2.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4c9f81414175c0012daf0167f5b23485cd92d527c940edf2cd47ecc478814a04"
+  inputs-digest = "cf518e98ffebe16a5fbb5b6b0de73c3a3447dad14da3393fa7a2c3cba44cab67"
   solver-name = "gps-cdcl"
   solver-version = 1

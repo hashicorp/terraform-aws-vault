@@ -78,6 +78,10 @@ server_output=$(retry \
 # existing unseal keys shares. See "vault operator rekey" for more information.
 # ==========================================================================
 
+
+# This is here only for debugging
+echo $server_output
+
 # Unseals the server with 3 keys from this output
 # Please note that this is not how it should be done in production as it is not secure and and we are
 # not storing any of the tokens, so in case it gets resealed, the tokens are lost and we wouldn't be able to unseal it again

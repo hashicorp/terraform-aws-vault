@@ -78,7 +78,7 @@ EOF
 # Retry in case the vault server is still booting and unsealing
 # Or in case run-consul running on the background didn't finish yet
 login_output=$(retry \
-  "curl --request POST --data '$data' https://vault.service.consul:8200/v1/auth/aws/login" \
+  "curl --fail --request POST --data '$data' https://vault.service.consul:8200/v1/auth/aws/login" \
   "Trying to login to vault")
 
 
@@ -96,7 +96,7 @@ token=$(echo $login_output | jq -r .auth.client_token)
 # And use the token to perform operations on vault such as reading a secret
 # These is being retried because race conditions were causing this to come up null sometimes
 response=$(retry \
-  "curl -H 'X-Vault-Token: $token' -X GET https://vault.service.consul:8200/v1/secret/example_gruntwork" \
+  "curl --fail -H 'X-Vault-Token: $token' -X GET https://vault.service.consul:8200/v1/secret/example_gruntwork" \
   "Trying to read secret from vault")
 
 # Vault cli alternative:

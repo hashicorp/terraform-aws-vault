@@ -62,7 +62,7 @@ EOF
 # we also have to for wait for vault server to be booted and unsealed before it can accept this request
 # so in case this fails we retry.
 login_output=$(retry \
-  "curl --request POST --data '$data' https://vault.service.consul:8200/v1/auth/aws/login" \
+  "curl --fail --request POST --data '$data' https://vault.service.consul:8200/v1/auth/aws/login" \
   "Trying to login to vault")
 
 # It is important to note that the default behavior is TOFU(trust on first use)
@@ -124,7 +124,7 @@ token=$(echo $login_output | jq -r .auth.client_token)
 
 # And use the token to perform operations on vault such as reading a secret
 response=$(retry \
-  "curl -H 'X-Vault-Token: $token' -X GET https://vault.service.consul:8200/v1/secret/example_gruntwork" \
+  "curl --fail -H 'X-Vault-Token: $token' -X GET https://vault.service.consul:8200/v1/secret/example_gruntwork" \
   "Trying to read secret from vault")
 
 # If vault cli is installed we can also perform these operations with vault cli

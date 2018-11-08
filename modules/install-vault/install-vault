@@ -84,6 +84,30 @@ function assert_either_or {
   fi
 }
 
+# A retry function that attempts to run a command a number of times and returns the output
+function retry {
+  local readonly cmd=$1
+  local readonly description=$2
+
+  for i in $(seq 1 5); do
+    log_info "$description"
+
+    # The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
+    # beginning of this script which exits the script immediatelly for error status while not losing the exit status code
+    output=$(eval "$cmd") && exit_status=0 || exit_status=$?
+    log_info "$output"
+    if [[ $exit_status -eq 0 ]]; then
+      echo "$output"
+      return
+    fi
+    log_warn "$description failed. Will sleep for 10 seconds and try again."
+    sleep 10
+  done;
+
+  log_error "$description failed after 5 attempts."
+  exit $exit_status
+}
+
 # Install steps are based on: http://unix.stackexchange.com/a/291098/215969
 function install_supervisord_debian {
   sudo apt-get install -y supervisor
@@ -206,8 +230,9 @@ function fetch_binary {
     download_url="https://releases.hashicorp.com/vault/${version}/vault_${version}_linux_amd64.zip"
   fi
 
-  log_info "Downloading Vault to $DOWNLOAD_PACKAGE_PATH"
-  curl -o "$DOWNLOAD_PACKAGE_PATH" "$download_url" --location --silent --fail --show-error
+  retry \
+    "curl -o '$DOWNLOAD_PACKAGE_PATH' '$download_url' --location --silent --fail --show-error" \
+    "Downloading Vault to $DOWNLOAD_PACKAGE_PATH"
 }
 
 function install_binary {

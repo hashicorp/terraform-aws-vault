@@ -28,9 +28,17 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   health_check_grace_period = "${var.health_check_grace_period}"
   wait_for_capacity_timeout = "${var.wait_for_capacity_timeout}"
 
+  # Use bucket name in tags for depending on bucket if they are there
+  # And only create the cluster after S3 bucket exists if S3 storage backend is enabled
+  # Otherwise Vault might boot and not find the bucket
   tags = ["${concat(
     list(
-      map("key", var.cluster_tag_key, "value", var.cluster_name, "propagate_at_launch", true)
+      map(
+        "key", var.cluster_tag_key,
+        "value", var.cluster_name,
+        "propagate_at_launch", true,
+        "using_s3_bucket_backend", element(concat(aws_s3_bucket.vault_storage.*.id, list("")), 0)
+      )
     ),
     var.cluster_extra_tags)
   }"]
@@ -198,6 +206,13 @@ resource "aws_s3_bucket" "vault_storage" {
     map("Description", "Used for secret storage with Vault. DO NOT DELETE this Bucket unless you know what you are doing."),
     var.s3_bucket_tags)
   }"
+
+  # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
+  # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
+  # when you try to do a terraform destroy.
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_iam_role_policy" "vault_s3" {

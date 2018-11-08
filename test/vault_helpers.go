@@ -109,12 +109,15 @@ func deployCluster(t *testing.T, amiId string, awsRegion string, examplesDir str
 		EnvVars: map[string]string{
 			ENV_VAR_AWS_REGION: awsRegion,
 		},
+		// There might be transient errors with the http requests to fetch files
+		RetryableTerraformErrors: map[string]string{
+			"Error installing provider": "Failed to download terraform package",
+		},
 	}
 	test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
-	retry.DoWithRetry(t, "Running terraform Init", 3, 10*time.Second, func() (string, error) {
-		return terraform.InitE(t, terraformOptions)
-	})
-	terraform.Apply(t, terraformOptions)
+
+	// This function internally retries on allowed errors set in the options
+	terraform.InitAndApply(t, terraformOptions)
 }
 
 // Initialize the Vault cluster and unseal each of the nodes by connecting to them over SSH and executing Vault

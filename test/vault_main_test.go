@@ -97,6 +97,13 @@ func TestMainVaultCluster(t *testing.T) {
 func runTestsOnDifferentPlatforms(t *testing.T, testCases []testCase, amiIds map[string]string) {
 	var amiId string
 	for _, testCase := range testCases {
+		// This re-assignment necessary, because the variable testCase is defined and set outside the forloop.
+		// As such, it gets overwritten on each iteration of the forloop. This is fine if you don't have concurrent code in the loop,
+		// but in this case, because you have a t.Parallel, the t.Run completes before the test function exits,
+		// which means that the value of testCase might change.
+		// More information at:
+		// "Be Careful with Table Driven Tests and t.Parallel()"
+		// https://gist.github.com/posener/92a55c4cd441fc5e5e85f27bca008721
 		testCase := testCase
 		t.Run(fmt.Sprintf("%sWithUbuntuAmi", testCase.Name), func(t *testing.T) {
 			t.Parallel()

@@ -12,7 +12,7 @@
     "tls_private_key_path": null
   },
   "builders": [{
-    "ami_name": "vault-consul-ubuntu-{{isotime | clean_ami_name}}",
+    "ami_name": "vault-consul-ubuntu-{{isotime | clean_ami_name}}-{{uuid}}",
     "ami_description": "An Ubuntu 16.04 AMI that has Vault and Consul installed.",
     "instance_type": "t2.micro",
     "name": "ubuntu16-ami",
@@ -31,7 +31,7 @@
     },
     "ssh_username": "ubuntu"
   },{
-    "ami_name": "vault-consul-amazon-linux-{{isotime | clean_ami_name}}",
+    "ami_name": "vault-consul-amazon-linux-{{isotime | clean_ami_name}}-{{uuid}}",
     "ami_description": "An Amazon Linux AMI that has Vault and Consul installed.",
     "instance_type": "t2.micro",
     "name": "amazon-linux-ami",
@@ -52,11 +52,11 @@
   }],
   "provisioners": [{
     "type": "shell",
-    "inline": ["mkdir /tmp/terraform-aws-vault"]
+    "inline": ["mkdir -p /tmp/terraform-aws-vault/modules"]
   },{
     "type": "file",
-    "source": "{{template_dir}}/../../",
-    "destination": "/tmp/terraform-aws-vault",
+    "source": "{{template_dir}}/../../modules/",
+    "destination": "/tmp/terraform-aws-vault/modules",
     "pause_before": "30s"
   },{
     "type": "shell",

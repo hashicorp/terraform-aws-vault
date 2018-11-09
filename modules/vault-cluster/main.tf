@@ -223,6 +223,13 @@ resource "aws_iam_role_policy" "vault_s3" {
   name   = "vault_s3"
   role   = "${aws_iam_role.instance_role.id}"
   policy = "${element(concat(data.aws_iam_policy_document.vault_s3.*.json, list("")), 0)}"
+
+  # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
+  # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
+  # when you try to do a terraform destroy.
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 data "aws_iam_policy_document" "vault_s3" {
@@ -258,4 +265,11 @@ resource "aws_iam_role_policy" "vault_auto_unseal_kms" {
   name   = "vault_auto_unseal_kms"
   role   = "${aws_iam_role.instance_role.id}"
   policy = "${element(concat(data.aws_iam_policy_document.vault_auto_unseal_kms.*.json, list("")), 0)}"
+
+  # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
+  # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
+  # when you try to do a terraform destroy.
+  lifecycle {
+    create_before_destroy = true
+  }
 }

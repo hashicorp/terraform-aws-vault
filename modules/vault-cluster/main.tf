@@ -11,9 +11,12 @@ terraform {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_autoscaling_group" "autoscaling_group" {
+  count       = "${var.asg_launch_mechanism == "launch_configuration" ? 1 : 0}"
   name_prefix = "${var.cluster_name}"
 
   launch_configuration = "${aws_launch_configuration.launch_configuration.name}"
+
+  depends_on = ["aws_iam_instance_profile.instance_profile", "aws_launch_configuration.launch_configuration"]
 
   availability_zones  = ["${var.availability_zones}"]
   vpc_zone_identifier = ["${var.subnet_ids}"]
@@ -29,10 +32,45 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   wait_for_capacity_timeout = "${var.wait_for_capacity_timeout}"
 
   tags = ["${concat(
+    var.cluster_extra_tags,
     list(
       map("key", var.cluster_tag_key, "value", var.cluster_name, "propagate_at_launch", true)
-    ),
-    var.cluster_extra_tags)
+      )
+    )
+  }"]
+}
+
+# An alternate autoscaling group that uses a launch_template
+resource "aws_autoscaling_group" "lt_autoscaling_group" {
+  count       = "${var.asg_launch_mechanism == "launch_template" ? 1 : 0}"
+  name_prefix = "${var.cluster_name}"
+
+  launch_template {
+    id      = "${aws_launch_template.launch_template.id}"
+    version = "${var.launch_template_version}"
+  }
+
+  depends_on = ["aws_iam_instance_profile.instance_profile", "aws_launch_template.launch_template"]
+
+  availability_zones  = ["${var.availability_zones}"]
+  vpc_zone_identifier = ["${var.subnet_ids}"]
+
+  # Use a fixed-size cluster
+  min_size             = "${var.cluster_size}"
+  max_size             = "${var.cluster_size}"
+  desired_capacity     = "${var.cluster_size}"
+  termination_policies = ["${var.termination_policies}"]
+
+  health_check_type         = "${var.health_check_type}"
+  health_check_grace_period = "${var.health_check_grace_period}"
+  wait_for_capacity_timeout = "${var.wait_for_capacity_timeout}"
+
+  tags = ["${concat(
+    var.cluster_extra_tags,
+    list(
+      map("key", var.cluster_tag_key, "value", var.cluster_name, "propagate_at_launch", true)
+      )
+    )
   }"]
 
   # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
@@ -48,6 +86,7 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_launch_configuration" "launch_configuration" {
+  count         = "${var.asg_launch_mechanism == "launch_configuration" ? 1 : 0}"
   name_prefix   = "${var.cluster_name}-"
   image_id      = "${var.ami_id}"
   instance_type = "${var.instance_type}"
@@ -80,6 +119,77 @@ resource "aws_launch_configuration" "launch_configuration" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# CREATE LAUNCH TEMPLATE TO DEFINE WHAT RUNS ON EACH INSTANCE IN THE ASG
+# ---------------------------------------------------------------------------------------------------------------------
+
+data "aws_ami" "ami" {
+  filter {
+    name   = "image-id"
+    values = ["${var.ami_id}"]
+  }
+}
+
+resource "aws_launch_template" "launch_template" {
+  count         = "${var.asg_launch_mechanism == "launch_template" ? 1 : 0}"
+  name_prefix   = "${var.cluster_name}-"
+  image_id      = "${var.ami_id}"
+  instance_type = "${var.instance_type}"
+  user_data     = "${base64encode(var.user_data)}"
+
+  depends_on = ["aws_iam_instance_profile.instance_profile"]
+
+  iam_instance_profile {
+    name = "${aws_iam_instance_profile.instance_profile.name}"
+  }
+
+  key_name = "${var.ssh_key_name}"
+
+  # Don't use vpc_security_group_ids when network_interfaces includes security_groups.
+  # vpc_security_group_ids = ["${concat(list(aws_security_group.lc_security_group.id), var.additional_security_group_ids)}"]
+
+  placement {
+    tenancy = "${var.tenancy}"
+  }
+  network_interfaces {
+    associate_public_ip_address = "${var.associate_public_ip_address}"
+    delete_on_termination       = true
+    security_groups             = ["${concat(list(aws_security_group.lc_security_group.id), var.additional_security_group_ids)}"]
+  }
+  ebs_optimized = "${var.root_volume_ebs_optimized}"
+  block_device_mappings {
+    device_name = "${data.aws_ami.ami.root_device_name}"
+
+    ebs {
+      encrypted             = "${var.root_volume_ebs_encryption}"
+      volume_type           = "${var.root_volume_type}"
+      volume_size           = "${var.root_volume_size}"
+      delete_on_termination = "${var.root_volume_delete_on_termination}"
+    }
+  }
+  tags = "${var.launch_template_tags}"
+  tag_specifications {
+    # Instance tags are already handled by the autoscaling group
+    resource_type = "volume"
+
+    tags = "${merge(
+      var.volume_extra_tags,
+      map("key", var.cluster_tag_key, "value", var.cluster_name)
+      )
+    }"
+  }
+  # Important note: whenever using a launch configuration with an auto scaling group, you must set
+  # create_before_destroy = true. However, as soon as you set create_before_destroy = true in one resource, you must
+  # also set it in every resource that it depends on, or you'll get an error about cyclic dependencies (especially when
+  # removing resources). For more info, see:
+  #
+  # https://www.terraform.io/docs/providers/aws/r/launch_configuration.html
+  # https://terraform.io/docs/configuration/resources.html
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # CREATE A SECURITY GROUP TO CONTROL WHAT REQUESTS CAN GO IN AND OUT OF EACH EC2 INSTANCE
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -95,7 +205,7 @@ resource "aws_security_group" "lc_security_group" {
     create_before_destroy = true
   }
 
-  tags = "${merge(map("Name", var.cluster_name), var.security_group_tags)}"
+  tags = "${merge(var.security_group_tags, map("Name", var.cluster_name))}"
 }
 
 resource "aws_security_group_rule" "allow_ssh_inbound_from_cidr_blocks" {
@@ -195,8 +305,9 @@ resource "aws_s3_bucket" "vault_storage" {
   force_destroy = "${var.force_destroy_s3_bucket}"
 
   tags = "${merge(
-    map("Description", "Used for secret storage with Vault. DO NOT DELETE this Bucket unless you know what you are doing."),
-    var.s3_bucket_tags)
+    var.s3_bucket_tags,
+    map("Description", "Used for secret storage with Vault. DO NOT DELETE this Bucket unless you know what you are doing.")
+    )
   }"
 }
 

@@ -207,3 +207,36 @@ variable "force_destroy_s3_bucket" {
   description = "If 'configure_s3_backend' is enabled and you set this to true, when you run terraform destroy, this tells Terraform to delete all the objects in the S3 bucket used for backend storage. You should NOT set this to true in production or you risk losing all your data! This property is only here so automated tests of this module can clean up after themselves. Only used if 'enable_s3_backend' is set to true."
   default     = false
 }
+
+# Launch Template Extensions
+
+variable "asg_launch_mechanism" {
+  # Choices are launch_configuration and launch_template.
+  # launch_template gives you the opportunithy to set tags on instance volumes.
+  #
+  description = "Select between launch_config-driven or launch_template-driven autoscaling group."
+
+  default = "launch_configuration"
+}
+
+variable "launch_template_tags" {
+  description = "A list of tags to add to the launch template."
+  type        = "map"
+  default     = {}
+}
+
+variable "root_volume_ebs_encryption" {
+  description = "If true, the launched EC2 instance's root volume will be encrypted."
+  default     = ""
+}
+
+variable "launch_template_version" {
+  default = "Launch template verison to be used by the autoscaling group."
+  default = "$Latest"
+}
+
+variable "volume_extra_tags" {
+  description = "A list of additional tags to add to each Instance's volumes in the ASG. Only applicable when use_launch_template is true."
+  type        = "map"
+  default     = {}
+}

@@ -53,6 +53,13 @@ func runVaultAutoUnsealTest(t *testing.T, amiId string, awsRegion string, sshUse
 		teardownResources(t, examplesDir)
 	})
 
+	defer test_structure.RunTestStage(t, "log", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+
+		getVaultLogs(t, "vaultAutoUnseal", terraformOptions, amiId, awsRegion, sshUserName, keyPair)
+	})
+
 	test_structure.RunTestStage(t, "deploy", func() {
 		uniqueId := random.UniqueId()
 		terraformVars := map[string]interface{}{
@@ -85,6 +92,13 @@ func runVaultEnterpriseClusterTest(t *testing.T, amiId string, awsRegion string,
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
 		teardownResources(t, examplesDir)
+	})
+
+	defer test_structure.RunTestStage(t, "log", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+
+		getVaultLogs(t, "vaultEnterpriseCluster", terraformOptions, amiId, awsRegion, sshUserName, keyPair)
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {

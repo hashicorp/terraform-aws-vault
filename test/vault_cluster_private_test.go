@@ -25,6 +25,13 @@ func runVaultPrivateClusterTest(t *testing.T, amiId string, awsRegion string, ss
 		teardownResources(t, examplesDir)
 	})
 
+	defer test_structure.RunTestStage(t, "log", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+
+		getVaultLogs(t, "vaultPrivateCluster", terraformOptions, amiId, awsRegion, sshUserName, keyPair)
+	})
+
 	test_structure.RunTestStage(t, "deploy", func() {
 		deployCluster(t, amiId, awsRegion, examplesDir, random.UniqueId(), nil)
 	})

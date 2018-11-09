@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,12 +13,14 @@ import (
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/files"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/hashicorp/vault/api"
+	"github.com/stretchr/testify/require"
 )
 
 const REPO_ROOT = "../"
@@ -118,6 +121,34 @@ func deployCluster(t *testing.T, amiId string, awsRegion string, examplesDir str
 
 	// This function internally retries on allowed errors set in the options
 	terraform.InitAndApply(t, terraformOptions)
+}
+
+func getVaultLogs(t *testing.T, testId string, terraformOptions *terraform.Options, amiId string, awsRegion string, sshUserName string, keyPair *aws.Ec2Keypair) {
+	asgName := terraform.OutputRequired(t, terraformOptions, OUTPUT_VAULT_CLUSTER_ASG_NAME)
+
+	sysLogPath := vaultSyslogPathUbuntu
+	if sshUserName == "ec2-user" {
+		sysLogPath = vaultSyslogPathAmazonLinux
+	}
+
+	instanceIdToFilePathToContents := aws.FetchContentsOfFilesFromAsg(t, awsRegion, sshUserName, keyPair, asgName, true, vaultStdOutLogFilePath, vaultStdErrLogFilePath, sysLogPath)
+
+	require.Len(t, instanceIdToFilePathToContents, vaultClusterSizeInExamples)
+
+	for instanceID, filePathToContents := range instanceIdToFilePathToContents {
+		require.Contains(t, filePathToContents, vaultStdOutLogFilePath)
+		require.Contains(t, filePathToContents, vaultStdErrLogFilePath)
+		require.Contains(t, filePathToContents, sysLogPath)
+
+		localDestDir := filepath.Join("/tmp/logs/", testId, amiId, instanceID)
+		if !files.FileExists(localDestDir) {
+			os.MkdirAll(localDestDir, 0755)
+		}
+
+		writeLogFile(t, filePathToContents[vaultStdOutLogFilePath], filepath.Join(localDestDir, "vaultStdOut.log"))
+		writeLogFile(t, filePathToContents[vaultStdErrLogFilePath], filepath.Join(localDestDir, "vaultStdErr.log"))
+		writeLogFile(t, filePathToContents[sysLogPath], filepath.Join(localDestDir, "syslog.log"))
+	}
 }
 
 // Initialize the Vault cluster and unseal each of the nodes by connecting to them over SSH and executing Vault

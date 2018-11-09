@@ -1,16 +1,10 @@
 package test
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/gruntwork-io/terratest/modules/files"
 	"github.com/gruntwork-io/terratest/modules/random"
-	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/gruntwork-io/terratest/modules/test-structure"
-	"github.com/stretchr/testify/require"
 )
 
 const VAULT_CLUSTER_S3_BACKEND_PATH = "examples/vault-s3-backend"
@@ -35,34 +29,11 @@ func runVaultWithS3BackendClusterTest(t *testing.T, amiId string, awsRegion, ssh
 		teardownResources(t, examplesDir)
 	})
 
-	defer test_structure.RunTestStage(t, "logs", func() {
+	defer test_structure.RunTestStage(t, "log", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
-		asgName := terraform.OutputRequired(t, terraformOptions, OUTPUT_VAULT_CLUSTER_ASG_NAME)
 
-		sysLogPath := vaultSyslogPathUbuntu
-		if sshUserName == "ec2-user" {
-			sysLogPath = vaultSyslogPathAmazonLinux
-		}
-
-		instanceIdToFilePathToContents := aws.FetchContentsOfFilesFromAsg(t, awsRegion, sshUserName, keyPair, asgName, true, vaultStdOutLogFilePath, vaultStdErrLogFilePath, sysLogPath)
-
-		require.Len(t, instanceIdToFilePathToContents, vaultClusterSizeInExamples)
-
-		for instanceID, filePathToContents := range instanceIdToFilePathToContents {
-			require.Contains(t, filePathToContents, vaultStdOutLogFilePath)
-			require.Contains(t, filePathToContents, vaultStdErrLogFilePath)
-			require.Contains(t, filePathToContents, sysLogPath)
-
-			localDestDir := filepath.Join("/tmp/logs/vaultClusterWithS3Backend/", amiId, instanceID)
-			if !files.FileExists(localDestDir) {
-				os.MkdirAll(localDestDir, 0755)
-			}
-
-			writeLogFile(t, filePathToContents[vaultStdOutLogFilePath], filepath.Join(localDestDir, "vaultStdOut.log"))
-			writeLogFile(t, filePathToContents[vaultStdErrLogFilePath], filepath.Join(localDestDir, "vaultStdErr.log"))
-			writeLogFile(t, filePathToContents[sysLogPath], filepath.Join(localDestDir, "syslog.log"))
-		}
+		getVaultLogs(t, "vaultClusterWithS3Backend", terraformOptions, amiId, awsRegion, sshUserName, keyPair)
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {

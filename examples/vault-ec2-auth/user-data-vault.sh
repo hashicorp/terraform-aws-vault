@@ -18,17 +18,17 @@ readonly VAULT_TLS_KEY_FILE="/opt/vault/tls/vault.key.pem"
 /opt/consul/bin/run-consul --client --cluster-tag-key "${consul_cluster_tag_key}" --cluster-tag-value "${consul_cluster_tag_value}"
 /opt/vault/bin/run-vault --tls-cert-file "$VAULT_TLS_CERT_FILE"  --tls-key-file "$VAULT_TLS_KEY_FILE"
 
-# Log the given message at the given level. All logs are written to stderr with a timestamp.
+# Log the given message. All logs are written to stderr with a timestamp.
 function log {
- local readonly message="$1"
- local readonly timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+ local -r message="$1"
+ local -r timestamp=$(date +"%Y-%m-%d %H:%M:%S")
  >&2 echo -e "$timestamp $message"
 }
 
 # A retry function that attempts to run a command a number of times and returns the output
 function retry {
-  local readonly cmd=$1
-  local readonly description=$2
+  local -r cmd="$1"
+  local -r description="$2"
 
   for i in $(seq 1 30); do
     log "$description"

@@ -12,17 +12,17 @@ exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 # These variables are passed in via Terraform template interpolation
 /opt/consul/bin/run-consul --client --cluster-tag-key "${consul_cluster_tag_key}" --cluster-tag-value "${consul_cluster_tag_value}"
 
-# Log the given message at the given level. All logs are written to stderr with a timestamp.
+# Log the given message. All logs are written to stderr with a timestamp.
 function log {
- local readonly message="$1"
- local readonly timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+ local -r message="$1"
+ local -r timestamp=$(date +"%Y-%m-%d %H:%M:%S")
  >&2 echo -e "$timestamp $message"
 }
 
 # A retry function that attempts to run a command a number of times and returns the output
 function retry {
-  local readonly cmd=$1
-  local readonly description=$2
+  local -r cmd="$1"
+  local -r description="$2"
 
   for i in $(seq 1 30); do
     log "$description"

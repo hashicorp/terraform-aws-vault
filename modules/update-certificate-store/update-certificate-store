@@ -32,35 +32,35 @@ function print_usage {
 }
 
 function log {
-  local readonly level="$1"
-  local readonly message="$2"
-  local readonly timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+  local -r level="$1"
+  local -r message="$2"
+  local -r timestamp=$(date +"%Y-%m-%d %H:%M:%S")
   >&2 echo -e "${timestamp} [${level}] [$SCRIPT_NAME] ${message}"
 }
 
 function log_info {
-  local readonly message="$1"
+  local -r message="$1"
   log "INFO" "$message"
 }
 
 function log_warn {
-  local readonly message="$1"
+  local -r message="$1"
   log "WARN" "$message"
 }
 
 function log_error {
-  local readonly message="$1"
+  local -r message="$1"
   log "ERROR" "$message"
 }
 
 function command_exists {
-  local readonly command_name="$1"
+  local -r command_name="$1"
   [[ -n "$(command -v $command_name)" ]]
 }
 
 function update_certificate_store {
-  local readonly cert_file_path="$1"
-  local readonly dest_file_name="$2"
+  local -r cert_file_path="$1"
+  local -r dest_file_name="$2"
 
   log_info "Adding CA public key $cert_file_path to OS certificate store"
 
@@ -77,8 +77,8 @@ function update_certificate_store {
 }
 
 function assert_not_empty {
-  local readonly arg_name="$1"
-  local readonly arg_value="$2"
+  local -r arg_name="$1"
+  local -r arg_value="$2"
 
   if [[ -z "$arg_value" ]]; then
     log_error "The value for '$arg_name' cannot be empty"

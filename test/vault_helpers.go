@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,12 +13,14 @@ import (
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/files"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/hashicorp/vault/api"
+	"github.com/stretchr/testify/require"
 )
 
 const REPO_ROOT = "../"
@@ -35,8 +38,6 @@ const OUTPUT_VAULT_CLUSTER_ASG_NAME = "asg_name_vault_cluster"
 
 const VAULT_CLUSTER_PUBLIC_OUTPUT_FQDN = "vault_fully_qualified_domain_name"
 const VAULT_CLUSTER_PUBLIC_OUTPUT_ELB_DNS_NAME = "vault_elb_dns_name"
-
-const SAVED_AWS_REGION = "AwsRegion"
 
 var UnsealKeyRegex = regexp.MustCompile("^Unseal Key \\d: (.+)$")
 
@@ -95,9 +96,7 @@ func mergeMaps(mapA map[string]interface{}, mapB map[string]interface{}) map[str
 	return result
 }
 
-func deployCluster(t *testing.T, amiId string, examplesDir string, uniqueId string, terraformVars map[string]interface{}) {
-	awsRegion := test_structure.LoadString(t, WORK_DIR, SAVED_AWS_REGION)
-
+func deployCluster(t *testing.T, amiId string, awsRegion string, examplesDir string, uniqueId string, terraformVars map[string]interface{}) {
 	keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueId)
 	test_structure.SaveEc2KeyPair(t, examplesDir, keyPair)
 
@@ -113,9 +112,43 @@ func deployCluster(t *testing.T, amiId string, examplesDir string, uniqueId stri
 		EnvVars: map[string]string{
 			ENV_VAR_AWS_REGION: awsRegion,
 		},
+		// There might be transient errors with the http requests to fetch files
+		RetryableTerraformErrors: map[string]string{
+			"Error installing provider": "Failed to download terraform package",
+		},
 	}
 	test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
+
+	// This function internally retries on allowed errors set in the options
 	terraform.InitAndApply(t, terraformOptions)
+}
+
+func getVaultLogs(t *testing.T, testId string, terraformOptions *terraform.Options, amiId string, awsRegion string, sshUserName string, keyPair *aws.Ec2Keypair) {
+	asgName := terraform.OutputRequired(t, terraformOptions, OUTPUT_VAULT_CLUSTER_ASG_NAME)
+
+	sysLogPath := vaultSyslogPathUbuntu
+	if sshUserName == "ec2-user" {
+		sysLogPath = vaultSyslogPathAmazonLinux
+	}
+
+	instanceIdToFilePathToContents := aws.FetchContentsOfFilesFromAsg(t, awsRegion, sshUserName, keyPair, asgName, true, vaultStdOutLogFilePath, vaultStdErrLogFilePath, sysLogPath)
+
+	require.Len(t, instanceIdToFilePathToContents, vaultClusterSizeInExamples)
+
+	for instanceID, filePathToContents := range instanceIdToFilePathToContents {
+		require.Contains(t, filePathToContents, vaultStdOutLogFilePath)
+		require.Contains(t, filePathToContents, vaultStdErrLogFilePath)
+		require.Contains(t, filePathToContents, sysLogPath)
+
+		localDestDir := filepath.Join("/tmp/logs/", testId, amiId, instanceID)
+		if !files.FileExists(localDestDir) {
+			os.MkdirAll(localDestDir, 0755)
+		}
+
+		writeLogFile(t, filePathToContents[vaultStdOutLogFilePath], filepath.Join(localDestDir, "vaultStdOut.log"))
+		writeLogFile(t, filePathToContents[vaultStdErrLogFilePath], filepath.Join(localDestDir, "vaultStdErr.log"))
+		writeLogFile(t, filePathToContents[sysLogPath], filepath.Join(localDestDir, "syslog.log"))
+	}
 }
 
 // Initialize the Vault cluster and unseal each of the nodes by connecting to them over SSH and executing Vault
@@ -204,15 +237,18 @@ func waitForVaultToBoot(t *testing.T, cluster VaultCluster) {
 
 // Initialize the Vault cluster, filling in the unseal keys in the given vaultCluster struct
 func initializeVault(t *testing.T, vaultCluster *VaultCluster) {
-	logger.Logf(t, "Initializing the cluster")
-	output := ssh.CheckSshCommand(t, vaultCluster.Leader, "vault operator init")
+	output := retry.DoWithRetry(t, "Initializing the cluster", 10, 10*time.Second, func() (string, error) {
+		return ssh.CheckSshCommandE(t, vaultCluster.Leader, "vault operator init")
+	})
 	vaultCluster.UnsealKeys = parseUnsealKeysFromVaultInitResponse(t, output)
 }
 
 // Restart vault
 func restartVault(t *testing.T, host ssh.Host) {
-	logger.Logf(t, "Restarting vault on host %s", host)
-	ssh.CheckSshCommand(t, host, "sudo supervisorctl restart vault")
+	description := fmt.Sprintf("Restarting vault on host %s", host.Hostname)
+	retry.DoWithRetry(t, description, 10, 10*time.Second, func() (string, error) {
+		return ssh.CheckSshCommandE(t, host, "sudo supervisorctl restart vault")
+	})
 }
 
 // Parse the unseal keys from the stdout returned from the vault init command.
@@ -324,9 +360,10 @@ func unsealVaultNode(t *testing.T, host ssh.Host, unsealKeys []string) {
 	}
 
 	unsealCommand := strings.Join(unsealCommands, " && ")
-
-	logger.Logf(t, "Unsealing Vault on host %s", host.Hostname)
-	ssh.CheckSshCommand(t, host, unsealCommand)
+	description := fmt.Sprintf("Unsealing Vault on host %s", host.Hostname)
+	retry.DoWithRetryE(t, description, 10, 10*time.Second, func() (string, error) {
+		return ssh.CheckSshCommandE(t, host, unsealCommand)
+	})
 }
 
 // Parse an unseal key from a single line of the stdout of the vault init command, which should be of the format:

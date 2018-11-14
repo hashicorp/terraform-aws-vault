@@ -12,17 +12,17 @@ set -e
 # From: https://alestic.com/2010/12/ec2-user-data-output/
 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
-# Log the given message at the given level. All logs are written to stderr with a timestamp.
+# Log the given message. All logs are written to stderr with a timestamp.
 function log {
- local readonly message="$1"
- local readonly timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+ local -r message="$1"
+ local -r timestamp=$(date +"%Y-%m-%d %H:%M:%S")
  >&2 echo -e "$timestamp $message"
 }
 
 # A retry function that attempts to run a command a number of times and returns the output
 function retry {
-  local readonly cmd=$1
-  local readonly description=$2
+  local -r cmd="$1"
+  local -r description="$2"
 
   for i in $(seq 1 30); do
     log "$description"
@@ -30,7 +30,11 @@ function retry {
     # The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
     # beginning of this script which exits the script immediatelly for error status while not losing the exit status code
     output=$(eval "$cmd") && exit_status=0 || exit_status=$?
-    if [[ $exit_status -eq 0 ]]; then
+    errors=$(echo "$output") | grep '^{' | jq -r .errors
+
+    log "$output"
+
+    if [[ $exit_status -eq 0 && -n "$output" && -z "$errors" ]]; then
       echo "$output"
       return
     fi
@@ -74,7 +78,7 @@ EOF
 # Retry in case the vault server is still booting and unsealing
 # Or in case run-consul running on the background didn't finish yet
 login_output=$(retry \
-  "curl --request POST --data '$data' https://vault.service.consul:8200/v1/auth/aws/login" \
+  "curl --fail --request POST --data '$data' https://vault.service.consul:8200/v1/auth/aws/login" \
   "Trying to login to vault")
 
 
@@ -90,10 +94,10 @@ login_output=$(retry \
 token=$(echo $login_output | jq -r .auth.client_token)
 
 # And use the token to perform operations on vault such as reading a secret
-response=$(curl \
-  -H "X-Vault-Token: $token" \
-  -X GET \
-  https://vault.service.consul:8200/v1/secret/example_gruntwork)
+# These is being retried because race conditions were causing this to come up null sometimes
+response=$(retry \
+  "curl --fail -H 'X-Vault-Token: $token' -X GET https://vault.service.consul:8200/v1/secret/example_gruntwork" \
+  "Trying to read secret from vault")
 
 # Vault cli alternative:
 # export VAULT_TOKEN=$token

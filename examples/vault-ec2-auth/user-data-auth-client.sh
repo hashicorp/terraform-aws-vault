@@ -12,27 +12,37 @@ exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 # These variables are passed in via Terraform template interpolation
 /opt/consul/bin/run-consul --client --cluster-tag-key "${consul_cluster_tag_key}" --cluster-tag-value "${consul_cluster_tag_value}"
 
-# run-consul is running on the background, so we have to wait for it and
-# we also have to for wait for vault server to be booted and unsealed before it can accept this request
-# so in case this fails we retry.
-function retry_login {
-  local readonly data=$1
-  local readonly url=$2
+# Log the given message. All logs are written to stderr with a timestamp.
+function log {
+ local -r message="$1"
+ local -r timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+ >&2 echo -e "$timestamp $message"
+}
+
+# A retry function that attempts to run a command a number of times and returns the output
+function retry {
+  local -r cmd="$1"
+  local -r description="$2"
 
   for i in $(seq 1 30); do
-    echo "Attempting to authenticate to Vault..."
+    log "$description"
+
     # The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
     # beginning of this script which exits the script immediatelly for error status while not losing the exit status code
-    # The important bit is the curl request
-    login_output=$(curl --request POST --data "$data" "$url") && exit_status=0 || exit_status=$?
-    if [[ $exit_status -eq 0 ]]; then
+    output=$(eval "$cmd") && exit_status=0 || exit_status=$?
+    errors=$(echo "$output") | grep '^{' | jq -r .errors
+
+    log "$output"
+
+    if [[ $exit_status -eq 0 && -n "$output" && -z "$errors" ]]; then
+      echo "$output"
       return
     fi
-    echo "Failed to auth to Vault. It may still be in the process of booting. Will sleep for 10 seconds and try again."
+    log "$description failed. Will sleep for 10 seconds and try again."
     sleep 10
   done;
 
-  echo "Failed to authenticate to Vault."
+  log "$description failed after 30 attempts."
   exit $exit_status
 }
 
@@ -47,7 +57,13 @@ data=$(cat <<EOF
 }
 EOF
 )
-retry_login "$data" "https://vault.service.consul:8200/v1/auth/aws/login"
+
+# run-consul is running on the background, so we have to wait for it and
+# we also have to for wait for vault server to be booted and unsealed before it can accept this request
+# so in case this fails we retry.
+login_output=$(retry \
+  "curl --fail --request POST --data '$data' https://vault.service.consul:8200/v1/auth/aws/login" \
+  "Trying to login to vault")
 
 # It is important to note that the default behavior is TOFU(trust on first use)
 # So if the pkcs7 certificate gets compromised, attempts to login again will be
@@ -107,10 +123,9 @@ retry_login "$data" "https://vault.service.consul:8200/v1/auth/aws/login"
 token=$(echo $login_output | jq -r .auth.client_token)
 
 # And use the token to perform operations on vault such as reading a secret
-response=$(curl \
-  -H "X-Vault-Token: $token" \
-  -X GET \
-  https://vault.service.consul:8200/v1/secret/example_gruntwork)
+response=$(retry \
+  "curl --fail -H 'X-Vault-Token: $token' -X GET https://vault.service.consul:8200/v1/secret/example_gruntwork" \
+  "Trying to read secret from vault")
 
 # If vault cli is installed we can also perform these operations with vault cli
 # The necessary environment variables have to be set

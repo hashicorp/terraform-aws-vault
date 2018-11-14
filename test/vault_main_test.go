@@ -12,9 +12,23 @@ import (
 const AMI_EXAMPLE_PATH = "../examples/vault-consul-ami/vault-consul.json"
 
 type testCase struct {
-	Name       string                           // Name of the test
-	Func       func(*testing.T, string, string) // Function that runs test. Receives(t, amiId, sshUserName)
-	Enterprise bool                             // Run on ami with enterprise vault installed
+	Name       string                                   // Name of the test
+	Func       func(*testing.T, string, string, string) // Function that runs test. Receives(t, amiId, awsRegion, sshUserName)
+	Enterprise bool                                     // Run on ami with enterprise vault installed
+}
+
+type amiData struct {
+	Name            string // Name of the ami
+	PackerBuildName string // Build name of ami
+	SshUserName     string // ssh user name of ami
+	Enterprise      bool   // Install vault enterprise on ami
+}
+
+var amisData = []amiData{
+	{"vaultEnterpriseUbuntu", "ubuntu16-ami", "ubuntu", true},
+	{"vaultEnterpriseAmazonLinux", "amazon-linux-ami", "ec2-user", true},
+	{"vaultUbuntu", "ubuntu16-ami", "ubuntu", false},
+	{"vaultAmazonLinux", "amazon-linux-ami", "ec2-user", false},
 }
 
 var testCases = []testCase{
@@ -57,45 +71,47 @@ var testCases = []testCase{
 
 func TestMainVaultCluster(t *testing.T) {
 	t.Parallel()
-	amiIds := map[string]string{}
 
 	test_structure.RunTestStage(t, "setup_amis", func() {
-		awsRegion := aws.GetRandomRegion(t, nil, nil)
-		test_structure.SaveString(t, WORK_DIR, SAVED_AWS_REGION, awsRegion)
-
 		tlsCert := generateSelfSignedTlsCert(t)
 		saveTlsCert(t, WORK_DIR, tlsCert)
 
-		var identifierToOptions = map[string]*packer.Options{
-			"vaultEnterpriseUbuntu":      composeAmiOptions(t, AMI_EXAMPLE_PATH, "ubuntu16-ami", tlsCert, awsRegion, getUrlFromEnv(t)),
-			"vaultEnterpriseAmazonLinux": composeAmiOptions(t, AMI_EXAMPLE_PATH, "amazon-linux-ami", tlsCert, awsRegion, getUrlFromEnv(t)),
-			"vaultUbuntu":                composeAmiOptions(t, AMI_EXAMPLE_PATH, "ubuntu16-ami", tlsCert, awsRegion, ""),
-			"vaultAmazonLinux":           composeAmiOptions(t, AMI_EXAMPLE_PATH, "amazon-linux-ami", tlsCert, awsRegion, ""),
+		amisPackerOptions := map[string]*packer.Options{}
+		for _, ami := range amisData {
+			awsRegion := aws.GetRandomRegion(t, nil, nil)
+			test_structure.SaveString(t, WORK_DIR, fmt.Sprintf("awsRegion-%s", ami.Name), awsRegion)
+
+			if ami.Enterprise {
+				amisPackerOptions[ami.Name] = composeAmiOptions(t, AMI_EXAMPLE_PATH, ami.PackerBuildName, tlsCert, awsRegion, getUrlFromEnv(t))
+			} else {
+				amisPackerOptions[ami.Name] = composeAmiOptions(t, AMI_EXAMPLE_PATH, ami.PackerBuildName, tlsCert, awsRegion, "")
+			}
 		}
 
-		amiIds = packer.BuildArtifacts(t, identifierToOptions)
+		amiIds := packer.BuildArtifacts(t, amisPackerOptions)
 		for key, amiId := range amiIds {
 			test_structure.SaveString(t, WORK_DIR, fmt.Sprintf("amiId-%s", key), amiId)
 		}
 	})
 
 	defer test_structure.RunTestStage(t, "delete_amis", func() {
-		awsRegion := test_structure.LoadString(t, WORK_DIR, SAVED_AWS_REGION)
-		for _, amiId := range amiIds {
+		for _, ami := range amisData {
+			awsRegion := test_structure.LoadString(t, WORK_DIR, fmt.Sprintf("awsRegion-%s", ami.Name))
+			amiId := test_structure.LoadString(t, WORK_DIR, fmt.Sprintf("amiId-%s", ami.Name))
 			aws.DeleteAmi(t, awsRegion, amiId)
 		}
+
 		tlsCert := loadTlsCert(t, WORK_DIR)
 		cleanupTlsCertFiles(tlsCert)
 	})
 
 	t.Run("group", func(t *testing.T) {
-		runTestsOnDifferentPlatforms(t, testCases, amiIds)
+		runTestsOnDifferentPlatforms(t)
 	})
 
 }
 
-func runTestsOnDifferentPlatforms(t *testing.T, testCases []testCase, amiIds map[string]string) {
-	var amiId string
+func runTestsOnDifferentPlatforms(t *testing.T) {
 	for _, testCase := range testCases {
 		// This re-assignment necessary, because the variable testCase is defined and set outside the forloop.
 		// As such, it gets overwritten on each iteration of the forloop. This is fine if you don't have concurrent code in the loop,
@@ -105,19 +121,16 @@ func runTestsOnDifferentPlatforms(t *testing.T, testCases []testCase, amiIds map
 		// "Be Careful with Table Driven Tests and t.Parallel()"
 		// https://gist.github.com/posener/92a55c4cd441fc5e5e85f27bca008721
 		testCase := testCase
-		t.Run(fmt.Sprintf("%sWithUbuntuAmi", testCase.Name), func(t *testing.T) {
-			t.Parallel()
-			if amiId = amiIds["vaultUbuntu"]; testCase.Enterprise {
-				amiId = amiIds["vaultEnterpriseUbuntu"]
+		for _, ami := range amisData {
+			ami := ami
+			if testCase.Enterprise == ami.Enterprise {
+				t.Run(fmt.Sprintf("%sWith%sAmi", testCase.Name, ami.Name), func(t *testing.T) {
+					t.Parallel()
+					awsRegion := test_structure.LoadString(t, WORK_DIR, fmt.Sprintf("awsRegion-%s", ami.Name))
+					amiId := test_structure.LoadString(t, WORK_DIR, fmt.Sprintf("amiId-%s", ami.Name))
+					testCase.Func(t, amiId, awsRegion, ami.SshUserName)
+				})
 			}
-			testCase.Func(t, amiId, "ubuntu")
-		})
-		t.Run(fmt.Sprintf("%sWithAmazonLinuxAmi", testCase.Name), func(t *testing.T) {
-			t.Parallel()
-			if amiId = amiIds["vaultAmazonLinux"]; testCase.Enterprise {
-				amiId = amiIds["vaultEnterpriseAmazonLinux"]
-			}
-			testCase.Func(t, amiId, "ec2-user")
-		})
+		}
 	}
 }

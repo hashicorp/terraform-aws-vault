@@ -1,8 +1,11 @@
 package test
 
 import (
+	"fmt"
+	"os"
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/packer"
 	"github.com/gruntwork-io/terratest/modules/test-structure"
 )
@@ -40,4 +43,14 @@ func loadTlsCert(t *testing.T, testFolder string) TlsCert {
 	var tlsCert TlsCert
 	test_structure.LoadTestData(t, test_structure.FormatTestDataPath(testFolder, SAVED_TLS_CERT), &tlsCert)
 	return tlsCert
+}
+
+func writeLogFile(t *testing.T, buffer string, destination string) {
+	file, err := os.Create(destination)
+	if err != nil {
+		logger.Logf(t, fmt.Sprintf("Error creating log file on disk: %s", err.Error()))
+	}
+	defer file.Close()
+
+	file.WriteString(buffer)
 }

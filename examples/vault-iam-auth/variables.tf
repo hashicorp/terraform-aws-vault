@@ -66,7 +66,7 @@ variable "vault_instance_type" {
 
 variable "consul_instance_type" {
   description = "The type of EC2 Instance to run in the Consul ASG"
-  default     = "t2.nano"
+  default     = "t2.micro"
 }
 
 variable "consul_cluster_tag_key" {

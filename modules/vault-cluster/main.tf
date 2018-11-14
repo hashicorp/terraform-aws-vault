@@ -28,9 +28,20 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   health_check_grace_period = "${var.health_check_grace_period}"
   wait_for_capacity_timeout = "${var.wait_for_capacity_timeout}"
 
+  # Use bucket and policies names in tags for depending on them when they are there
+  # And only create the cluster after S3 bucket and policies exist
+  # Otherwise Vault might boot and not find the bucket or not yet have the necessary permissions
+  # Not using `depends_on` because these resources might not exist
   tags = ["${concat(
     list(
-      map("key", var.cluster_tag_key, "value", var.cluster_name, "propagate_at_launch", true)
+      map(
+        "key", var.cluster_tag_key,
+        "value", var.cluster_name,
+        "propagate_at_launch", true,
+        "using_s3_bucket_backend",  element(concat(aws_iam_role_policy.vault_s3.*.name, list("")), 0),
+        "s3_bucket_id", element(concat(aws_s3_bucket.vault_storage.*.id, list("")), 0),
+        "using_auto_unseal",  element(concat(aws_iam_role_policy.vault_auto_unseal_kms.*.name, list("")), 0),
+      )
     ),
     var.cluster_extra_tags)
   }"]
@@ -198,6 +209,13 @@ resource "aws_s3_bucket" "vault_storage" {
     map("Description", "Used for secret storage with Vault. DO NOT DELETE this Bucket unless you know what you are doing."),
     var.s3_bucket_tags)
   }"
+
+  # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
+  # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
+  # when you try to do a terraform destroy.
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_iam_role_policy" "vault_s3" {
@@ -205,6 +223,13 @@ resource "aws_iam_role_policy" "vault_s3" {
   name   = "vault_s3"
   role   = "${aws_iam_role.instance_role.id}"
   policy = "${element(concat(data.aws_iam_policy_document.vault_s3.*.json, list("")), 0)}"
+
+  # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
+  # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
+  # when you try to do a terraform destroy.
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 data "aws_iam_policy_document" "vault_s3" {
@@ -240,4 +265,11 @@ resource "aws_iam_role_policy" "vault_auto_unseal_kms" {
   name   = "vault_auto_unseal_kms"
   role   = "${aws_iam_role.instance_role.id}"
   policy = "${element(concat(data.aws_iam_policy_document.vault_auto_unseal_kms.*.json, list("")), 0)}"
+
+  # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
+  # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
+  # when you try to do a terraform destroy.
+  lifecycle {
+    create_before_destroy = true
+  }
 }

@@ -53,37 +53,37 @@ function print_usage {
 }
 
 function log {
-  local readonly level="$1"
-  local readonly message="$2"
-  local readonly timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+  local -r level="$1"
+  local -r message="$2"
+  local -r timestamp=$(date +"%Y-%m-%d %H:%M:%S")
   >&2 echo -e "${timestamp} [${level}] [$SCRIPT_NAME] ${message}"
 }
 
 function log_info {
-  local readonly message="$1"
+  local -r message="$1"
   log "INFO" "$message"
 }
 
 function log_warn {
-  local readonly message="$1"
+  local -r message="$1"
   log "WARN" "$message"
 }
 
 function log_error {
-  local readonly message="$1"
+  local -r message="$1"
   log "ERROR" "$message"
 }
 
 # Based on code from: http://stackoverflow.com/a/16623897/483528
 function strip_prefix {
-  local readonly str="$1"
-  local readonly prefix="$2"
+  local -r str="$1"
+  local -r prefix="$2"
   echo "${str#$prefix}"
 }
 
 function assert_not_empty {
-  local readonly arg_name="$1"
-  local readonly arg_value="$2"
+  local -r arg_name="$1"
+  local -r arg_value="$2"
 
   if [[ -z "$arg_value" ]]; then
     log_error "The value for '$arg_name' cannot be empty"
@@ -93,7 +93,7 @@ function assert_not_empty {
 }
 
 function lookup_path_in_instance_metadata {
-  local readonly path="$1"
+  local -r path="$1"
   curl --silent --location "$EC2_INSTANCE_METADATA_URL/$path/"
 }
 
@@ -102,7 +102,7 @@ function get_instance_ip_address {
 }
 
 function assert_is_installed {
-  local readonly name="$1"
+  local -r name="$1"
 
   if [[ ! $(command -v ${name}) ]]; then
     log_error "The binary '$name' is required by this script but is not installed or in the system's PATH."
@@ -118,8 +118,8 @@ function get_vault_version {
 }
 
 function vault_version_at_least {
-  local readonly config_path=$1
-  local readonly ui_config=$2
+  local -r config_path=$1
+  local -r ui_config=$2
   VAULT_VERSION=$(get_vault_version)
 
   #This if statement will echo the current vault version and the minimum version required for ui support.
@@ -133,20 +133,20 @@ function vault_version_at_least {
 }
 
 function generate_vault_config {
-  local readonly tls_cert_file="$1"
-  local readonly tls_key_file="$2"
-  local readonly port="$3"
-  local readonly cluster_port="$4"
-  local readonly api_addr="$5"
-  local readonly config_dir="$6"
-  local readonly user="$7"
-  local readonly enable_s3_backend="$8"
-  local readonly s3_bucket="$9"
-  local readonly s3_bucket_region="${10}"
-  local readonly enable_auto_unseal="${11}"
-  local readonly auto_unseal_kms_key_id="${12}"
-  local readonly auto_unseal_kms_key_region="${13}"
-  local readonly config_path="$config_dir/$VAULT_CONFIG_FILE"
+  local -r tls_cert_file="$1"
+  local -r tls_key_file="$2"
+  local -r port="$3"
+  local -r cluster_port="$4"
+  local -r api_addr="$5"
+  local -r config_dir="$6"
+  local -r user="$7"
+  local -r enable_s3_backend="$8"
+  local -r s3_bucket="$9"
+  local -r s3_bucket_region="${10}"
+  local -r enable_auto_unseal="${11}"
+  local -r auto_unseal_kms_key_id="${12}"
+  local -r auto_unseal_kms_key_region="${13}"
+  local -r config_path="$config_dir/$VAULT_CONFIG_FILE"
 
   local instance_ip_address
   instance_ip_address=$(get_instance_ip_address)
@@ -163,13 +163,13 @@ EOF
   fi
 
   log_info "Creating default Vault config file in $config_path"
-  local readonly ui_config=$(cat <<EOF
+  local -r ui_config=$(cat <<EOF
 ui = true
 
 EOF
 )
 
-  local readonly listener_config=$(cat <<EOF
+  local -r listener_config=$(cat <<EOF
 listener "tcp" {
   address         = "0.0.0.0:$port"
   cluster_address = "0.0.0.0:$cluster_port"
@@ -192,7 +192,7 @@ EOF
     consul_storage_type="ha_storage"
   fi
 
-  local readonly consul_storage=$(cat <<EOF
+  local -r consul_storage=$(cat <<EOF
 $consul_storage_type "consul" {
   address = "127.0.0.1:8500"
   path    = "vault/"
@@ -218,12 +218,12 @@ EOF
 }
 
 function generate_supervisor_config {
-  local readonly supervisor_config_path="$1"
-  local readonly vault_config_dir="$2"
-  local readonly vault_bin_dir="$3"
-  local readonly vault_log_dir="$4"
-  local readonly vault_log_level="$5"
-  local readonly vault_user="$6"
+  local -r supervisor_config_path="$1"
+  local -r vault_config_dir="$2"
+  local -r vault_bin_dir="$3"
+  local -r vault_log_dir="$4"
+  local -r vault_log_level="$5"
+  local -r vault_user="$6"
 
   log_info "Creating Supervisor config file to run Vault in $supervisor_config_path"
   cat > "$supervisor_config_path" <<EOF
@@ -247,7 +247,7 @@ function start_vault {
 
 # Based on: http://unix.stackexchange.com/a/7732/215969
 function get_owner_of_path {
-  local readonly path="$1"
+  local -r path="$1"
   ls -ld "$path" | awk '{print $3}'
 }
 

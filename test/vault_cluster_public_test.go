@@ -22,11 +22,18 @@ const VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME = "vault_domain_name"
 // 4. SSH to a Vault node and initialize the Vault cluster
 // 5. SSH to each Vault node and unseal it
 // 6. Connect to the Vault cluster via the ELB
-func runVaultPublicClusterTest(t *testing.T, amiId string, sshUserName string) {
+func runVaultPublicClusterTest(t *testing.T, amiId string, awsRegion string, sshUserName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, ".")
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
 		teardownResources(t, examplesDir)
+	})
+
+	defer test_structure.RunTestStage(t, "log", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+
+		getVaultLogs(t, "vaultPrivateCluster", terraformOptions, amiId, awsRegion, sshUserName, keyPair)
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
@@ -35,12 +42,11 @@ func runVaultPublicClusterTest(t *testing.T, amiId string, sshUserName string) {
 			VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME: "",
 			VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME:       "",
 		}
-		deployCluster(t, amiId, examplesDir, random.UniqueId(), terraformVars)
+		deployCluster(t, amiId, awsRegion, examplesDir, random.UniqueId(), terraformVars)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, WORK_DIR, SAVED_AWS_REGION)
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
 
 		initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)

@@ -39,30 +39,30 @@ function print_usage {
 }
 
 function log {
-  local readonly level="$1"
-  local readonly message="$2"
-  local readonly timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+  local -r level="$1"
+  local -r message="$2"
+  local -r timestamp=$(date +"%Y-%m-%d %H:%M:%S")
   >&2 echo -e "${timestamp} [${level}] [$SCRIPT_NAME] ${message}"
 }
 
 function log_info {
-  local readonly message="$1"
+  local -r message="$1"
   log "INFO" "$message"
 }
 
 function log_warn {
-  local readonly message="$1"
+  local -r message="$1"
   log "WARN" "$message"
 }
 
 function log_error {
-  local readonly message="$1"
+  local -r message="$1"
   log "ERROR" "$message"
 }
 
 function assert_not_empty {
-  local readonly arg_name="$1"
-  local readonly arg_value="$2"
+  local -r arg_name="$1"
+  local -r arg_value="$2"
 
   if [[ -z "$arg_value" ]]; then
     log_error "The value for '$arg_name' cannot be empty"
@@ -72,16 +72,40 @@ function assert_not_empty {
 }
 
 function assert_either_or {
-  local readonly arg1_name="$1"
-  local readonly arg1_value="$2"
-  local readonly arg2_name="$3"
-  local readonly arg2_value="$4"
+  local -r arg1_name="$1"
+  local -r arg1_value="$2"
+  local -r arg2_name="$3"
+  local -r arg2_value="$4"
 
   if [[ -z "$arg1_value" && -z "$arg2_value" ]]; then
     log_error "Either the value for '$arg1_name' or '$arg2_name' must be passed, both cannot be empty"
     print_usage
     exit 1
   fi
+}
+
+# A retry function that attempts to run a command a number of times and returns the output
+function retry {
+  local -r cmd="$1"
+  local -r description="$2"
+
+  for i in $(seq 1 5); do
+    log_info "$description"
+
+    # The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
+    # beginning of this script which exits the script immediatelly for error status while not losing the exit status code
+    output=$(eval "$cmd") && exit_status=0 || exit_status=$?
+    log_info "$output"
+    if [[ $exit_status -eq 0 ]]; then
+      echo "$output"
+      return
+    fi
+    log_warn "$description failed. Will sleep for 10 seconds and try again."
+    sleep 10
+  done;
+
+  log_error "$description failed after 5 attempts."
+  exit $exit_status
 }
 
 # Install steps are based on: http://unix.stackexchange.com/a/291098/215969
@@ -164,12 +188,12 @@ function install_dependencies {
 }
 
 function user_exists {
-  local readonly username="$1"
+  local -r username="$1"
   id "$username" >/dev/null 2>&1
 }
 
 function create_vault_user {
-  local readonly username="$1"
+  local -r username="$1"
 
   if $(user_exists "$username"); then
     echo "User $username already exists. Will not create again."
@@ -180,8 +204,8 @@ function create_vault_user {
 }
 
 function create_vault_install_paths {
-  local readonly path="$1"
-  local readonly username="$2"
+  local -r path="$1"
+  local -r username="$2"
 
   log_info "Creating install dirs for Vault at $path"
   sudo mkdir -p "$path"
@@ -199,24 +223,25 @@ function create_vault_install_paths {
 }
 
 function fetch_binary {
-  local readonly version="$1"
+  local -r version="$1"
   local download_url="$2"
 
   if [[ -z "$download_url" && -n "$version" ]];  then
     download_url="https://releases.hashicorp.com/vault/${version}/vault_${version}_linux_amd64.zip"
   fi
 
-  log_info "Downloading Vault to $DOWNLOAD_PACKAGE_PATH"
-  curl -o "$DOWNLOAD_PACKAGE_PATH" "$download_url" --location --silent --fail --show-error
+  retry \
+    "curl -o '$DOWNLOAD_PACKAGE_PATH' '$download_url' --location --silent --fail --show-error" \
+    "Downloading Vault to $DOWNLOAD_PACKAGE_PATH"
 }
 
 function install_binary {
-  local readonly install_path="$1"
-  local readonly username="$2"
+  local -r install_path="$1"
+  local -r username="$2"
 
-  local readonly bin_dir="$install_path/bin"
-  local readonly vault_dest_path="$bin_dir/vault"
-  local readonly run_vault_dest_path="$bin_dir/run-vault"
+  local -r bin_dir="$install_path/bin"
+  local -r vault_dest_path="$bin_dir/vault"
+  local -r run_vault_dest_path="$bin_dir/run-vault"
 
   unzip -d /tmp "$DOWNLOAD_PACKAGE_PATH"
 
@@ -225,7 +250,7 @@ function install_binary {
   sudo chown "$username:$username" "$vault_dest_path"
   sudo chmod a+x "$vault_dest_path"
 
-  local readonly symlink_path="$SYSTEM_BIN_DIR/vault"
+  local -r symlink_path="$SYSTEM_BIN_DIR/vault"
   if [[ -f "$symlink_path" ]]; then
     log_info "Symlink $symlink_path already exists. Will not add again."
   else

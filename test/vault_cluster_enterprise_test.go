@@ -46,11 +46,18 @@ func getUrlFromEnv(t *testing.T) string {
 // 3. Deploying a cluster of 1 vault server using the example Terraform code
 // 4. Sshing into vault node to initialize the server and check that it booted unsealed
 // 5. Increasing the the cluster size to 3 and check that new nodes are unsealed when they boot and join the cluster
-func runVaultAutoUnsealTest(t *testing.T, amiId string, sshUserName string) {
+func runVaultAutoUnsealTest(t *testing.T, amiId string, awsRegion string, sshUserName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_AUTO_UNSEAL_AUTH_PATH)
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
 		teardownResources(t, examplesDir)
+	})
+
+	defer test_structure.RunTestStage(t, "log", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+
+		getVaultLogs(t, "vaultAutoUnseal", terraformOptions, amiId, awsRegion, sshUserName, keyPair)
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
@@ -59,12 +66,11 @@ func runVaultAutoUnsealTest(t *testing.T, amiId string, sshUserName string) {
 			VAR_VAULT_AUTO_UNSEAL_KMS_KEY_ALIAS: AUTO_UNSEAL_KMS_KEY_ALIAS,
 			VAR_VAULT_CLUSTER_SIZE:              1,
 		}
-		deployCluster(t, amiId, examplesDir, uniqueId, terraformVars)
+		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, WORK_DIR, SAVED_AWS_REGION)
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
 
 		testAutoUnseal(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
@@ -81,20 +87,26 @@ func runVaultAutoUnsealTest(t *testing.T, amiId string, sshUserName string) {
 // 5. SSH to each Vault node and unseal it
 // 6. SSH to a Vault node and make sure you can communicate with the nodes via Consul-managed DNS
 // 7. SSH to a Vault node and check if Vault enterprise is installed properly
-func runVaultEnterpriseClusterTest(t *testing.T, amiId string, sshUserName string) {
+func runVaultEnterpriseClusterTest(t *testing.T, amiId string, awsRegion string, sshUserName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_CLUSTER_PRIVATE_PATH)
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
 		teardownResources(t, examplesDir)
 	})
 
+	defer test_structure.RunTestStage(t, "log", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+
+		getVaultLogs(t, "vaultEnterpriseCluster", terraformOptions, amiId, awsRegion, sshUserName, keyPair)
+	})
+
 	test_structure.RunTestStage(t, "deploy", func() {
-		deployCluster(t, amiId, examplesDir, random.UniqueId(), nil)
+		deployCluster(t, amiId, awsRegion, examplesDir, random.UniqueId(), nil)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, WORK_DIR, SAVED_AWS_REGION)
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
 
 		cluster := initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
@@ -118,8 +130,9 @@ func testAutoUnseal(t *testing.T, asgNameOutputVar string, sshUserName string, t
 	establishConnectionToCluster(t, initialCluster)
 	waitForVaultToBoot(t, initialCluster)
 
-	logger.Logf(t, "Initializing the cluster")
-	ssh.CheckSshCommand(t, initialCluster.Leader, "vault operator init")
+	retry.DoWithRetry(t, "Initializing the cluster", 10, 10*time.Second, func() (string, error) {
+		return ssh.CheckSshCommandE(t, initialCluster.Leader, "vault operator init")
+	})
 	assertStatus(t, initialCluster.Leader, Leader)
 
 	logger.Logf(t, "Increasing the cluster size and running 'terraform apply' again")

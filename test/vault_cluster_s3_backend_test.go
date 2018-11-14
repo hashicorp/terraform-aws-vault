@@ -3,12 +3,8 @@ package test
 import (
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
-	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/gruntwork-io/terratest/modules/test-structure"
-	"github.com/stretchr/testify/require"
 )
 
 const VAULT_CLUSTER_S3_BACKEND_PATH = "examples/vault-s3-backend"
@@ -26,37 +22,18 @@ const VAR_FORCE_DESTROY_S3_BUCKET = "force_destroy_s3_bucket"
 // 4. SSH to a Vault node and initialize the Vault cluster
 // 5. SSH to each Vault node and unseal it
 // 6. Connect to the Vault cluster via the ELB
-func runVaultWithS3BackendClusterTest(t *testing.T, amiId string, sshUserName string) {
+func runVaultWithS3BackendClusterTest(t *testing.T, amiId string, awsRegion, sshUserName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_CLUSTER_S3_BACKEND_PATH)
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
 		teardownResources(t, examplesDir)
 	})
 
-	defer test_structure.RunTestStage(t, "logs", func() {
+	defer test_structure.RunTestStage(t, "log", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, WORK_DIR, SAVED_AWS_REGION)
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
-		asgName := terraform.OutputRequired(t, terraformOptions, OUTPUT_VAULT_CLUSTER_ASG_NAME)
 
-		sysLogPath := vaultSyslogPathUbuntu
-		if sshUserName == "ec2-user" {
-			sysLogPath = vaultSyslogPathAmazonLinux
-		}
-
-		instanceIdToFilePathToContents := aws.FetchContentsOfFilesFromAsg(t, awsRegion, sshUserName, keyPair, asgName, true, vaultStdOutLogFilePath, vaultStdErrLogFilePath, sysLogPath)
-
-		require.Len(t, instanceIdToFilePathToContents, vaultClusterSizeInExamples)
-
-		for instanceID, filePathToContents := range instanceIdToFilePathToContents {
-			require.Contains(t, filePathToContents, vaultStdOutLogFilePath)
-			require.Contains(t, filePathToContents, vaultStdErrLogFilePath)
-			require.Contains(t, filePathToContents, sysLogPath)
-
-			logger.Logf(t, "Contents of %s on Instance %s:\n\n%s\n", vaultStdOutLogFilePath, instanceID, filePathToContents[vaultStdOutLogFilePath])
-			logger.Logf(t, "Contents of %s on Instance %s:\n\n%s\n", vaultStdErrLogFilePath, instanceID, filePathToContents[vaultStdErrLogFilePath])
-			logger.Logf(t, "Contents of %s on Instance %s:\n\n%s\n", sysLogPath, instanceID, filePathToContents[sysLogPath])
-		}
+		getVaultLogs(t, "vaultClusterWithS3Backend", terraformOptions, amiId, awsRegion, sshUserName, keyPair)
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
@@ -66,12 +43,11 @@ func runVaultWithS3BackendClusterTest(t *testing.T, amiId string, sshUserName st
 			VAR_S3_BUCKET_NAME:          s3BucketName(uniqueId),
 			VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
 		}
-		deployCluster(t, amiId, examplesDir, uniqueId, terraformVars)
+		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
-		awsRegion := test_structure.LoadString(t, WORK_DIR, SAVED_AWS_REGION)
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
 
 		cluster := initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)

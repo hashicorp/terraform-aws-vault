@@ -34,7 +34,7 @@ function retry {
 
     log "$output"
 
-    if [[ $exit_status -eq 0 ]] && test -n "$output" && test -z "$errors"; then
+    if [[ $exit_status -eq 0 && -n "$output" && -z "$errors" ]]; then
       echo "$output"
       return
     fi

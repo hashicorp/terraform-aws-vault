@@ -28,6 +28,8 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   health_check_grace_period = "${var.health_check_grace_period}"
   wait_for_capacity_timeout = "${var.wait_for_capacity_timeout}"
 
+  enabled_metrics = ["${var.enabled_metrics}"]
+
   # Use bucket and policies names in tags for depending on them when they are there
   # And only create the cluster after S3 bucket and policies exist
   # Otherwise Vault might boot and not find the bucket or not yet have the necessary permissions

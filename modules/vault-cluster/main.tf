@@ -249,15 +249,17 @@ data "aws_iam_policy_document" "vault_s3" {
 }
 
 data "aws_iam_policy_document" "vault_auto_unseal_kms" {
-  count  = "${var.enable_auto_unseal ? 1 : 0}"
+  count = "${var.enable_auto_unseal ? 1 : 0}"
 
   statement {
-    effect    = "Allow"
+    effect = "Allow"
+
     actions = [
       "kms:Encrypt",
       "kms:Decrypt",
-      "kms:DescribeKey"
+      "kms:DescribeKey",
     ]
+
     resources = ["${var.auto_unseal_kms_key_arn}"]
   }
 }

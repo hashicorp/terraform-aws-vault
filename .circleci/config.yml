@@ -1,5 +1,15 @@
+---
 version: 2
 jobs:
+  validate_terraform:
+    docker:
+      - image: hashicorp/terraform
+    steps:
+      - checkout
+      - run:
+          name: Validate Terraform Formatting
+          command: "[ -z \"$(terraform fmt -write=false)\" ] || { terraform fmt -write=false -diff; exit 1; }"
+
   build:
     machine: true
     # Changing default working dir to the one used for the go path configuration

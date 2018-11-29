@@ -126,10 +126,12 @@ data "template_file" "user_data_vault_cluster" {
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
     example_role_name        = "${var.example_role_name}"
+
     # Please note that normally we would never pass a secret this way
     # This is just for test purposes so we can verify that our example instance is authenticating correctly
-    example_secret           = "${var.example_secret}"
-    ami_id                   = "${var.ami_id}"
+    example_secret = "${var.example_secret}"
+
+    ami_id = "${var.ami_id}"
   }
 }
 

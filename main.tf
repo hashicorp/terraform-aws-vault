@@ -117,7 +117,7 @@ data "template_file" "user_data_vault_cluster" {
 module "security_group_rules" {
   source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-client-security-group-rules?ref=v0.4.0"
 
-  security_group_id           = "${module.vault_cluster.security_group_id}"
+  security_group_id = "${module.vault_cluster.security_group_id}"
 
   # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
   # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.

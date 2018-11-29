@@ -103,6 +103,9 @@ module "consul_cluster" {
   vpc_id     = "${data.aws_vpc.default.id}"
   subnet_ids = "${data.aws_subnet_ids.default.ids}"
 
+  allowed_inbound_security_group_ids   = ["${module.vault_cluster.security_group_id}"]
+  allowed_inbound_security_group_count = 1
+
   # To make testing easier, we allow Consul and SSH requests from any IP address here but in a production
   # deployment, we strongly recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
 

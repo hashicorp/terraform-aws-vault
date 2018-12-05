@@ -37,11 +37,12 @@ function print_usage {
   echo -e "  --s3-bucket\tSpecifies the S3 bucket to use to store Vault data. Only used if '--enable-s3-backend' is set."
   echo -e "  --s3-bucket-region\tSpecifies the AWS region where `--s3-bucket` lives. Only used if `--enable-s3-backend` is set."
   echo
-  echo "Optional Arguments for enabling the AWS KMS seal (Vault Enterprise only):"
+  echo "Optional Arguments for enabling the AWS KMS seal (Vault Enterprise or 1.0 and above):"
   echo
   echo -e "  --enable-auto-unseal\tIf this flag is set, enable the AWS KMS Auto-unseal feature. Default is false."
   echo -e "  --auto-unseal-kms-key-id\tThe key id of the AWS KMS key to be used for encryption and decryption. Required if --enable-auto-unseal is enabled."
-  echo -e "  --auto-unseal-region\tThe AWS region where the encryption key lives. Required if --enable-auto-unseal is enabled."
+  echo -e "  --auto-unseal-kms-key-region\tThe AWS region where the encryption key lives. Required if --enable-auto-unseal is enabled."
+  echo -e "  --auto-unseal-endpoint\tThe KMS API endpoint to be used to make AWS KMS requests. Optional. Defaults to \"\". Only used if --enable-auto-unseal is enabled."
   echo
   echo "Examples:"
   echo
@@ -146,6 +147,7 @@ function generate_vault_config {
   local -r enable_auto_unseal="${11}"
   local -r auto_unseal_kms_key_id="${12}"
   local -r auto_unseal_kms_key_region="${13}"
+  local -r auto_unseal_endpoint="${14}"
   local -r config_path="$config_dir/$VAULT_CONFIG_FILE"
 
   local instance_ip_address
@@ -156,7 +158,8 @@ function generate_vault_config {
     auto_unseal_config=$(cat <<EOF
 seal "awskms" {
   kms_key_id = "$auto_unseal_kms_key_id"
-  region = "$auto_unseal_kms_key_region"
+  region     = "$auto_unseal_kms_key_region"
+  endpoint   = "$auto_unseal_endpoint"
 }\n
 EOF
 )
@@ -267,9 +270,9 @@ function run {
   local s3_bucket=""
   local s3_bucket_region=""
   local enable_auto_unseal="false"
-  local auto_unseal_region=""
   local auto_unseal_kms_key_id=""
   local auto_unseal_kms_key_region=""
+  local auto_unseal_endpoint=""
   local all_args=()
 
   while [[ $# > 0 ]]; do
@@ -341,16 +344,16 @@ function run {
       --enable-auto-unseal)
         enable_auto_unseal="true"
         ;;
-      --auto-unseal-region)
-        auto_unseal_region="$2"
-        shift
-        ;;
       --auto-unseal-kms-key-id)
         auto_unseal_kms_key_id="$2"
         shift
         ;;
       --auto-unseal-kms-key-region)
         auto_unseal_kms_key_region="$2"
+        shift
+        ;;
+      --auto-unseal-endpoint)
+        auto_unseal_endpoint="$2"
         shift
         ;;
       --help)
@@ -426,7 +429,8 @@ function run {
       "$s3_bucket_region" \
       "$enable_auto_unseal" \
       "$auto_unseal_kms_key_id" \
-      "$auto_unseal_kms_key_region"
+      "$auto_unseal_kms_key_region" \
+      "$auto_unseal_endpoint"
   fi
 
   generate_supervisor_config "$SUPERVISOR_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_dir" "$log_level" "$user"

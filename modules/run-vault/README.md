@@ -70,7 +70,8 @@ The `run-vault` script accepts the following arguments:
 Optional Arguments for enabling the AWS KMS seal (Vault Enterprise only):
  * `--enable-auto-unseal`: If this flag is set, enable the AWS KMS Auto-unseal feature. Default is false.
  * `--auto-unseal-kms-key-id`: The key id of the AWS KMS key to be used for encryption and decryption. Required if `--enable-auto-unseal` is enabled.
- * `--auto-unseal-region`: The AWS region where the encryption key lives. Required if --enable-auto-unseal is enabled.
+ * `--auto-unseal-kms-key-region`: The AWS region where the encryption key lives. Required if --enable-auto-unseal is enabled.
+ * `--auto-unseal-endpoint`: The KMS API endpoint to be used to make AWS KMS requests. Optional. Defaults to `""`. Only used if --enable-auto-unseal is enabled.
 
 Example:
 

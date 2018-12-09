@@ -187,20 +187,20 @@ this CA.
 So here's our strategy for issuing a TLS Cert for a private service:
 
 1. **Create our own CA.**
-  - If a client wishes to trust our CA, they need only reference this CA public key.
-  - We'll deal with the private key in a moment.
+    - If a client wishes to trust our CA, they need only reference this CA public key.
+    - We'll deal with the private key in a moment.
 
 1. **Using our CA, issue a TLS Certificate for our private service.**
-  - Create a public/private key pair for the private service, and have the CA sign the public key.
-  - This means anyone who trusts the CA will trust that the possessor of the private key that corresponds to this public 
-    key is who they claim to be.
-  - We will be extremely careful with the TLS private key since anyone who obtains it can impersonate our private 
-    service! For this reason, we recommend immediately encrypting the private key with 
-    [KMS](https://aws.amazon.com/kms/).
+    - Create a public/private key pair for the private service, and have the CA sign the public key.
+    - This means anyone who trusts the CA will trust that the possessor of the private key that corresponds to this public 
+      key is who they claim to be.
+    - We will be extremely careful with the TLS private key since anyone who obtains it can impersonate our private 
+      service! For this reason, we recommend immediately encrypting the private key with 
+      [KMS](https://aws.amazon.com/kms/).
 
 1. **Freely advertise our CA's public key to all internal services.**
-  - Any service that wishes to connect securely to our private service will need our CA's public key so it can declare 
-    that it trusts this CA, and thereby the TLS cert it issued to the private service.
+    - Any service that wishes to connect securely to our private service will need our CA's public key so it can declare 
+      that it trusts this CA, and thereby the TLS cert it issued to the private service.
 
 1. **Throw away the CA private key.**
     - By erasing a CA private key it's impossible for the CA to be compromised, because there's no private key to steal!

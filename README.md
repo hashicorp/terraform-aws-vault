@@ -1,4 +1,4 @@
-[![Maintained by Gruntwork.io](https://img.shields.io/badge/maintained%20by-gruntwork.io-%235849a6.svg)](https://gruntwork.io/?ref=aws_vault_repo)
+[![Maintained by Gruntwork.io](https://img.shields.io/badge/maintained%20by-gruntwork.io-%235849a6.svg)](https://gruntwork.io/?ref=repo_aws_vault)
 # Vault AWS Module
 
 This repo contains a Module for how to deploy a [Vault](https://www.vaultproject.io/) cluster on 

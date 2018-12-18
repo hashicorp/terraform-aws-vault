@@ -98,7 +98,8 @@
   },{
     "type": "shell",
     "inline": [
-      "sudo apt-get install -y git"
+      "sudo apt-get install -y git python-pip",
+      "LC_ALL=C && sudo pip install boto3"
     ],
     "only": ["ubuntu16-ami"]
   },{

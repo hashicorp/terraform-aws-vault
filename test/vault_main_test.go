@@ -35,7 +35,7 @@ var testCases = []testCase{
 	{
 		"TestVaultAutoUnseal",
 		runVaultAutoUnsealTest,
-		true,
+		false,
 	},
 	{
 		"TestEnterpriseInstallation",

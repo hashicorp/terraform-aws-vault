@@ -155,11 +155,17 @@ function generate_vault_config {
 
   local auto_unseal_config=""
   if [[ "$enable_auto_unseal" == "true" ]]; then
+
+    local endpoint=""
+    if [[ -n "$auto_unseal_endpoint" ]]; then
+      endpoint="endpoint   = '$auto_unseal_endpoint'"
+    fi
+
     auto_unseal_config=$(cat <<EOF
 seal "awskms" {
   kms_key_id = "$auto_unseal_kms_key_id"
   region     = "$auto_unseal_kms_key_region"
-  endpoint   = "$auto_unseal_endpoint"
+  $endpoint
 }\n
 EOF
 )

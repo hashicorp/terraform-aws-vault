@@ -7,6 +7,7 @@
     "consul_version": "1.3.1",
     "consul_download_url": "{{env `CONSUL_DOWNLOAD_URL`}}",
     "vault_download_url": "{{env `VAULT_DOWNLOAD_URL`}}",
+    "install_auth_signing_script": "true",
     "ca_public_key_path": null,
     "tls_public_key_path": null,
     "tls_private_key_path": null
@@ -86,7 +87,11 @@
 },{
     "type": "shell",
     "inline": [
+      "if [ '{{user `install_auth_signing_script`}}' = 'true' ]; then",
       "sudo mv /tmp/sign-request.py /opt/vault/scripts/",
+      "else",
+      "sudo rm /tmp/sign-request.py",
+      "fi",
       "sudo mv /tmp/ca.crt.pem /opt/vault/tls/",
       "sudo mv /tmp/vault.crt.pem /opt/vault/tls/",
       "sudo mv /tmp/vault.key.pem /opt/vault/tls/",
@@ -98,7 +103,11 @@
   },{
     "type": "shell",
     "inline": [
-      "sudo apt-get install -y git"
+      "sudo apt-get install -y git",
+      "if [ '{{user `install_auth_signing_script`}}' = 'true' ]; then",
+      "sudo apt-get install -y python-pip",
+      "LC_ALL=C && sudo pip install boto3",
+      "fi"
     ],
     "only": ["ubuntu16-ami"]
   },{

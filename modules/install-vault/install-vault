@@ -174,9 +174,8 @@ function install_dependencies {
 
   if $(has_apt_get); then
     sudo apt-get update -y
-    sudo apt-get install -y awscli curl unzip jq python-pip
+    sudo apt-get install -y awscli curl unzip jq
     install_supervisord_debian
-    LC_ALL=C && sudo pip install boto3
   elif $(has_yum); then
     sudo yum update -y
     sudo yum install -y awscli curl unzip jq

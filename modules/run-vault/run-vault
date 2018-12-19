@@ -158,7 +158,7 @@ function generate_vault_config {
 
     local endpoint=""
     if [[ -n "$auto_unseal_endpoint" ]]; then
-      endpoint="endpoint   = '$auto_unseal_endpoint'"
+      endpoint="endpoint   = \"$auto_unseal_endpoint\""
     fi
 
     auto_unseal_config=$(cat <<EOF

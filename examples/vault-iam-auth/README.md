@@ -69,6 +69,8 @@ who signed it, which the Vault Server then can check against the ARN of the IAM
 principal bounded to a previously created Vault Role and decide if it should be
 allowed to authenticate or not.
 
+![auth diagram][auth_diagram]
+
 It is important to notice that, when the Vault Server receives this encrypted STS
 API request attached to a login request, to be able to execute it and perform the
 login, the cluster needs to have AWS Policies that will allow the cluster to execute
@@ -183,6 +185,7 @@ vault login -method=aws header_value=vault.service.consul role=vault-role-name
 ```
 
 [ami]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html
+[auth_diagram]: https://i.imgur.com/UXkj8lP.png
 [auth_methods]: https://www.vaultproject.io/docs/auth/index.html
 [aws_auth]:https://www.vaultproject.io/docs/auth/aws.html
 [consul_policy]: https://github.com/hashicorp/terraform-aws-consul/blob/master/modules/consul-iam-policies/main.tf

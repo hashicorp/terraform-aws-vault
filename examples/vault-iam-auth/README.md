@@ -185,7 +185,7 @@ vault login -method=aws header_value=vault.service.consul role=vault-role-name
 ```
 
 [ami]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html
-[auth_diagram]: https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-iam-auth/images/iam-auth.png
+[auth_diagram]: https://raw.githubusercontent.com/hashicorp/terraform-aws-vault/master/examples/vault-iam-auth/images/iam-auth.png
 [auth_methods]: https://www.vaultproject.io/docs/auth/index.html
 [aws_auth]:https://www.vaultproject.io/docs/auth/aws.html
 [consul_policy]: https://github.com/hashicorp/terraform-aws-consul/blob/master/modules/consul-iam-policies/main.tf

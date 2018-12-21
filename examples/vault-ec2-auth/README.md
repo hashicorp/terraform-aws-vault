@@ -175,7 +175,7 @@ To see the full script for authenticating check the [client user data script][us
 
 [ami]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html
 [auth_methods]: https://www.vaultproject.io/docs/auth/index.html
-[auth_diagram]: https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-ec2-auth/images/ec2-auth.png
+[auth_diagram]: https://raw.githubusercontent.com/hashicorp/terraform-aws-vault/master/examples/vault-ec2-auth/images/ec2-auth.png
 [aws_auth]:https://www.vaultproject.io/docs/auth/aws.html
 [consul_policy]: https://github.com/hashicorp/terraform-aws-consul/blob/master/modules/consul-iam-policies/main.tf
 [create_role]: https://www.vaultproject.io/api/auth/aws/index.html#create-role

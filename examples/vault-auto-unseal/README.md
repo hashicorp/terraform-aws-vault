@@ -1,9 +1,7 @@
 # Vault auto unseal example
 
-** For Vault Enterprise version only **
-
 This folder shows an example of Terraform code that deploys a [Vault][vault] cluster
-in AWS with [auto unseal][auto_unseal]. Auto unseal is a Vault Enterprise feature
+in AWS with [auto unseal][auto_unseal]. Auto unseal is a Vault feature
 that automatically [unseals][seal] each node in the cluster at boot using [Amazon KMS][kms].
 Without auto unseal, Vault operators are expected to manually unseal each Vault node
 after it boots, a cumbersome process that typically requires multiple Vault operators
@@ -35,7 +33,8 @@ even if you immediately delete it.
 1. `git clone` this repo to your computer.
 1. Build a Vault and Consul AMI. See the [vault-consul-ami example][vault_consul_ami]
   documentation for instructions. Don't forget to set the variable `vault_download_url`
-  with the url of the enterprise version of Vault. Make sure to note down the ID of the AMI.
+  with the url of the enterprise version of Vault if you wish to use Vault Enterprise.
+  Make sure to note down the ID of the AMI.
 1. Install [Terraform][terraform].
 1. [Create an AWS KMS key][key_creation]. Take note of the key alias.
 1. Open `vars.tf`, set the environment variables specified at the top of the file,
@@ -74,7 +73,7 @@ Vault remains unsealed until it reboots or until someone manually reseals it.
 
 ### Auto-unseal
 
-Vault Enterprise has a feature that allows automatic unsealing via Amazon KMS. It
+Vault has a feature that allows automatic unsealing via Amazon KMS. It
 allows operators to delegate the unsealing process to AWS, which is useful for failure
 situations where the server has to restart and then it will be already unsealed or
 for the creation of ephemeral clusters. This process uses an AWS KMS key as
@@ -103,10 +102,8 @@ data "aws_kms_alias" "vault-example" {
 }
 ```
 
-Since Auto-unseal is a Vault Enterprise feature, you still need to apply your Vault
+If you wish to use Vault Enterprise, you still need to apply your Vault
 Enterprise License to the cluster with `vault write /sys/license "text=$LICENSE_KEY_TEXT"`.
-If you don't do that, Vault will re-seal after 30 minutes and you won't be able
-to write or read secrets anymore.
 
 [ami]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html
 [auto_unseal]: https://www.vaultproject.io/docs/enterprise/auto-unseal/index.html

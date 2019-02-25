@@ -41,7 +41,7 @@ This repo has the following structure:
 * [modules](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules): This folder contains several standalone, reusable, production-grade modules that you can use to deploy Vault.
 * [examples](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples): This folder shows examples of different ways to combine the modules in the `modules` folder to deploy Vault.
 * [test](https://github.com/hashicorp/terraform-aws-vault/tree/master/test): Automated tests for the modules and examples.
-[root folder](https://github.com/hashicorp/terraform-aws-vault/tree/master): The root folder is *an example* of how to use the [vault-cluster module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster) 
+* [root folder](https://github.com/hashicorp/terraform-aws-vault/tree/master): The root folder is *an example* of how to use the [vault-cluster module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster) 
   module to deploy a [Vault](https://www.vaultproject.io/) cluster in [AWS](https://aws.amazon.com/). The Terraform Registry requires the root of every repo to contain Terraform code, so we've put one of the examples there. This example is great for learning and experimenting, but for production use, please use the underlying modules in the [modules folder](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules) directly.
   
 To deploy Vault to production with this repo, you will need to deploy two separate clusters: one to run 

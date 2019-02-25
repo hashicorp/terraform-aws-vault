@@ -12,9 +12,6 @@ jobs:
 
   build:
     machine: true
-    # Changing default working dir to the one used for the go path configuration
-    # Circle requires the use of the full path without env vars here
-    working_directory: /home/circleci/.go_workspace/src/github.com/hashicorp/terraform-aws-vault
     steps:
       - checkout
       - restore_cache:

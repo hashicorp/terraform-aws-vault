@@ -1,7 +1,7 @@
 [![Maintained by Gruntwork.io](https://img.shields.io/badge/maintained%20by-gruntwork.io-%235849a6.svg)](https://gruntwork.io/?ref=repo_aws_vault)
 # Vault AWS Module
 
-This repo contains a Module for how to deploy a [Vault](https://www.vaultproject.io/) cluster on 
+This repo contains a set of modules in the [modules folder](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules) for deploying a [Vault](https://www.vaultproject.io/) cluster on 
 [AWS](https://aws.amazon.com/) using [Terraform](https://www.terraform.io/). Vault is an open source tool for managing
 secrets. By default, this Module uses [Consul](https://www.consul.io) as a [storage 
 backend](https://www.vaultproject.io/docs/configuration/storage/index.html). You can optionally add an [S3](https://aws.amazon.com/s3/) backend for durability.
@@ -34,45 +34,17 @@ This Module includes:
    
 
 
-
-## What's a Module?
-
-A Module is a canonical, reusable, best-practices definition for how to run a single piece of infrastructure, such 
-as a database or server cluster. Each Module is created primarily using [Terraform](https://www.terraform.io/), 
-includes automated tests, examples, and documentation, and is maintained both by the open source community and 
-companies that provide commercial support. 
-
-Instead of having to figure out the details of how to run a piece of infrastructure from scratch, you can reuse 
-existing code that has been proven in production. And instead of maintaining all that infrastructure code yourself, 
-you can leverage the work of the Module community and maintainers, and pick up infrastructure improvements through
-a version number bump.
- 
- 
- 
-## Who maintains this Module?
-
-This Module is maintained by [Gruntwork](http://www.gruntwork.io/). If you're looking for help or commercial 
-support, send an email to [modules@gruntwork.io](mailto:modules@gruntwork.io?Subject=Vault%20Module). 
-Gruntwork can help with:
-
-* Setup, customization, and support for this Module.
-* Modules for other types of infrastructure, such as VPCs, Docker clusters, databases, and continuous integration.
-* Modules that meet compliance requirements, such as HIPAA.
-* Consulting & Training on AWS, Terraform, and DevOps.
-
-
-
 ## How do you use this Module?
 
-Each Module has the following folder structure:
+This repo has the following structure:
 
-* [modules](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules): This folder contains the reusable code for this Module, broken down into one or more modules.
-* [examples](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples): This folder contains examples of how to use the modules.
+* [modules](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules): This folder contains several standalone, reusable, production-grade modules that you can use to deploy Vault.
+* [examples](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples): This folder shows examples of different ways to combine the modules in the `modules` folder to deploy Vault.
 * [test](https://github.com/hashicorp/terraform-aws-vault/tree/master/test): Automated tests for the modules and examples.
-
-Click on each of the modules above for more details.
-
-To deploy Vault with this Module, you will need to deploy two separate clusters: one to run 
+* [root folder](https://github.com/hashicorp/terraform-aws-vault/tree/master): The root folder is *an example* of how to use the [vault-cluster module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster) 
+  module to deploy a [Vault](https://www.vaultproject.io/) cluster in [AWS](https://aws.amazon.com/). The Terraform Registry requires the root of every repo to contain Terraform code, so we've put one of the examples there. This example is great for learning and experimenting, but for production use, please use the underlying modules in the [modules folder](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules) directly.
+  
+To deploy Vault to production with this repo, you will need to deploy two separate clusters: one to run 
 [Consul](https://www.consul.io/) servers (which Vault uses as a [storage 
 backend](https://www.vaultproject.io/docs/configuration/storage/index.html)) and one to run Vault servers. 
 
@@ -113,8 +85,34 @@ To deploy the Vault cluster:
 1. Head over to the [How do you use the Vault cluster?](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster#how-do-you-use-the-vault-cluster) guide
    to learn how to initialize, unseal, and use Vault.
 
+
+
+
+## What's a Module?
+
+A Module is a canonical, reusable, best-practices definition for how to run a single piece of infrastructure, such 
+as a database or server cluster. Each Module is created primarily using [Terraform](https://www.terraform.io/), 
+includes automated tests, examples, and documentation, and is maintained both by the open source community and 
+companies that provide commercial support. 
+
+Instead of having to figure out the details of how to run a piece of infrastructure from scratch, you can reuse 
+existing code that has been proven in production. And instead of maintaining all that infrastructure code yourself, 
+you can leverage the work of the Module community and maintainers, and pick up infrastructure improvements through
+a version number bump.
  
  
+ 
+## Who maintains this Module?
+
+This Module is maintained by [Gruntwork](http://www.gruntwork.io/). If you're looking for help or commercial 
+support, send an email to [modules@gruntwork.io](mailto:modules@gruntwork.io?Subject=Vault%20Module). 
+Gruntwork can help with:
+
+* Setup, customization, and support for this Module.
+* Modules for other types of infrastructure, such as VPCs, Docker clusters, databases, and continuous integration.
+* Modules that meet compliance requirements, such as HIPAA.
+* Consulting & Training on AWS, Terraform, and DevOps.
+
 
 
 

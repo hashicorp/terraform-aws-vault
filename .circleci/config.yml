@@ -12,9 +12,6 @@ jobs:
 
   build:
     machine: true
-    # Changing default working dir to the one used for the go path configuration
-    # Circle requires the use of the full path without env vars here
-    working_directory: /home/circleci/.go_workspace/src/github.com/hashicorp/terraform-aws-vault
     steps:
       - checkout
       - restore_cache:
@@ -27,12 +24,12 @@ jobs:
 
       # Install the gruntwork-module-circleci-helpers and use it to configure the build environment and run tests.
       - run: curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version v0.0.21
-      - run: gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.12.2"
-      - run: gruntwork-install --module-name "build-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.12.2"
-      - run: gruntwork-install --module-name "aws-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.12.2"
-      - run: gruntwork-install --module-name "git-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.12.2"
+      - run: gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.13.9"
+      - run: gruntwork-install --module-name "build-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.13.9"
+      - run: gruntwork-install --module-name "aws-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.13.9"
+      - run: gruntwork-install --module-name "git-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.13.9"
       - run: gruntwork-install --binary-name "terratest_log_parser" --repo "https://github.com/gruntwork-io/terratest" --tag v0.13.10
-      - run: configure-environment-for-gruntwork-module --go-src-path test --use-go-dep --terraform-version 0.11.7 --circle-ci-2
+      - run: configure-environment-for-gruntwork-module --go-src-path test --use-go-dep --circle-ci-2 --circle-ci-2-machine-executor
 
       - save_cache:
           key: external-dep

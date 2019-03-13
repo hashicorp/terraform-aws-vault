@@ -55,7 +55,7 @@ module "vault_cluster" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
   # source = "github.com/hashicorp/terraform-aws-vault//modules/vault-cluster?ref=v0.0.1"
-  source = "modules/vault-cluster"
+  source = "./modules/vault-cluster"
 
   cluster_name  = "${var.vault_cluster_name}"
   cluster_size  = "${var.vault_cluster_size}"
@@ -133,7 +133,7 @@ module "vault_elb" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
   # source = "github.com/hashicorp/terraform-aws-vault//modules/vault-elb?ref=v0.0.1"
-  source = "modules/vault-elb"
+  source = "./modules/vault-elb"
 
   name = "${var.vault_cluster_name}"
 

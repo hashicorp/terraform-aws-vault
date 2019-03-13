@@ -16,7 +16,7 @@ code by adding a `module` configuration and setting its `source` parameter to UR
 ```hcl
 module "vault_cluster" {
   # Use version v0.0.1 of the vault-cluster module
-  source = "github.com/hashicorp/terraform-aws-vault//modules/vault-cluster?ref=v0.0.1"
+  source = "github.com/hashicorp/terraform-aws-vault/modules/vault-cluster?ref=v0.0.1"
 
   # Specify the ID of the Vault AMI. You should build this using the scripts in the install-vault module.
   ami_id = "ami-abcd1234"

@@ -5,7 +5,7 @@ store. This allows you to establish TLS connections to services that use TLS cer
 x509 certificate errors. This script has been tested on the following operating systems:
 
 * Ubuntu 16.04
-* Amazon Linux
+* Amazon Linux 2
 
 There is a good chance it will work on other flavors of Debian, CentOS, and RHEL as well.
 

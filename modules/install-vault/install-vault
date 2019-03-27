@@ -3,7 +3,7 @@
 # operating systems:
 #
 # 1. Ubuntu 16.04
-# 2. Amazon Linux
+# 2. Amazon Linux 2
 
 set -e
 
@@ -15,16 +15,13 @@ readonly DOWNLOAD_PACKAGE_PATH="/tmp/vault.zip"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SYSTEM_BIN_DIR="/usr/local/bin"
 
-readonly SUPERVISOR_DIR="/etc/supervisor"
-readonly SUPERVISOR_CONF_DIR="$SUPERVISOR_DIR/conf.d"
-
 readonly SCRIPT_NAME="$(basename "$0")"
 
 function print_usage {
   echo
   echo "Usage: install-vault [OPTIONS]"
   echo
-  echo "This script can be used to install Vault and its dependencies. This script has been tested with Ubuntu 16.04 and Amazon Linux."
+  echo "This script can be used to install Vault and its dependencies. This script has been tested with Ubuntu 16.04 and Amazon Linux 2."
   echo
   echo "Options:"
   echo
@@ -108,59 +105,6 @@ function retry {
   exit $exit_status
 }
 
-# Install steps are based on: http://unix.stackexchange.com/a/291098/215969
-function install_supervisord_debian {
-  sudo apt-get install -y supervisor
-  sudo update-rc.d supervisor defaults
-
-  create_supervisor_config
-  sudo systemctl enable supervisor
-}
-
-
-function two_way_symlink() {
-  local src="$1"
-  local dest="$2"
-
-  if [[ ! -f "$dest" ]] && [[ ! -f "$src" ]]; then
-    echo "Missing source '$src' AND destination '$dest' exiting..."
-    exit -5
-  fi
-
-  if [[ ! -f "$dest" ]]; then
-    ## Destination isn't there point it to source
-    sudo ln -s $src  $dest
-  elif [[ ! -f "$src" ]]; then
-    ## Source file was missing, point to destination.  Should ONLY do so if it doesn't already exist (e.g. hadn't already been dual linked)
-    sudo ln -s $dest $src
-  fi
-
-
-}
-
-
-# Install steps are based on: http://stackoverflow.com/a/31576473/483528
-function install_supervisord_amazon_linux {
-  sudo pip install supervisor
-
-  # On Amazon Linux, /usr/local/bin is not in PATH for the root user, so we add symlinks to /usr/bin, which is in PATH
-  two_way_symlink "/usr/bin/supervisorctl" "/usr/local/bin/supervisorctl"
-  two_way_symlink "/usr/bin/supervisord" "/usr/local/bin/supervisord"
-
-  sudo cp "$SCRIPT_DIR/supervisor-initd-script.sh" "/etc/init.d/supervisor"
-  sudo chmod a+x /etc/init.d/supervisor
-  sudo mkdir -p /var/log/supervisor
-
-  create_supervisor_config
-  sudo chkconfig --add supervisor
-  sudo chkconfig supervisor on
-}
-
-function create_supervisor_config {
-  sudo mkdir -p "$SUPERVISOR_CONF_DIR"
-  sudo cp "$SCRIPT_DIR/supervisord.conf" "$SUPERVISOR_DIR/supervisord.conf"
-}
-
 function has_yum {
   [[ -n "$(command -v yum)" ]]
 }
@@ -175,11 +119,9 @@ function install_dependencies {
   if $(has_apt_get); then
     sudo apt-get update -y
     sudo apt-get install -y awscli curl unzip jq
-    install_supervisord_debian
   elif $(has_yum); then
     sudo yum update -y
     sudo yum install -y awscli curl unzip jq
-    install_supervisord_amazon_linux
   else
     log_error "Could not find apt-get or yum. Cannot install dependencies on this OS."
     exit 1

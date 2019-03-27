@@ -247,7 +247,7 @@ func initializeVault(t *testing.T, vaultCluster *VaultCluster) {
 func restartVault(t *testing.T, host ssh.Host) {
 	description := fmt.Sprintf("Restarting vault on host %s", host.Hostname)
 	retry.DoWithRetry(t, description, 10, 10*time.Second, func() (string, error) {
-		return ssh.CheckSshCommandE(t, host, "sudo supervisorctl restart vault")
+		return ssh.CheckSshCommandE(t, host, "sudo systemctl restart vault")
 	})
 }
 

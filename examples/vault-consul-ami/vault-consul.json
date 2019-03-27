@@ -32,17 +32,17 @@
     },
     "ssh_username": "ubuntu"
   },{
-    "ami_name": "vault-consul-amazon-linux-{{isotime | clean_ami_name}}-{{uuid}}",
-    "ami_description": "An Amazon Linux AMI that has Vault and Consul installed.",
+    "ami_name": "vault-consul-amazon-linux-2-{{isotime | clean_ami_name}}-{{uuid}}",
+    "ami_description": "An Amazon Linux 2 AMI that has Vault and Consul installed.",
     "instance_type": "t2.micro",
-    "name": "amazon-linux-ami",
+    "name": "amazon-linux-2-ami",
     "region": "{{user `aws_region`}}",
     "type": "amazon-ebs",
     "source_ami_filter": {
       "filters": {
         "virtualization-type": "hvm",
         "architecture": "x86_64",
-        "name": "*amzn-ami-hvm-*",
+        "name": "*amzn2-ami-hvm-*",
         "block-device-mapping.volume-type": "gp2",
         "root-device-type": "ebs"
       },
@@ -113,9 +113,9 @@
   },{
     "type": "shell",
     "inline": [
-      "sudo yum install -y git"
+      "sudo yum install -y git python2-pip"
     ],
-    "only": ["amazon-linux-ami"]
+    "only": ["amazon-linux-2-ami"]
   },{
     "type": "shell",
     "inline": [

@@ -4,7 +4,7 @@
 set -e
 
 readonly VAULT_CONFIG_FILE="default.hcl"
-readonly SUPERVISOR_CONFIG_PATH="/etc/supervisor/conf.d/run-vault.conf"
+readonly SYSTEMD_CONFIG_PATH="/etc/systemd/system/vault.service"
 
 readonly DEFAULT_PORT=8200
 readonly DEFAULT_LOG_LEVEL="info"
@@ -29,7 +29,6 @@ function print_usage {
   echo -e "  --api-addr\t\tThe full address to use for Client Redirection when running Vault in HA mode. Defaults to \"https://[instance_ip]:$DEFAULT_PORT\". Optional."
   echo -e "  --config-dir\t\tThe path to the Vault config folder. Optional. Default is the absolute path of '../config', relative to this script."
   echo -e "  --bin-dir\t\tThe path to the folder with Vault binary. Optional. Default is the absolute path of the parent folder of this script."
-  echo -e "  --log-dir\t\tThe path to the Vault log folder. Optional. Default is the absolute path of '../log', relative to this script."
   echo -e "  --log-level\t\tThe log verbosity to use with Vault. Optional. Default is $DEFAULT_LOG_LEVEL."
   echo -e "  --user\t\tThe user to run Vault as. Optional. Default is to use the owner of --config-dir."
   echo -e "  --skip-vault-config\tIf this flag is set, don't generate a Vault configuration file. Optional. Default is false."
@@ -226,32 +225,55 @@ EOF
   chown "$user:$user" "$config_path"
 }
 
-function generate_supervisor_config {
-  local -r supervisor_config_path="$1"
+function generate_systemd_config {
+  local -r systemd_config_path="$1"
   local -r vault_config_dir="$2"
   local -r vault_bin_dir="$3"
-  local -r vault_log_dir="$4"
-  local -r vault_log_level="$5"
-  local -r vault_user="$6"
+  local -r vault_log_level="$4"
+  local -r vault_user="$5"
+  local -r config_path="$config_dir/$VAULT_CONFIG_FILE"
 
-  log_info "Creating Supervisor config file to run Vault in $supervisor_config_path"
-  cat > "$supervisor_config_path" <<EOF
-[program:vault]
-command=$vault_bin_dir/vault server -config $vault_config_dir -log-level=$vault_log_level
-stdout_logfile=$vault_log_dir/vault-stdout.log
-stderr_logfile=$vault_log_dir/vault-error.log
-numprocs=1
-autostart=true
-autorestart=true
-stopsignal=INT
-user=$vault_user
+  log_info "Creating systemd config file to run Vault in $systemd_config_path"
+  cat > "$systemd_config_path" <<EOF
+[Unit]
+Description="HashiCorp Vault - A tool for managing secrets"
+Documentation=https://www.vaultproject.io/docs/
+Requires=network-online.target
+After=network-online.target
+ConditionFileNotEmpty=$config_path
+
+[Service]
+User=$vault_user
+Group=$vault_user
+ProtectSystem=full
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+SecureBits=keep-caps
+AmbientCapabilities=CAP_IPC_LOCK
+Capabilities=CAP_IPC_LOCK+ep
+CapabilityBoundingSet=CAP_SYSLOG CAP_IPC_LOCK
+NoNewPrivileges=yes
+ExecStart=$vault_bin_dir/vault server -config $vault_config_dir -log-level=$vault_log_level
+ExecReload=/bin/kill --signal HUP \$MAINPID
+KillMode=process
+KillSignal=SIGINT
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+StartLimitIntervalSec=60
+StartLimitBurst=3
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
 EOF
 }
 
 function start_vault {
-  log_info "Reloading Supervisor config and starting Vault"
-  supervisorctl reread
-  supervisorctl update
+  log_info "Reloading systemd config and starting Vault"
+  sudo systemctl daemon-reload
+  sudo systemctl restart vault.service
 }
 
 # Based on: http://unix.stackexchange.com/a/7732/215969
@@ -268,7 +290,6 @@ function run {
   local api_addr=""
   local config_dir=""
   local bin_dir=""
-  local log_dir=""
   local log_level="$DEFAULT_LOG_LEVEL"
   local user=""
   local skip_vault_config="false"
@@ -316,11 +337,6 @@ function run {
       --bin-dir)
         assert_not_empty "$key" "$2"
         bin_dir="$2"
-        shift
-        ;;
-      --log-dir)
-        assert_not_empty "$key" "$2"
-        log_dir="$2"
         shift
         ;;
       --log-level)
@@ -384,7 +400,7 @@ function run {
     assert_not_empty "--s3-bucket-region" "$s3_bucket_region"
   fi
 
-  assert_is_installed "supervisorctl"
+  assert_is_installed "systemctl"
   assert_is_installed "aws"
   assert_is_installed "curl"
   assert_is_installed "jq"
@@ -395,10 +411,6 @@ function run {
 
   if [[ -z "$bin_dir" ]]; then
     bin_dir=$(cd "$SCRIPT_DIR/../bin" && pwd)
-  fi
-
-  if [[ -z "$log_dir" ]]; then
-    log_dir=$(cd "$SCRIPT_DIR/../log" && pwd)
   fi
 
   if [[ -z "$user" ]]; then
@@ -439,7 +451,7 @@ function run {
       "$auto_unseal_endpoint"
   fi
 
-  generate_supervisor_config "$SUPERVISOR_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_dir" "$log_level" "$user"
+  generate_systemd_config "$SYSTEMD_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_level" "$user"
   start_vault
 }
 

@@ -4,7 +4,7 @@ This folder contains a script for configuring and running Vault on an [AWS](http
 script has been tested on the following operating systems:
 
 * Ubuntu 16.04
-* Amazon Linux
+* Amazon Linux 2
 
 There is a good chance it will work on other flavors of Debian, CentOS, and RHEL as well.
 
@@ -27,15 +27,15 @@ This will:
    See [Vault configuration](#vault-configuration) for details on what this configuration file will contain and how
    to override it with your own configuration.
 
-1. Generate a [Supervisor](http://supervisord.org/) configuration file called `run-vault.conf` in the Supervisor
-   config dir (default: `/etc/supervisor/conf.d`) with a command that will run Vault:
+1. Generate a [systemd](https://www.freedesktop.org/wiki/Software/systemd/) service file called `vault.service` in the systemd
+   config dir (default: `/etc/systemd/system`) with a command that will run Vault:
    `vault server -config=/opt/vault/config`.
 
-1. Tell Supervisor to load the new configuration file, thereby starting Vault.
+1. Tell systemd to load the new configuration file, thereby starting Vault.
 
 We recommend using the `run-vault` command as part of [User
 Data](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html#user-data-shell-scripts), so that it executes
-when the EC2 Instance is first booting. After running `run-vault` on that initial boot, the `supervisord` configuration
+when the EC2 Instance is first booting. After running `run-vault` on that initial boot, the `systemd` configuration
 will automatically restart Vault if it crashes or the EC2 instance reboots.
 
 See the [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) and

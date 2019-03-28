@@ -30,6 +30,8 @@ function print_usage {
   echo -e "  --config-dir\t\tThe path to the Vault config folder. Optional. Default is the absolute path of '../config', relative to this script."
   echo -e "  --bin-dir\t\tThe path to the folder with Vault binary. Optional. Default is the absolute path of the parent folder of this script."
   echo -e "  --log-level\t\tThe log verbosity to use with Vault. Optional. Default is $DEFAULT_LOG_LEVEL."
+  echo -e "  --systemd-stdout\t\tThe StandardOutput option of the systemd unit.  Optional.  If not configured, uses systemd's default (journal)."
+  echo -e "  --systemd-stderr\t\tThe StandardError option of the systemd unit.  Optional.  If not configured, uses systemd's default (inherit)."
   echo -e "  --user\t\tThe user to run Vault as. Optional. Default is to use the owner of --config-dir."
   echo -e "  --skip-vault-config\tIf this flag is set, don't generate a Vault configuration file. Optional. Default is false."
   echo -e "  --enable-s3-backend\tIf this flag is set, an S3 backend will be enabled in addition to the HA Consul backend. Default is false."
@@ -230,11 +232,14 @@ function generate_systemd_config {
   local -r vault_config_dir="$2"
   local -r vault_bin_dir="$3"
   local -r vault_log_level="$4"
-  local -r vault_user="$5"
+  local -r vault_systemd_stdout="$5"
+  local -r vault_systemd_stderr="$6"
+  local -r vault_user="$7"
   local -r config_path="$config_dir/$VAULT_CONFIG_FILE"
 
   log_info "Creating systemd config file to run Vault in $systemd_config_path"
-  cat > "$systemd_config_path" <<EOF
+
+  local -r unit_config=$(cat <<EOF
 [Unit]
 Description="HashiCorp Vault - A tool for managing secrets"
 Documentation=https://www.vaultproject.io/docs/
@@ -242,6 +247,10 @@ Requires=network-online.target
 After=network-online.target
 ConditionFileNotEmpty=$config_path
 
+EOF
+)
+
+  local -r service_config=$(cat <<EOF
 [Service]
 User=$vault_user
 Group=$vault_user
@@ -264,10 +273,27 @@ TimeoutStopSec=30
 StartLimitIntervalSec=60
 StartLimitBurst=3
 LimitNOFILE=65536
+EOF
+)
 
+  local log_config=""
+  if [[ ! -z $vault_systemd_stdout ]]; then
+    log_config+="StandardOutput=$vault_systemd_stdout\n"
+  fi
+  if [[ ! -z $vault_systemd_stderr ]]; then
+    log_config+="StandardError=$vault_systemd_stderr\n"
+  fi
+
+  local -r install_config=$(cat <<EOF
 [Install]
 WantedBy=multi-user.target
 EOF
+)
+
+  echo -e "$unit_config" > "$systemd_config_path"
+  echo -e "$service_config" >> "$systemd_config_path"
+  echo -e "$log_config" >> "$systemd_config_path"
+  echo -e "$install_config" >> "$systemd_config_path"
 }
 
 function start_vault {
@@ -291,6 +317,8 @@ function run {
   local config_dir=""
   local bin_dir=""
   local log_level="$DEFAULT_LOG_LEVEL"
+  local systemd_stdout=""
+  local systemd_stderr=""
   local user=""
   local skip_vault_config="false"
   local enable_s3_backend="false"
@@ -342,6 +370,16 @@ function run {
       --log-level)
         assert_not_empty "$key" "$2"
         log_level="$2"
+        shift
+        ;;
+      --systemd-stdout)
+        assert_not_empty "$key" "$2"
+        systemd_stdout="$2"
+        shift
+        ;;
+      --systemd-stderr)
+        assert_not_empty "$key" "$2"
+        systemd_stderr="$2"
         shift
         ;;
       --user)
@@ -409,6 +447,8 @@ function run {
     config_dir=$(cd "$SCRIPT_DIR/../config" && pwd)
   fi
 
+  # If $systemd_stdout and/or $systemd_stderr are empty, we leave them empty so that generate_systemd_config will use systemd's defaults (journal and inherit, respectively)
+
   if [[ -z "$bin_dir" ]]; then
     bin_dir=$(cd "$SCRIPT_DIR/../bin" && pwd)
   fi
@@ -451,7 +491,7 @@ function run {
       "$auto_unseal_endpoint"
   fi
 
-  generate_systemd_config "$SYSTEMD_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_level" "$user"
+  generate_systemd_config "$SYSTEMD_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_level" "$systemd_stdout" "$systemd_stderr" "$user"
   start_vault
 }
 

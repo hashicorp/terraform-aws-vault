@@ -153,7 +153,6 @@ function create_vault_install_paths {
   sudo mkdir -p "$path/bin"
   sudo mkdir -p "$path/config"
   sudo mkdir -p "$path/data"
-  sudo mkdir -p "$path/log"
   sudo mkdir -p "$path/tls"
   sudo mkdir -p "$path/scripts"
   sudo chmod 755 "$path"

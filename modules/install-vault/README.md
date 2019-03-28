@@ -104,6 +104,14 @@ After the `install-vault` script finishes running, you may wish to do the follow
    
 
 
+## Dependencies
+
+The install script assumes that `systemd` is already installed.  We use it as a cross-platform supervisor to ensure Vault is started
+whenever the system boots and restarted if the Vault process crashes.  Additionally, it is used to store all logs which can be accessed
+using `journalctl`.
+
+
+
 ## Why use Git to install this code?
 
 We needed an easy way to install these scripts that satisfied a number of requirements, including working on a variety 

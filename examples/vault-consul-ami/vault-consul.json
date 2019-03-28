@@ -87,7 +87,7 @@
 },{
     "type": "shell",
     "inline": [
-      "if [ '{{user `install_auth_signing_script`}}' = 'true' ]; then",
+      "if [[ '{{user `install_auth_signing_script`}}' == 'true' ]]; then",
       "sudo mv /tmp/sign-request.py /opt/vault/scripts/",
       "else",
       "sudo rm /tmp/sign-request.py",
@@ -104,7 +104,7 @@
     "type": "shell",
     "inline": [
       "sudo apt-get install -y git",
-      "if [ '{{user `install_auth_signing_script`}}' = 'true' ]; then",
+      "if [[ '{{user `install_auth_signing_script`}}' == 'true' ]]; then",
       "sudo apt-get install -y python-pip",
       "LC_ALL=C && sudo pip install boto3",
       "fi"
@@ -114,7 +114,7 @@
     "type": "shell",
     "inline": [
       "sudo yum install -y git",
-      "if [ '{{user `install_auth_signing_script`}}' = 'true' ]; then",
+      "if [[ '{{user `install_auth_signing_script`}}' == 'true' ]]; then",
       "sudo yum install -y python2-pip",
       "LC_ALL=C && sudo pip install boto3",
       "fi"

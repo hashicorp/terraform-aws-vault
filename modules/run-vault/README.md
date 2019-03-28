@@ -38,6 +38,12 @@ Data](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html#user-dat
 when the EC2 Instance is first booting. After running `run-vault` on that initial boot, the `systemd` configuration
 will automatically restart Vault if it crashes or the EC2 instance reboots.
 
+Note that `systemd` logs to its own journal by default.  To view the Vault logs, run `journalctl -u vault.service`.  To change
+the log output location, you can specify the `StandardOutput` and `StandardError` options by using the `--systemd-stdout` and `--systemd-stderr`
+options.  See the [`systemd.exec` man pages](https://www.freedesktop.org/software/systemd/man/systemd.exec.html#StandardOutput=) for available
+options, but note that the `file:path` option requires [systemd version >= 236](https://stackoverflow.com/a/48052152), which is not provided 
+in the base Ubuntu 16.04 and Amazon Linux 2 images.
+
 See the [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) and
 [vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) examples for fully-working sample code.
 
@@ -55,6 +61,8 @@ The `run-vault` script accepts the following arguments:
   encryption?](#how-do-you_handle-encryption) for more info.
 * `--port` (optional): The port Vault should listen on. Default is `8200`.
 * `--log-level` (optional): The log verbosity to use with Vault. Default is `info`.
+* `--systemd-stdout` (optional): The StandardOutput option of the systemd unit. If not specified, it will use systemd's default (journal).
+* `--systemd-stderr` (optional): The StandardError option of the systemd unit. If not specified, it will use systemd's default (inherit).
 * `--cluster-port` (optional): The port Vault should listen on for server-to-server communication. Default is
   `--port + 1`.
 * `--api-addr`: The full address to use for [Client Redirection](https://www.vaultproject.io/docs/concepts/ha.html#client-redirection) when running Vault in HA mode. Defaults to "https://[instance_ip]:8200". Optional.

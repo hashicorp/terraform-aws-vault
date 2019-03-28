@@ -113,7 +113,11 @@
   },{
     "type": "shell",
     "inline": [
-      "sudo yum install -y git python2-pip"
+      "sudo yum install -y git",
+      "if [ '{{user `install_auth_signing_script`}}' = 'true' ]; then",
+      "sudo yum install -y python2-pip",
+      "LC_ALL=C && sudo pip install boto3",
+      "fi"
     ],
     "only": ["amazon-linux-2-ami"]
   },{

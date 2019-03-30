@@ -41,8 +41,7 @@ const VAULT_CLUSTER_PUBLIC_OUTPUT_ELB_DNS_NAME = "vault_elb_dns_name"
 
 var UnsealKeyRegex = regexp.MustCompile("^Unseal Key \\d: (.+)$")
 
-const vaultStdOutLogFilePath = "/opt/vault/log/vault-stdout.log"
-const vaultStdErrLogFilePath = "/opt/vault/log/vault-error.log"
+const vaultLogFilePath = "/opt/vault/log/vault-journalctl.log"
 const vaultSyslogPathUbuntu = "/var/log/syslog"
 const vaultSyslogPathAmazonLinux = "/var/log/messages"
 const vaultClusterSizeInExamples = 3
@@ -124,6 +123,8 @@ func deployCluster(t *testing.T, amiId string, awsRegion string, examplesDir str
 }
 
 func getVaultLogs(t *testing.T, testId string, terraformOptions *terraform.Options, amiId string, awsRegion string, sshUserName string, keyPair *aws.Ec2Keypair) {
+	writeOutVaultLogs(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
+
 	asgName := terraform.OutputRequired(t, terraformOptions, OUTPUT_VAULT_CLUSTER_ASG_NAME)
 
 	sysLogPath := vaultSyslogPathUbuntu
@@ -131,13 +132,12 @@ func getVaultLogs(t *testing.T, testId string, terraformOptions *terraform.Optio
 		sysLogPath = vaultSyslogPathAmazonLinux
 	}
 
-	instanceIdToFilePathToContents := aws.FetchContentsOfFilesFromAsg(t, awsRegion, sshUserName, keyPair, asgName, true, vaultStdOutLogFilePath, vaultStdErrLogFilePath, sysLogPath)
+	instanceIdToFilePathToContents := aws.FetchContentsOfFilesFromAsg(t, awsRegion, sshUserName, keyPair, asgName, true, vaultLogFilePath, sysLogPath)
 
 	require.Len(t, instanceIdToFilePathToContents, vaultClusterSizeInExamples)
 
 	for instanceID, filePathToContents := range instanceIdToFilePathToContents {
-		require.Contains(t, filePathToContents, vaultStdOutLogFilePath)
-		require.Contains(t, filePathToContents, vaultStdErrLogFilePath)
+		require.Contains(t, filePathToContents, vaultLogFilePath)
 		require.Contains(t, filePathToContents, sysLogPath)
 
 		localDestDir := filepath.Join("/tmp/logs/", testId, amiId, instanceID)
@@ -145,10 +145,22 @@ func getVaultLogs(t *testing.T, testId string, terraformOptions *terraform.Optio
 			os.MkdirAll(localDestDir, 0755)
 		}
 
-		writeLogFile(t, filePathToContents[vaultStdOutLogFilePath], filepath.Join(localDestDir, "vaultStdOut.log"))
-		writeLogFile(t, filePathToContents[vaultStdErrLogFilePath], filepath.Join(localDestDir, "vaultStdErr.log"))
+		writeLogFile(t, filePathToContents[vaultLogFilePath], filepath.Join(localDestDir, "vault-journalctl.log"))
 		writeLogFile(t, filePathToContents[sysLogPath], filepath.Join(localDestDir, "syslog.log"))
 	}
+}
+
+// Write out the Vault logs from journalctl into a file.  This is mainly used for debugging purposes.
+func writeOutVaultLogs(t *testing.T, asgNameOutputVar string, sshUserName string, terraformOptions *terraform.Options, awsRegion string, keyPair *aws.Ec2Keypair) {
+	cluster := findVaultClusterNodes(t, asgNameOutputVar, sshUserName, terraformOptions, awsRegion, keyPair)
+
+	for _, node := range cluster.Nodes() {
+		output := retry.DoWithRetry(t, "Writing out Vault logs from journalctl to file", 1, 10*time.Second, func() (string, error) {
+			return ssh.CheckSshCommandE(t, node, fmt.Sprintf("sudo -u vault mkdir -p /opt/vault/log && journalctl -u vault.service | sudo -u vault tee %s > /dev/null", vaultLogFilePath))
+		})
+		logger.Logf(t, "Output from journalctl command on %s: %s", node.Hostname, output)
+	}
+
 }
 
 // Initialize the Vault cluster and unseal each of the nodes by connecting to them over SSH and executing Vault

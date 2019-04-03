@@ -340,7 +340,7 @@ NOT actually deploy those new instances. To make that happen, you need to:
 For each of the standby nodes:
 
 1. SSH to the EC2 Instance where the Vault standby is running.
-1. Execute `sudo supervisorctl stop vault` to have Vault shut down gracefully.
+1. Execute `sudo systemctl stop vault` to have Vault shut down gracefully.
 1. Terminate the EC2 Instance.
 1. After a minute or two, the ASG should automatically launch a new Instance, with the new AMI, to replace the old one.
 1. Have each Vault admin SSH to the new EC2 Instance and unseal it.
@@ -353,7 +353,7 @@ upgraded:
 
 1. SSH to the EC2 Instance where the Vault primary is running. This should be the last server that has the old version
    of your AMI.
-1. Execute `sudo supervisorctl stop vault` to have Vault shut down gracefully.
+1. Execute `sudo systemctl stop vault` to have Vault shut down gracefully.
 1. Terminate the EC2 Instance.
 1. After a minute or two, the ASG should automatically launch a new Instance, with the new AMI, to replace the old one.
 1. Have each Vault admin SSH to the new EC2 Instance and unseal it.
@@ -366,7 +366,7 @@ upgraded:
 
 There are two ways a Vault node may go down:
  
-1. The Vault process may crash. In that case, `supervisor` should restart it automatically. At this point, you will
+1. The Vault process may crash. In that case, `systemd` should restart it automatically. At this point, you will
    need to have each Vault admin SSH to the Instance to unseal it again.
 1. The EC2 Instance running Vault dies. In that case, the Auto Scaling Group should launch a replacement automatically. 
    Once again, the Vault admins will have to SSH to the replacement Instance and unseal it.

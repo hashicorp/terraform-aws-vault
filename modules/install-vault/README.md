@@ -8,7 +8,7 @@ This folder contains a script for installing Vault and its dependencies. You can
 This script has been tested on the following operating systems:
 
 * Ubuntu 16.04
-* Amazon Linux
+* Amazon Linux 2
 
 There is a good chance it will work on other flavors of Debian, CentOS, and RHEL as well.
 
@@ -61,7 +61,6 @@ The `install-vault` script does the following:
 1. [Creates a user and folders for Vault](#create-a-user-and-folders-for-vault)
 1. [Installs Vault binaries and scripts](#install-vault-binaries-and-scripts)
 1. [Configures mlock](#configure-mlock)
-1. [Installs supervisord](#install-supervisord)
 1. [Follow-up tasks](#follow-up-tasks)
 
 
@@ -94,12 +93,6 @@ Gives Vault permissions to make the `mlock` (memory lock) syscall. This syscall 
 Vault's memory to disk. For more info, see: https://www.vaultproject.io/docs/configuration/#disable_mlock.
 
 
-### Installs supervisord
-
-Installs [supervisord](http://supervisord.org/). We use it as a cross-platform supervisor to ensure Vault is started
-whenever the system boots and restarted if the Vault process crashes.
-
-
 ### Follow-up tasks
 
 After the `install-vault` script finishes running, you may wish to do the following:
@@ -109,6 +102,14 @@ After the `install-vault` script finishes running, you may wish to do the follow
 1. If `/usr/local/bin` isn't already part of `PATH`, you should add it so you can run the `vault` command without
    specifying the full path.
    
+
+
+## Dependencies
+
+The install script assumes that `systemd` is already installed.  We use it as a cross-platform supervisor to ensure Vault is started
+whenever the system boots and restarted if the Vault process crashes.  Additionally, it is used to store all logs which can be accessed
+using `journalctl`.
+
 
 
 ## Why use Git to install this code?

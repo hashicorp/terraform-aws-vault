@@ -26,9 +26,9 @@ type amiData struct {
 
 var amisData = []amiData{
 	{"vaultEnterpriseUbuntu", "ubuntu16-ami", "ubuntu", true},
-	{"vaultEnterpriseAmazonLinux", "amazon-linux-ami", "ec2-user", true},
+	{"vaultEnterpriseAmazonLinux", "amazon-linux-2-ami", "ec2-user", true},
 	{"vaultUbuntu", "ubuntu16-ami", "ubuntu", false},
-	{"vaultAmazonLinux", "amazon-linux-ami", "ec2-user", false},
+	{"vaultAmazonLinux", "amazon-linux-2-ami", "ec2-user", false},
 }
 
 var testCases = []testCase{

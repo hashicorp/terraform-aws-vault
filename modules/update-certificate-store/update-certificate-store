@@ -4,7 +4,7 @@
 # This script has been tested with the following operating systems:
 #
 # 1. Ubuntu 16.04
-# 2. Amazon Linux
+# 2. Amazon Linux 2
 
 set -e
 
@@ -19,7 +19,7 @@ function print_usage {
   echo
   echo "Usage: update-certificate-store [OPTIONS]"
   echo
-  echo "Add a trusted, private CA certificate to an OS's certificate store. This script has been tested with Ubuntu 16.04 and Amazon Linux."
+  echo "Add a trusted, private CA certificate to an OS's certificate store. This script has been tested with Ubuntu 16.04 and Amazon Linux 2."
   echo
   echo "Options:"
   echo

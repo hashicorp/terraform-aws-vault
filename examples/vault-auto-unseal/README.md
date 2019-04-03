@@ -49,7 +49,7 @@ even if you immediately delete it.
 1. Ssh to an instance in the vault cluster and run `vault operator init` to initialize
   the cluster, then `vault status` to check that it is unsealed. If you ssh to a
   different node in the cluster, you might have to restart Vault first with
-  `sudo supervisorctl restart vault` so it will rejoin the cluster and unseal.
+  `sudo systemctl restart vault.service` so it will rejoin the cluster and unseal.
   To avoid doing that, you can start your cluster with initially just one node and
   start the server, then change the `vault_cluster_size` variable back to 3 and and
   run `terraform apply again`. The new nodes will join the cluster already unsealed

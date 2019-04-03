@@ -7,7 +7,7 @@ from the Consul AWS Module with [Packer](https://www.packer.io/) to create [Amaz
 (AMIs)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) that have Vault and Consul installed on top of:
  
 1. Ubuntu 16.04
-1. Amazon Linux
+1. Amazon Linux 2
 
 You can use this AMI to deploy a [Vault cluster](https://www.vaultproject.io/) by using the [vault-cluster
 module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster). This Vault cluster will use Consul as its storage backend, so you can also use the 

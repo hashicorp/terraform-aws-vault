@@ -32,17 +32,17 @@
     },
     "ssh_username": "ubuntu"
   },{
-    "ami_name": "vault-consul-amazon-linux-{{isotime | clean_ami_name}}-{{uuid}}",
-    "ami_description": "An Amazon Linux AMI that has Vault and Consul installed.",
+    "ami_name": "vault-consul-amazon-linux-2-{{isotime | clean_ami_name}}-{{uuid}}",
+    "ami_description": "An Amazon Linux 2 AMI that has Vault and Consul installed.",
     "instance_type": "t2.micro",
-    "name": "amazon-linux-ami",
+    "name": "amazon-linux-2-ami",
     "region": "{{user `aws_region`}}",
     "type": "amazon-ebs",
     "source_ami_filter": {
       "filters": {
         "virtualization-type": "hvm",
         "architecture": "x86_64",
-        "name": "*amzn-ami-hvm-*",
+        "name": "*amzn2-ami-hvm-*",
         "block-device-mapping.volume-type": "gp2",
         "root-device-type": "ebs"
       },
@@ -87,7 +87,7 @@
 },{
     "type": "shell",
     "inline": [
-      "if [ '{{user `install_auth_signing_script`}}' = 'true' ]; then",
+      "if [[ '{{user `install_auth_signing_script`}}' == 'true' ]]; then",
       "sudo mv /tmp/sign-request.py /opt/vault/scripts/",
       "else",
       "sudo rm /tmp/sign-request.py",
@@ -99,23 +99,29 @@
       "sudo chmod -R 600 /opt/vault/tls",
       "sudo chmod 700 /opt/vault/tls",
       "sudo /tmp/terraform-aws-vault/modules/update-certificate-store/update-certificate-store --cert-file-path /opt/vault/tls/ca.crt.pem"
-    ]
+    ],
+    "inline_shebang": "/bin/bash -e"
   },{
     "type": "shell",
     "inline": [
       "sudo apt-get install -y git",
-      "if [ '{{user `install_auth_signing_script`}}' = 'true' ]; then",
+      "if [[ '{{user `install_auth_signing_script`}}' == 'true' ]]; then",
       "sudo apt-get install -y python-pip",
       "LC_ALL=C && sudo pip install boto3",
       "fi"
     ],
+    "inline_shebang": "/bin/bash -e",
     "only": ["ubuntu16-ami"]
   },{
     "type": "shell",
     "inline": [
-      "sudo yum install -y git"
+      "sudo yum install -y git",
+      "if [[ '{{user `install_auth_signing_script`}}' == 'true' ]]; then",
+      "sudo yum install -y python2-pip",
+      "LC_ALL=C && sudo pip install boto3",
+      "fi"
     ],
-    "only": ["amazon-linux-ami"]
+    "only": ["amazon-linux-2-ami"]
   },{
     "type": "shell",
     "inline": [

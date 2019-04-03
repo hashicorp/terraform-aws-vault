@@ -59,7 +59,7 @@ To deploy the Vault cluster:
    
    If you are just experimenting with this Module, you may find it more convenient to use one of our official public AMIs:
    - [Latest Ubuntu 16 AMIs](https://github.com/hashicorp/terraform-aws-vault/tree/master/_docs/ubuntu16-ami-list.md).
-   - [Latest Amazon Linux AMIs](https://github.com/hashicorp/terraform-aws-vault/tree/master/_docs/amazon-linux-ami-list.md).
+   - [Latest Amazon Linux 2 AMIs](https://github.com/hashicorp/terraform-aws-vault/tree/master/_docs/amazon-linux-ami-list.md).
    
    **WARNING! Do NOT use these AMIs in your production setup. In production, you should build your own AMIs in your 
      own AWS account.**

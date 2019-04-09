@@ -31,7 +31,7 @@ We recommend running the `install-vault` script as part of a [Packer](https://ww
 Vault [Amazon Machine Image (AMI)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) (see the 
 [vault-consul-ami example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-consul-ami) for sample code). You can then deploy the AMI across an Auto 
 Scaling Group using the [vault-cluster module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster) (see the 
-[vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) and [vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) 
+[root example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example) and [vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) 
 examples for fully-working sample code).
 
 

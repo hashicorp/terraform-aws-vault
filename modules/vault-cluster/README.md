@@ -68,7 +68,7 @@ Note the following parameters:
 
 You can find the other parameters in [vars.tf](vars.tf).
 
-Check out the [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) and 
+Check out the [root example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example) and 
 [vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) examples for working sample code.
 
 
@@ -78,7 +78,7 @@ Check out the [vault-cluster-public](https://github.com/hashicorp/terraform-aws-
 ## How do you use the Vault cluster?
 
 To use the Vault cluster, you will typically need to SSH to each of the Vault servers. If you deployed the
-[vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) or [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) 
+[vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) or [the root example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example) 
 examples, the [vault-examples-helper.sh script](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-examples-helper/vault-examples-helper.sh) will do the 
 tag lookup for you automatically (note, you must have the [AWS CLI](https://aws.amazon.com/cli/) and 
 [jq](https://stedolan.github.io/jq/) installed locally):
@@ -463,7 +463,7 @@ same cluster because:
    your memory consumption on each server.
 
 Check out the [Consul AWS Module](https://github.com/hashicorp/terraform-aws-consul) for how to deploy a Consul 
-server cluster in AWS. See the [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) and 
+server cluster in AWS. See the [root example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example) and 
 [vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) examples for sample code that shows how to run both a
 Vault server cluster and Consul server cluster.
 

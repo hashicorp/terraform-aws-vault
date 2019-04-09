@@ -141,7 +141,7 @@ Now that you have the unseal keys, you can [unseal Vault](https://www.vaultproje
 having 3 out of the 5 administrators (or whatever your key shard threshold is) do the following:
 
 1. SSH to a Vault server.
-1. Run `vault unseal`.
+1. Run `vault operator unseal`.
 1. Enter the unseal key when prompted.
 1. Repeat for each of the other Vault servers.
 

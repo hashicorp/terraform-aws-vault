@@ -198,7 +198,7 @@ function print_instructions {
   instructions+=("\nTo unseal your Vault cluster, SSH to each of the servers and run the unseal command with 3 of the 5 unseal keys:\n")
   for server_ip in "${server_ips[@]}"; do
     instructions+=("    ssh -i $ssh_key_name ubuntu@$server_ip")
-    instructions+=("    vault unseal (run this 3 times)\n")
+    instructions+=("    vault operator unseal (run this 3 times)\n")
   done
 
   local vault_elb_domain_name
@@ -210,12 +210,12 @@ function print_instructions {
   if [[ -z "$vault_elb_domain_name" ]]; then
     instructions+=("\nOnce your cluster is unsealed, you can read and write secrets by SSHing to any of the servers:\n")
     instructions+=("    ssh -i $ssh_key_name ubuntu@$server_ip")
-    instructions+=("    vault auth")
+    instructions+=("    vault login")
     instructions+=("    vault write secret/example value=secret")
     instructions+=("    vault read secret/example")
   else
     instructions+=("\nOnce your cluster is unsealed, you can read and write secrets via the ELB:\n")
-    instructions+=("    vault auth -address=https://$vault_elb_domain_name")
+    instructions+=("    vault login -address=https://$vault_elb_domain_name")
     instructions+=("    vault write -address=https://$vault_elb_domain_name secret/example value=secret")
     instructions+=("    vault read -address=https://$vault_elb_domain_name secret/example")
   fi

@@ -15,7 +15,7 @@ same AMI to deploy a separate [Consul server cluster](https://www.consul.io/) by
 module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/consul-cluster). 
 
 Check out the [vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) and 
-[vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) examples for working sample code. For more info on Vault 
+[the root example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example) examples for working sample code. For more info on Vault 
 installation and configuration, check out the [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault) documentation.
 
 
@@ -35,8 +35,8 @@ To build the Vault and Consul AMI:
 1. Use the [private-tls-cert module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/private-tls-cert) to generate a CA cert and public and private keys for a
    TLS cert:
 
-    1. Set the `dns_names` parameter to `vault.service.consul`. If you're using the [vault-cluster-public
-       example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) and want a public domain name (e.g. `vault.example.com`), add that
+    1. Set the `dns_names` parameter to `vault.service.consul`. If you're using the [root
+       example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example) and want a public domain name (e.g. `vault.example.com`), add that
        domain name here too.
     1. Set the `ip_addresses` to `127.0.0.1`.
     1. For production usage, you should take care to protect the private key by encrypting it (see [Using TLS
@@ -50,8 +50,13 @@ To build the Vault and Consul AMI:
 1. Run `packer build vault-consul.json`.
 
 When the build finishes, it will output the IDs of the new AMIs. To see how to deploy one of these AMIs, check out the
-[vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) and [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public)
+[vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) and [the root example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example)
 examples.
+
+**NOTE**: This packer template will build two versions of the AMI - an Ubuntu version and Amazon Linux 2 version. You
+can restrict packer to only build one of them by using the `only` CLI arg. For example, to only build the Amazon Linux 2
+AMI, run `packer build -only amazon-linux-2-ami vault-consul.json`. You can use the parameter `ubuntu16-ami` for the
+ubuntu AMI.
 
 
 

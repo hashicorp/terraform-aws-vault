@@ -48,7 +48,7 @@ Note the following parameters:
 
 You can find the other parameters in [vars.tf](vars.tf).
 
-Check out the [vault-cluster-public example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) for working sample code.
+Check out the [root example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example) for working sample code.
 
 
 

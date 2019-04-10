@@ -39,8 +39,8 @@ of the Vault nodes.
    instructions. Make sure the `install_auth_signing_script` variable is `true`.
    Make sure to note down the ID of the AMI.
 1. Install [Terraform](https://www.terraform.io/).
-1. Open `vars.tf`, set the environment variables specified at the top of the file, and fill in any other variables that
-   don't have a default. Put the AMI ID you previously took note into the `ami_id` variable.
+1. Open `variables.tf`, set the environment variables specified at the top of the file, and fill in any other variables
+   that don't have a default. Put the AMI ID you previously took note into the `ami_id` variable.
 1. Run `terraform init`.
 1. Run `terraform apply`.
 1. Run the [vault-examples-helper.sh script][examples_helper] to

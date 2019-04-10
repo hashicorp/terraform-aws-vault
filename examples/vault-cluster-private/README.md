@@ -15,7 +15,7 @@ Each of the servers in this example has [Dnsmasq](http://www.thekelleys.org.uk/d
 [install-dnsmasq module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq)) 
 which allows it to use the Consul server cluster for service discovery and thereby access Vault via DNS using the 
 domain name `vault.service.consul`. For an example of a Vault cluster
-that is publicly accessible, see [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public).
+that is publicly accessible, see [the root example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example).
 
 ![Vault architecture](https://github.com/hashicorp/terraform-aws-vault/blob/master/_docs/architecture.png?raw=true)
 

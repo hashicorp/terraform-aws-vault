@@ -44,7 +44,7 @@ options.  See the [`systemd.exec` man pages](https://www.freedesktop.org/softwar
 options, but note that the `file:path` option requires [systemd version >= 236](https://stackoverflow.com/a/48052152), which is not provided 
 in the base Ubuntu 16.04 and Amazon Linux 2 images.
 
-See the [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) and
+See the [root example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example) and
 [vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) examples for fully-working sample code.
 
 

@@ -76,8 +76,10 @@ Before we try to authenticate, we must be sure that the Vault Server is configur
 properly and prepared to receive requests. First, we must make sure the Vault server
 has been initialized (using `vault operator init`) and unsealed (using `vault operator unseal`).
 Next, we must enable Vault to support the AWS auth method (using `vault auth enable aws`).
-Finally, we must define the correct Vault Policies and Roles to declare which IAM
-Principals will have access to which resources in Vault.
+After that, we enable the Vault kv secrets engine at the path `secret` (note that this engine
+was enabled by default in previous versions < 1.1.0).  Finally, we must define the correct
+Vault Policies and Roles to declare which IAM Principals will have access to which resources
+in Vault.
 
 [Policies][policies_doc] are rules that grant or forbid access and actions to certain paths in
 Vault. With one or more policies on hand, you can then finally create the authentication role.

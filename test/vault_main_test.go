@@ -67,6 +67,11 @@ var testCases = []testCase{
 		runVaultPublicClusterTest,
 		false,
 	},
+	{
+		"TestVaultAgent",
+		runVaultAgentTest,
+		false,
+	},
 }
 
 func TestMainVaultCluster(t *testing.T) {

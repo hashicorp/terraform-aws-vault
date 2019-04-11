@@ -118,7 +118,7 @@ this data is known by Vault, so you **MUST** save it in a secure place immediate
 the unseal keys should ever be so close together. You should distribute each one to a different, trusted administrator
 for safe keeping in completely separate secret stores and NEVER store them all in the same place. 
 
-In fact, a better option is to initial Vault with [PGP, GPG, or 
+In fact, a better option is to initialize Vault with [PGP, GPG, or
 Keybase](https://www.vaultproject.io/docs/concepts/pgp-gpg-keybase.html) so that each unseal key is encrypted with a
 different user's public key. That way, no one, not even the operator running the `init` command can see all the keys
 in one place:
@@ -147,6 +147,16 @@ having 3 out of the 5 administrators (or whatever your key shard threshold is) d
 
 Once this process is complete, all the Vault servers will be unsealed and you will be able to start reading and writing
 secrets.
+
+
+### Setting up a secrets engine
+
+In previous versions of Vault (< 1.1.0), a key-value secrets engine was automatically mounted at the path `secret/`.  This
+module.  The examples in this module use versions >= 1.1.0 and thus mount a key-value secrets engine at `secret/` explicitly.
+
+```
+vault secrets enable -version=1 -path=secret kv
+```
 
 
 ### Connecting to the Vault cluster to read and write secrets

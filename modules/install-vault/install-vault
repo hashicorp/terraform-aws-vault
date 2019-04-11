@@ -157,6 +157,7 @@ function create_vault_install_paths {
   sudo mkdir -p "$path/scripts"
   sudo chmod 755 "$path"
   sudo chmod 755 "$path/bin"
+  sudo chmod 755 "$path/data"
 
   log_info "Changing ownership of $path to $username"
   sudo chown -R "$username:$username" "$path"

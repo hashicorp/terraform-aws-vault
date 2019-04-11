@@ -95,6 +95,11 @@ retry \
   "/opt/vault/bin/vault auth enable aws" \
   "Trying to enable aws auth"
 
+# Enable the kv secrets engine at path `secret`, since we are using Vault version >= 1.1.0
+retry \
+  "/opt/vault/bin/vault secrets enable -version=1 -path=secret kv" \
+  "Trying to enable key-value secrets engine"
+
 # Creates a policy that allows writing and reading from an "example_" prefix at "secret" backend
 /opt/vault/bin/vault policy write "example-policy" -<<EOF
 path "secret/example_*" {

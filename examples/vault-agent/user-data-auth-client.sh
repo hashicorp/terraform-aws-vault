@@ -52,8 +52,9 @@ function retry {
 # Start the Vault agent
 /opt/vault/bin/run-vault --agent --agent-auth-type iam --agent-auth-role "${example_role_name}"
 
-# Retry in case the Vault server is still booting and unsealing
-# Or in case run-consul running on the background didn't finish yet
+# Retry and wait for the Vault Agent to write the token out to a file.  This could be
+# because the Vault server is still booting and unsealing, or because run-consul
+# running on the background didn't finish yet
 retry \
   "[[ -s /opt/vault/data/vault-token ]] && echo 'vault token file created'" \
   "waiting for Vault agent to write out token to sink"

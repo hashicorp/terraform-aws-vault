@@ -326,11 +326,11 @@ function generate_systemd_config {
 
   local vault_description="HashiCorp Vault - A tool for managing secrets"
   local vault_command="server"
-  local vault_config_file_or_dir=$vault_config_dir  # Vault agent requires single file, but server can accept config dir.
+  local vault_config_file_or_dir="$vault_config_dir"  # Vault agent requires single file, but server can accept config dir.
   if [[ "$is_vault_agent" == "true" ]]; then
     vault_command="agent"
     vault_description="HashiCorp Vault Agent"
-    vault_config_file_or_dir=$config_path
+    vault_config_file_or_dir="$config_path"
   fi
 
   log_info "Creating systemd config file to run Vault in $systemd_config_path"

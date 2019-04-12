@@ -7,7 +7,9 @@ and thus you do not have to implement potentially complicated renewal logic your
 This example uses the [AWS IAM Auth Method][iam_auth] to authenticate, and builds upon the [`IAM` auth
 example][iam_example], creating the same Vault `example-role`.  The difference between that and this
 example is instead of using curl to access the Vault API to authenticate, this example uses
-Vault agent to authenticate.
+Vault agent to authenticate.  The authentication token is written to a file under the Vault agent
+install directory (by default, `/opt/vault/data/vault-token`), which only the `vault` user has access
+to after installation.
 
 **Note**: To keep this example as simple to deploy and test as possible and because we are
 focusing on authentication, it deploys the Vault cluster into your default VPC and default subnets,

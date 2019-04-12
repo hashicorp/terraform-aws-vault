@@ -2,9 +2,10 @@
 # This script is meant to be run in the User Data of each EC2 Instance while it's booting. The script uses the
 # run-consul script to configure and start Consul in client mode. Note that this script assumes it's running in an AMI
 # built from the Packer template in examples/vault-consul-ami/vault-consul.json.
-# It then uses a python script to create a signed request to the AWS STS API and sends this encrypted request
-# to the Vault server when authenticating. After login, it reads a secret and exposes it in a simple web server for
-# test purposes.
+# It then uses Vault agent to automatically authenticate to the Vault server. After login, Vault agent writes the
+# authentication token to a file location, which you can use for your applications.  Note that by default, only the `vault`
+# user has access to the file, so you may need to grant the appropriate permissions to your application.
+# Finally, this script reads a secret and exposes it in a simple web server for test purposes.
 
 set -e
 

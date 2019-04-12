@@ -120,7 +120,7 @@ EOF
   auth/aws/role/${example_role_name}\
   auth_type=iam \
   policies=example-policy \
-  max_ttl=500h \
+  max_ttl=24h \
   bound_iam_principal_arn=${aws_iam_role_arn}
 
 # ==========================================================================

@@ -4,7 +4,12 @@
 set -e
 
 readonly VAULT_CONFIG_FILE="default.hcl"
+readonly VAULT_PID_FILE="vault-pid"
+readonly VAULT_TOKEN_FILE="vault-token"
 readonly SYSTEMD_CONFIG_PATH="/etc/systemd/system/vault.service"
+
+readonly DEFAULT_AGENT_VAULT_ADDRESS="vault.service.consul"
+readonly DEFAULT_AGENT_AUTH_MOUNT_PATH="auth/aws"
 
 readonly DEFAULT_PORT=8200
 readonly DEFAULT_LOG_LEVEL="info"
@@ -37,6 +42,18 @@ function print_usage {
   echo -e "  --enable-s3-backend\tIf this flag is set, an S3 backend will be enabled in addition to the HA Consul backend. Default is false."
   echo -e "  --s3-bucket\tSpecifies the S3 bucket to use to store Vault data. Only used if '--enable-s3-backend' is set."
   echo -e "  --s3-bucket-region\tSpecifies the AWS region where '--s3-bucket' lives. Only used if '--enable-s3-backend' is set."
+  echo
+  echo "Options for Vault Agent:"
+  echo
+  echo -e "  --agent\t\t\tIf set, run in Vault Agent mode.  If not set, run as a regular Vault server.  Optional."
+  echo -e "  --agent-vault-address\t\tThe hostname or IP address of the Vault server to connect to.  Optional. Default is $DEFAULT_AGENT_VAULT_ADDRESS"
+  echo -e "  --agent-vault-port\t\tThe port of the Vault server to connect to.  Optional. Default is $DEFAULT_PORT"
+  echo -e "  --agent-ca-cert-file\t\tSpecifies the path to a CA certificate to verify the Vault server's TLS certificate.  Optional."
+  echo -e "  --agent-client-cert-file\tSpecifies the path to a certificate to use for TLS authentication to the Vault server.  Optional."
+  echo -e "  --agent-client-key-file\tSpecifies the path to the private key for the client certificate used for TLS authentication to the Vault server.  Optional."
+  echo -e "  --agent-auth-mount-path\tThe Vault mount path to the auth method used for auto-auth.  Optional.  Defaults to $DEFAULT_AGENT_AUTH_MOUNT_PATH"
+  echo -e "  --agent-auth-type\t\tThe Vault AWS auth type to use for auto-auth.  Required.  Must be either iam or ec2"
+  echo -e "  --agent-auth-role\t\tThe Vault role to authenticate against.  Required."
   echo
   echo "Optional Arguments for enabling the AWS KMS seal (Vault Enterprise or 1.0 and above):"
   echo
@@ -132,6 +149,75 @@ function vault_version_at_least {
     else
       log_info "Vault 0.10.0 or greater is required for UI support."
   fi
+}
+
+function generate_vault_agent_config {
+  local -r config_dir="$1"
+  local -r data_dir="$2"
+  local -r vault_address="$3"
+  local -r vault_port="$4"
+  local -r ca_cert_file="$5"
+  local -r client_cert_file="$6"
+  local -r client_key_file="$7"
+  local -r auth_mount_path="$8"
+  local -r auth_type="$9"
+  local -r auth_role="${10}"
+
+  local -r config_path="$config_dir/$VAULT_CONFIG_FILE"
+
+  log_info "Creating default Vault Agent config file in $config_path"
+
+  local -r pid_config="pid_file   = \"$data_dir/$VAULT_PID_FILE\""
+
+  local ca_cert_config=""
+  if [[ ! -z $ca_cert_file ]]; then
+   ca_cert_config=$(cat <<EOF
+  ca_cert = "$ca_cert_file"\n
+EOF
+)
+  fi
+
+  local client_cert_config=""
+  if [[ ! -z $client_cert_file ]] && [[ ! -z $client_key_file ]]; then
+   client_cert_config=$(cat <<EOF
+  client_cert = "$client_cert_file"
+  client_key = "$client_key_file"\n
+EOF
+)
+  fi
+
+  local -r vault_config=$(cat <<EOF
+vault {
+  address = "https://$vault_address:$vault_port"
+$ca_cert_config
+$client_cert_config
+}\n
+EOF
+)
+
+  local -r auto_auth_config=$(cat <<EOF
+auto_auth {
+  method "aws" {
+    mount_path = "$auth_mount_path"
+    config = {
+      type = "$auth_type"
+      role = "$auth_role"
+    }
+  }
+
+  sink "file" {
+    config = {
+      path = "$data_dir/$VAULT_TOKEN_FILE"
+    }
+  }
+}\n
+EOF
+)
+  echo -e "$pid_config" > "$config_path"
+  echo -e "$vault_config" >> "$config_path"
+  echo -e "$auto_auth_config" >> "$config_path"
+
+  chown "$user:$user" "$config_path"
 }
 
 function generate_vault_config {
@@ -235,13 +321,23 @@ function generate_systemd_config {
   local -r vault_systemd_stdout="$5"
   local -r vault_systemd_stderr="$6"
   local -r vault_user="$7"
+  local -r is_vault_agent="$8"
   local -r config_path="$config_dir/$VAULT_CONFIG_FILE"
+
+  local vault_description="HashiCorp Vault - A tool for managing secrets"
+  local vault_command="server"
+  local vault_config_file_or_dir="$vault_config_dir"  # Vault agent requires single file, but server can accept config dir.
+  if [[ "$is_vault_agent" == "true" ]]; then
+    vault_command="agent"
+    vault_description="HashiCorp Vault Agent"
+    vault_config_file_or_dir="$config_path"
+  fi
 
   log_info "Creating systemd config file to run Vault in $systemd_config_path"
 
   local -r unit_config=$(cat <<EOF
 [Unit]
-Description="HashiCorp Vault - A tool for managing secrets"
+Description=\"$vault_description\"
 Documentation=https://www.vaultproject.io/docs/
 Requires=network-online.target
 After=network-online.target
@@ -263,7 +359,7 @@ AmbientCapabilities=CAP_IPC_LOCK
 Capabilities=CAP_IPC_LOCK+ep
 CapabilityBoundingSet=CAP_SYSLOG CAP_IPC_LOCK
 NoNewPrivileges=yes
-ExecStart=$vault_bin_dir/vault server -config $vault_config_dir -log-level=$vault_log_level
+ExecStart=$vault_bin_dir/vault $vault_command -config $vault_config_file_or_dir -log-level=$vault_log_level
 ExecReload=/bin/kill --signal HUP \$MAINPID
 KillMode=process
 KillSignal=SIGINT
@@ -324,6 +420,15 @@ function run {
   local enable_s3_backend="false"
   local s3_bucket=""
   local s3_bucket_region=""
+  local agent="false"
+  local agent_vault_address="$DEFAULT_AGENT_VAULT_ADDRESS"
+  local agent_vault_port="$DEFAULT_PORT"
+  local agent_ca_cert_file=""
+  local agent_client_cert_file=""
+  local agent_client_key_file=""
+  local agent_auth_mount_path="$DEFAULT_AGENT_AUTH_MOUNT_PATH"
+  local agent_auth_type=""
+  local agent_auth_role=""
   local enable_auto_unseal="false"
   local auto_unseal_kms_key_id=""
   local auto_unseal_kms_key_region=""
@@ -401,6 +506,47 @@ function run {
         s3_bucket_region="$2"
         shift
         ;;
+      --agent)
+        agent="true"
+        ;;
+      --agent-vault-address)
+        assert_not_empty "$key" "$2"
+        agent_vault_address="$2"
+        shift
+        ;;
+      --agent-vault-port)
+        assert_not_empty "$key" "$2"
+        agent_vault_port="$2"
+        shift
+        ;;
+      --agent-ca-cert_file)
+        assert_not_empty "$key" "$2"
+        agent_ca_cert_file="$2"
+        shift
+        ;;
+      --agent-client-cert-file)
+        assert_not_empty "$key" "$2"
+        agent_client_cert_file="$2"
+        shift
+        ;;
+      --agent-client-key-file)
+        assert_not_empty "$key" "$2"
+        agent_client_key_file="$2"
+        shift
+        ;;
+      --agent-auth-mount-path)
+        assert_not_empty "$key" "$2"
+        agent_auth_mount_path="$2"
+        shift
+        ;;
+      --agent-auth-type)
+        agent_auth_type="$2"
+        shift
+        ;;
+      --agent-auth-role)
+        agent_auth_role="$2"
+        shift
+        ;;
       --enable-auto-unseal)
         enable_auto_unseal="true"
         ;;
@@ -430,12 +576,18 @@ function run {
     shift
   done
 
-  assert_not_empty "--tls-cert-file" "$tls_cert_file"
-  assert_not_empty "--tls-key-file" "$tls_key_file"
+  # Required flags
+  if [[ "$agent" == "true" ]]; then
+    assert_not_empty "--agent-auth-type" "$agent_auth_type"
+    assert_not_empty "--agent-auth-role" "$agent_auth_role"
+  else
+    assert_not_empty "--tls-cert-file" "$tls_cert_file"
+    assert_not_empty "--tls-key-file" "$tls_key_file"
 
-  if [[ "$enable_s3_backend" == "true" ]]; then
-    assert_not_empty "--s3-bucket" "$s3_bucket"
-    assert_not_empty "--s3-bucket-region" "$s3_bucket_region"
+    if [[ "$enable_s3_backend" == "true" ]]; then
+      assert_not_empty "--s3-bucket" "$s3_bucket"
+      assert_not_empty "--s3-bucket-region" "$s3_bucket_region"
+    fi
   fi
 
   assert_is_installed "systemctl"
@@ -453,6 +605,10 @@ function run {
     bin_dir=$(cd "$SCRIPT_DIR/../bin" && pwd)
   fi
 
+  if [[ -z "$data_dir" ]]; then
+    data_dir=$(cd "$SCRIPT_DIR/../data" && pwd)
+  fi
+
   if [[ -z "$user" ]]; then
     user=$(get_owner_of_path "$config_dir")
   fi
@@ -465,7 +621,7 @@ function run {
     api_addr="https://$(get_instance_ip_address):${port}"
   fi
 
-  if [[ "$enable_auto_unseal" == "true" ]]; then
+  if [[ "$agent" == "false" ]] && [[ "$enable_auto_unseal" == "true" ]]; then
     log_info "The --enable-auto-unseal flag is set to true"
     assert_not_empty "--auto-unseal-kms-key-id" "$auto_unseal_kms_key_id"
     assert_not_empty "--auto-unseal-kms-key-region" "$auto_unseal_kms_key_region"
@@ -474,24 +630,40 @@ function run {
   if [[ "$skip_vault_config" == "true" ]]; then
     log_info "The --skip-vault-config flag is set, so will not generate a default Vault config file."
   else
-    generate_vault_config \
-      "$tls_cert_file" \
-      "$tls_key_file" \
-      "$port" \
-      "$cluster_port" \
-      "$api_addr" \
-      "$config_dir" \
-      "$user" \
-      "$enable_s3_backend" \
-      "$s3_bucket" \
-      "$s3_bucket_region" \
-      "$enable_auto_unseal" \
-      "$auto_unseal_kms_key_id" \
-      "$auto_unseal_kms_key_region" \
-      "$auto_unseal_endpoint"
+    if [[ "$agent" == "true" ]]; then
+      log_info "Running as Vault agent (--agent flag is set)"
+      generate_vault_agent_config \
+        "$config_dir" \
+        "$data_dir" \
+        "$agent_vault_address" \
+        "$agent_vault_port" \
+        "$agent_ca_cert_file" \
+        "$agent_client_cert_file" \
+        "$agent_client_key_file" \
+        "$agent_auth_mount_path" \
+        "$agent_auth_type" \
+        "$agent_auth_role"
+    else
+      log_info "Running as Vault server"
+      generate_vault_config \
+        "$tls_cert_file" \
+        "$tls_key_file" \
+        "$port" \
+        "$cluster_port" \
+        "$api_addr" \
+        "$config_dir" \
+        "$user" \
+        "$enable_s3_backend" \
+        "$s3_bucket" \
+        "$s3_bucket_region" \
+        "$enable_auto_unseal" \
+        "$auto_unseal_kms_key_id" \
+        "$auto_unseal_kms_key_region" \
+        "$auto_unseal_endpoint"
+    fi
   fi
 
-  generate_systemd_config "$SYSTEMD_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_level" "$systemd_stdout" "$systemd_stderr" "$user"
+  generate_systemd_config "$SYSTEMD_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_level" "$systemd_stdout" "$systemd_stderr" "$user" "$agent"
   start_vault
 }
 

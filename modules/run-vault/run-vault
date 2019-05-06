@@ -395,6 +395,7 @@ EOF
 function start_vault {
   log_info "Reloading systemd config and starting Vault"
   sudo systemctl daemon-reload
+  sudo systemctl enable vault.service  
   sudo systemctl restart vault.service
 }
 

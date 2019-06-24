@@ -60,7 +60,7 @@ data "aws_iam_policy_document" "example_instance_role" {
 
 # Adds policies necessary for running consul
 module "consul_iam_policies_for_client" {
-  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-iam-policies?ref=v0.4.0"
+  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-iam-policies?ref=tf12-upgrade"
 
   iam_role_id = "${aws_iam_role.example_instance_role.id}"
 }
@@ -169,7 +169,7 @@ module "vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_iam_policies_servers" {
-  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-iam-policies?ref=v0.4.0"
+  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-iam-policies?ref=tf12-upgrade"
 
   iam_role_id = "${module.vault_cluster.iam_role_id}"
 }
@@ -202,7 +202,7 @@ data "template_file" "user_data_vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "security_group_rules" {
-  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-client-security-group-rules?ref=v0.4.0"
+  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-client-security-group-rules?ref=tf12-upgrade"
 
   security_group_id = "${module.vault_cluster.security_group_id}"
 
@@ -217,7 +217,7 @@ module "security_group_rules" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_cluster" {
-  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-cluster?ref=v0.4.0"
+  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-cluster?ref=tf12-upgrade"
 
   cluster_name  = "${var.consul_cluster_name}"
   cluster_size  = "${var.consul_cluster_size}"

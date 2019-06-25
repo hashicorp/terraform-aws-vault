@@ -161,7 +161,7 @@ module "vault_elb" {
 
 # Look up the Route 53 Hosted Zone by domain name
 data "aws_route53_zone" "selected" {
-  count = var.create_dns_entry
+  count = var.create_dns_entry ? 1 : 0
   name  = "${var.hosted_zone_domain_name}."
 }
 

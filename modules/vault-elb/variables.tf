@@ -13,7 +13,7 @@ variable "vpc_id" {
 
 variable "allowed_inbound_cidr_blocks" {
   description = "A list of CIDR-formatted IP address ranges from which the ELB will accept requests."
-  type        = "list"
+  type        = list(string)
 }
 
 variable "vault_asg_name" {
@@ -27,7 +27,7 @@ variable "vault_asg_name" {
 
 variable "subnet_ids" {
   description = "The subnet IDs into which the ELB should be deployed. You will typically want to deploy the ELB into public subnets so your Vault cluster can run in private subnets. At least one of var.subnet_ids or var.availability_zones must be non-empty."
-  type        = "list"
+  type        = list(string)
   default     = []
 }
 
@@ -123,6 +123,7 @@ variable "load_balancer_tags" {
 
 variable "security_group_tags" {
   description = "Tags to be applied to the ELB security group."
-  type        = "map"
+  type        = map(string)
   default     = {}
 }
+

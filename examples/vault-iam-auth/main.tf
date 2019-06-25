@@ -74,7 +74,7 @@ module "consul_iam_policies_for_client" {
 data "template_file" "user_data_auth_client" {
   template = "${file("${path.module}/user-data-auth-client.sh")}"
 
-  vars {
+  vars = {
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
     example_role_name        = "${var.example_role_name}"
@@ -182,7 +182,7 @@ module "consul_iam_policies_servers" {
 data "template_file" "user_data_vault_cluster" {
   template = "${file("${path.module}/user-data-vault.sh")}"
 
-  vars {
+  vars = {
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
     example_role_name        = "${var.example_role_name}"
@@ -249,7 +249,7 @@ module "consul_cluster" {
 data "template_file" "user_data_consul" {
   template = "${file("${path.module}/user-data-consul.sh")}"
 
-  vars {
+  vars = {
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
   }

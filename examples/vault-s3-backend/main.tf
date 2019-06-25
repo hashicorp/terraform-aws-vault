@@ -62,7 +62,7 @@ module "consul_iam_policies_servers" {
 data "template_file" "user_data_vault_cluster" {
   template = "${file("${path.module}/user-data-vault.sh")}"
 
-  vars {
+  vars = {
     aws_region               = "${data.aws_region.current.name}"
     s3_bucket_name           = "${var.s3_bucket_name}"
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
@@ -124,7 +124,7 @@ module "consul_cluster" {
 data "template_file" "user_data_consul" {
   template = "${file("${path.module}/user-data-consul.sh")}"
 
-  vars {
+  vars = {
     consul_cluster_tag_key   = "${var.consul_cluster_tag_key}"
     consul_cluster_tag_value = "${var.consul_cluster_name}"
   }

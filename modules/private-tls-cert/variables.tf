@@ -33,12 +33,12 @@ variable "common_name" {
 
 variable "dns_names" {
   description = "List of DNS names for which the certificate will be valid (e.g. vault.service.consul, foo.example.com)."
-  type        = "list"
+  type        = list(string)
 }
 
 variable "ip_addresses" {
   description = "List of IP addresses for which the certificate will be valid (e.g. 127.0.0.1)."
-  type        = "list"
+  type        = list(string)
 }
 
 variable "validity_period_hours" {
@@ -52,7 +52,7 @@ variable "validity_period_hours" {
 
 variable "ca_allowed_uses" {
   description = "List of keywords from RFC5280 describing a use that is permitted for the CA certificate. For more info and the list of keywords, see https://www.terraform.io/docs/providers/tls/r/self_signed_cert.html#allowed_uses."
-  type        = "list"
+  type        = list(string)
 
   default = [
     "cert_signing",
@@ -63,7 +63,7 @@ variable "ca_allowed_uses" {
 
 variable "allowed_uses" {
   description = "List of keywords from RFC5280 describing a use that is permitted for the issued certificate. For more info and the list of keywords, see https://www.terraform.io/docs/providers/tls/r/self_signed_cert.html#allowed_uses."
-  type        = "list"
+  type        = list(string)
 
   default = [
     "key_encipherment",
@@ -90,3 +90,4 @@ variable "private_key_rsa_bits" {
   description = "The size of the generated RSA key in bits. Should only be used if var.private_key_algorithm is RSA."
   default     = "2048"
 }
+

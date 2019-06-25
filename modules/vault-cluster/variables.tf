@@ -104,7 +104,7 @@ variable "cluster_tag_key" {
 
 variable "cluster_extra_tags" {
   description = "A list of additional tags to add to each Instance in the ASG. Each element in the list must be a map with the keys key, value, and propagate_at_launch"
-  type        = list(string)
+  type        = list(object({ key : string, value : string, propagate_at_launch : bool }))
 
   #example:
   # default = [

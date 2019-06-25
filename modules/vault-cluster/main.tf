@@ -34,32 +34,40 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   # And only create the cluster after S3 bucket and policies exist
   # Otherwise Vault might boot and not find the bucket or not yet have the necessary permissions
   # Not using `depends_on` because these resources might not exist
-  # TF-UPGRADE-TODO: In Terraform v0.10 and earlier, it was sometimes necessary to
-  # force an interpolation expression to be interpreted as a list by wrapping it
-  # in an extra set of list brackets. That form was supported for compatibilty in
-  # v0.11, but is no longer supported in Terraform v0.12.
-  #
-  # If the expression in the following list itself returns a list, remove the
-  # brackets to avoid interpretation as a list of lists. If the expression
-  # returns a single list item then leave it as-is and remove this TODO comment.
-  tags = [
-    concat(
-      [
-        {
-          "key"                     = var.cluster_tag_key
-          "value"                   = var.cluster_name
-          "propagate_at_launch"     = true
-          "using_s3_bucket_backend" = element(concat(aws_iam_role_policy.vault_s3.*.name, [""]), 0)
-          "s3_bucket_id"            = element(concat(aws_s3_bucket.vault_storage.*.id, [""]), 0)
-          "using_auto_unseal" = element(
-            concat(aws_iam_role_policy.vault_auto_unseal_kms.*.name, [""]),
-            0,
-          )
-        },
-      ],
-      var.cluster_extra_tags,
-    ),
-  ]
+  tag {
+    key                 = var.cluster_tag_key
+    value               = var.cluster_name
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "using_s3_bucket_backend"
+    value               = element(concat(aws_iam_role_policy.vault_s3.*.name, list("")), 0)
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "s3_bucket_id"
+    value               = element(concat(aws_s3_bucket.vault_storage.*.id, list("")), 0)
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "using_auto_unseal"
+    value               = element(concat(aws_iam_role_policy.vault_auto_unseal_kms.*.name, list("")), 0)
+    propagate_at_launch = true
+  }
+
+  dynamic "tag" {
+    for_each = var.cluster_extra_tags
+
+    content {
+      key                 = tag.key
+      value               = tag.value
+      propagate_at_launch = tag.propagate_at_launch
+    }
+  }
+
 
   # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
   # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors

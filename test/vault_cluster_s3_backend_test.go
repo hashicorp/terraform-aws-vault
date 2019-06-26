@@ -9,7 +9,6 @@ import (
 
 const VAULT_CLUSTER_S3_BACKEND_PATH = "examples/vault-s3-backend"
 
-const VAR_ENABLE_S3_BACKEND = "enable_s3_backend"
 const VAR_S3_BUCKET_NAME = "s3_bucket_name"
 const VAR_FORCE_DESTROY_S3_BUCKET = "force_destroy_s3_bucket"
 
@@ -39,9 +38,8 @@ func runVaultWithS3BackendClusterTest(t *testing.T, amiId string, awsRegion, ssh
 	test_structure.RunTestStage(t, "deploy", func() {
 		uniqueId := random.UniqueId()
 		terraformVars := map[string]interface{}{
-			VAR_ENABLE_S3_BACKEND:       boolToTerraformVar(true),
 			VAR_S3_BUCKET_NAME:          s3BucketName(uniqueId),
-			VAR_FORCE_DESTROY_S3_BUCKET: boolToTerraformVar(true),
+			VAR_FORCE_DESTROY_S3_BUCKET: true,
 		}
 		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
 	})

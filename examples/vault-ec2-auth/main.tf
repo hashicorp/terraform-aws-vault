@@ -23,7 +23,7 @@ resource "aws_instance" "example_auth_to_vault" {
   user_data            = "${data.template_file.user_data_auth_client.rendered}"
   iam_instance_profile = "${aws_iam_instance_profile.example_instance_profile.name}"
 
-  tags {
+  tags = {
     Name = "${var.auth_server_name}"
   }
 }

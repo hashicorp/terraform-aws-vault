@@ -42,19 +42,19 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 
   tag {
     key                 = "using_s3_bucket_backend"
-    value               = element(concat(aws_iam_role_policy.vault_s3.*.name, list("")), 0)
+    value               = element(concat(aws_iam_role_policy.vault_s3.*.name, [""]), 0)
     propagate_at_launch = true
   }
 
   tag {
     key                 = "s3_bucket_id"
-    value               = element(concat(aws_s3_bucket.vault_storage.*.id, list("")), 0)
+    value               = element(concat(aws_s3_bucket.vault_storage.*.id, [""]), 0)
     propagate_at_launch = true
   }
 
   tag {
     key                 = "using_auto_unseal"
-    value               = element(concat(aws_iam_role_policy.vault_auto_unseal_kms.*.name, list("")), 0)
+    value               = element(concat(aws_iam_role_policy.vault_auto_unseal_kms.*.name, [""]), 0)
     propagate_at_launch = true
   }
 

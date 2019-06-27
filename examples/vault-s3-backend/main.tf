@@ -1,11 +1,9 @@
-# ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY A VAULT SERVER CLUSTER AND A CONSUL SERVER CLUSTER IN AWS
-# This is an example of how to use the vault-cluster module to deploy a Vault cluster in AWS. This cluster uses Consul,
-# running in a separate cluster, as its storage backend.
-# ---------------------------------------------------------------------------------------------------------------------
-
+# ----------------------------------------------------------------------------------------------------------------------
+# REQUIRE A SPECIFIC TERRAFORM VERSION OR HIGHER
+# This module has been updated with 0.12 syntax, which means it is no longer compatible with any versions below 0.12.
+# ----------------------------------------------------------------------------------------------------------------------
 terraform {
-  required_version = ">= 0.9.3"
+  required_version = ">= 0.12"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

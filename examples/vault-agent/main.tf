@@ -12,7 +12,7 @@ terraform {
 resource "aws_instance" "example_auth_to_vault" {
   ami           = var.ami_id
   instance_type = "t2.micro"
-  subnet_id     = tolist(var.data.aws_subnet_ids.default.ids)[0]
+  subnet_id     = tolist(data.aws_subnet_ids.default.ids)[0]
   key_name      = var.ssh_key_name
 
   # Security group that opens the necessary ports for consul

@@ -1,10 +1,9 @@
-# ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY A VAULT SERVER CLUSTER AND A CONSUL SERVER CLUSTER IN AWS
-# This is an example of how to launch a vault cluster and then authenticate an instance to the cluster
-# ---------------------------------------------------------------------------------------------------------------------
-
+# ----------------------------------------------------------------------------------------------------------------------
+# REQUIRE A SPECIFIC TERRAFORM VERSION OR HIGHER
+# This module has been updated with 0.12 syntax, which means it is no longer compatible with any versions below 0.12.
+# ----------------------------------------------------------------------------------------------------------------------
 terraform {
-  required_version = ">= 0.11.0"
+  required_version = ">= 0.12"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -118,7 +117,7 @@ data "aws_iam_policy_document" "vault_iam" {
     actions = ["iam:GetRole", "iam:GetUser"]
 
     # List of arns it can query, for more security, it could be set to specific roles or user
-    # resources = ["${aws_iam_role.example_instance_role.arn}"]
+    # resources = ["aws_iam_role.example_instance_role.arn"]
     resources = [
       "arn:aws:iam::*:user/*",
       "arn:aws:iam::*:role/*",

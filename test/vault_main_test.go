@@ -77,6 +77,16 @@ var testCases = []testCase{
 func TestMainVaultCluster(t *testing.T) {
 	t.Parallel()
 
+	// For convenience - uncomment these as well as the "os" import
+	// when doing local testing if you need to skip any sections.
+
+	// os.Setenv("SKIP_setup_amis", "true")
+	// os.Setenv("SKIP_deploy", "true")
+	// os.Setenv("SKIP_validate", "true")
+	// os.Setenv("SKIP_log", "true")
+	// os.Setenv("SKIP_teardown", "true")
+	// os.Setenv("SKIP_delete_amis", "true")
+
 	test_structure.RunTestStage(t, "setup_amis", func() {
 		tlsCert := generateSelfSignedTlsCert(t)
 		saveTlsCert(t, WORK_DIR, tlsCert)
@@ -85,6 +95,7 @@ func TestMainVaultCluster(t *testing.T) {
 		for _, ami := range amisData {
 			// Exclude eu-north-1 as it is missing the instance types we use
 			awsRegion := aws.GetRandomRegion(t, nil, []string{"eu-north-1"})
+
 			test_structure.SaveString(t, WORK_DIR, fmt.Sprintf("awsRegion-%s", ami.Name), awsRegion)
 
 			if ami.Enterprise {
@@ -118,12 +129,13 @@ func TestMainVaultCluster(t *testing.T) {
 }
 
 func runTestsOnDifferentPlatforms(t *testing.T) {
+
 	for _, testCase := range testCases {
 		// This re-assignment necessary, because the variable testCase is defined and set outside the forloop.
-		// As such, it gets overwritten on each iteration of the forloop. This is fine if you don't have concurrent code in the loop,
-		// but in this case, because you have a t.Parallel, the t.Run completes before the test function exits,
-		// which means that the value of testCase might change.
-		// More information at:
+		// As such, it gets overwritten on each iteration of the forloop. This is fine if you don't have concurrent code
+		// in the loop, but in this case, because you have a t.Parallel, the t.Run completes before the test function
+		// exits, which means that the value of testCase might change. More information at:
+		//
 		// "Be Careful with Table Driven Tests and t.Parallel()"
 		// https://gist.github.com/posener/92a55c4cd441fc5e5e85f27bca008721
 		testCase := testCase

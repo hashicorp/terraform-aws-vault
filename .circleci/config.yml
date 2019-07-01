@@ -8,7 +8,7 @@ jobs:
       - checkout
       - run:
           name: Validate Terraform Formatting
-          command: "[ -z \"$(terraform fmt -write=false)\" ] || { terraform fmt -write=false -diff; exit 1; }"
+          command: '[ -z "$(terraform fmt -write=false)" ] || { terraform fmt -write=false -diff; exit 1; }'
 
   build:
     machine: true
@@ -24,11 +24,11 @@ jobs:
 
       # Install the gruntwork-module-circleci-helpers and use it to configure the build environment and run tests.
       - run: curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version v0.0.21
-      - run: gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.13.9"
-      - run: gruntwork-install --module-name "build-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.13.9"
-      - run: gruntwork-install --module-name "aws-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.13.9"
-      - run: gruntwork-install --module-name "git-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.13.9"
-      - run: gruntwork-install --binary-name "terratest_log_parser" --repo "https://github.com/gruntwork-io/terratest" --tag v0.13.10
+      - run: gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.14.0"
+      - run: gruntwork-install --module-name "build-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.14.0"
+      - run: gruntwork-install --module-name "aws-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.14.0"
+      - run: gruntwork-install --module-name "git-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.14.0"
+      - run: gruntwork-install --binary-name "terratest_log_parser" --repo "https://github.com/gruntwork-io/terratest" --tag v0.17.4
       - run: configure-environment-for-gruntwork-module --go-src-path test --use-go-dep --circle-ci-2 --circle-ci-2-machine-executor
 
       - save_cache:

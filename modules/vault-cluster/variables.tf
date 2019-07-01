@@ -21,12 +21,12 @@ variable "vpc_id" {
 
 variable "allowed_inbound_cidr_blocks" {
   description = "A list of CIDR-formatted IP address ranges from which the EC2 Instances will allow connections to Vault"
-  type        = "list"
+  type        = list(string)
 }
 
 variable "allowed_inbound_security_group_ids" {
   description = "A list of security group IDs that will be allowed to connect to Vault"
-  type        = "list"
+  type        = list(string)
 }
 
 variable "allowed_inbound_security_group_count" {
@@ -58,13 +58,13 @@ variable "auto_unseal_kms_key_arn" {
 
 variable "subnet_ids" {
   description = "The subnet IDs into which the EC2 Instances should be deployed. You should typically pass in one subnet ID per node in the cluster_size variable. We strongly recommend that you run Vault in private subnets. At least one of var.subnet_ids or var.availability_zones must be non-empty."
-  type        = "list"
+  type        = list(string)
   default     = []
 }
 
 variable "availability_zones" {
   description = "The availability zones into which the EC2 Instances should be deployed. You should typically pass in one availability zone per node in the cluster_size variable. We strongly recommend against passing in only a list of availability zones, as that will run Vault in the default (and most likely public) subnets in your VPC. At least one of var.subnet_ids or var.availability_zones must be non-empty."
-  type        = "list"
+  type        = list(string)
   default     = []
 }
 
@@ -75,25 +75,25 @@ variable "ssh_key_name" {
 
 variable "allowed_ssh_cidr_blocks" {
   description = "A list of CIDR-formatted IP address ranges from which the EC2 Instances will allow SSH connections"
-  type        = "list"
+  type        = list(string)
   default     = []
 }
 
 variable "allowed_ssh_security_group_ids" {
   description = "A list of security group IDs from which the EC2 Instances will allow SSH connections"
-  type        = "list"
+  type        = list(string)
   default     = []
 }
 
 variable "additional_security_group_ids" {
   description = "A list of additional security group IDs to add to Vault EC2 Instances"
-  type        = "list"
+  type        = list(string)
   default     = []
 }
 
 variable "security_group_tags" {
   description = "Tags to be applied to the LC security group"
-  type        = "map"
+  type        = map(string)
   default     = {}
 }
 
@@ -104,7 +104,7 @@ variable "cluster_tag_key" {
 
 variable "cluster_extra_tags" {
   description = "A list of additional tags to add to each Instance in the ASG. Each element in the list must be a map with the keys key, value, and propagate_at_launch"
-  type        = "list"
+  type        = list(object({ key : string, value : string, propagate_at_launch : bool }))
 
   #example:
   # default = [
@@ -199,7 +199,7 @@ variable "s3_bucket_name" {
 
 variable "s3_bucket_tags" {
   description = "Tags to be applied to the S3 bucket."
-  type        = "map"
+  type        = map(string)
   default     = {}
 }
 
@@ -215,6 +215,7 @@ variable "force_destroy_s3_bucket" {
 
 variable "enabled_metrics" {
   description = "List of autoscaling group metrics to enable."
-  type        = "list"
+  type        = list(string)
   default     = []
 }
+

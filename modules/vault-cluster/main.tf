@@ -1,9 +1,9 @@
-# ---------------------------------------------------------------------------------------------------------------------
-# THESE TEMPLATES REQUIRE TERRAFORM VERSION 0.8 AND ABOVE
-# ---------------------------------------------------------------------------------------------------------------------
-
+# ----------------------------------------------------------------------------------------------------------------------
+# REQUIRE A SPECIFIC TERRAFORM VERSION OR HIGHER
+# This module has been updated with 0.12 syntax, which means it is no longer compatible with any versions below 0.12.
+# ----------------------------------------------------------------------------------------------------------------------
 terraform {
-  required_version = ">= 0.9.3"
+  required_version = ">= 0.12"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -11,42 +11,63 @@ terraform {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_autoscaling_group" "autoscaling_group" {
-  name_prefix = "${var.cluster_name}"
+  name_prefix = var.cluster_name
 
-  launch_configuration = "${aws_launch_configuration.launch_configuration.name}"
+  launch_configuration = aws_launch_configuration.launch_configuration.name
 
-  availability_zones  = ["${var.availability_zones}"]
-  vpc_zone_identifier = ["${var.subnet_ids}"]
+  availability_zones  = var.availability_zones
+  vpc_zone_identifier = var.subnet_ids
 
   # Use a fixed-size cluster
-  min_size             = "${var.cluster_size}"
-  max_size             = "${var.cluster_size}"
-  desired_capacity     = "${var.cluster_size}"
-  termination_policies = ["${var.termination_policies}"]
+  min_size             = var.cluster_size
+  max_size             = var.cluster_size
+  desired_capacity     = var.cluster_size
+  termination_policies = [var.termination_policies]
 
-  health_check_type         = "${var.health_check_type}"
-  health_check_grace_period = "${var.health_check_grace_period}"
-  wait_for_capacity_timeout = "${var.wait_for_capacity_timeout}"
+  health_check_type         = var.health_check_type
+  health_check_grace_period = var.health_check_grace_period
+  wait_for_capacity_timeout = var.wait_for_capacity_timeout
 
-  enabled_metrics = ["${var.enabled_metrics}"]
+  enabled_metrics = var.enabled_metrics
 
   # Use bucket and policies names in tags for depending on them when they are there
   # And only create the cluster after S3 bucket and policies exist
   # Otherwise Vault might boot and not find the bucket or not yet have the necessary permissions
   # Not using `depends_on` because these resources might not exist
-  tags = ["${concat(
-    list(
-      map(
-        "key", var.cluster_tag_key,
-        "value", var.cluster_name,
-        "propagate_at_launch", true,
-        "using_s3_bucket_backend",  element(concat(aws_iam_role_policy.vault_s3.*.name, list("")), 0),
-        "s3_bucket_id", element(concat(aws_s3_bucket.vault_storage.*.id, list("")), 0),
-        "using_auto_unseal",  element(concat(aws_iam_role_policy.vault_auto_unseal_kms.*.name, list("")), 0),
-      )
-    ),
-    var.cluster_extra_tags)
-  }"]
+  tag {
+    key                 = var.cluster_tag_key
+    value               = var.cluster_name
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "using_s3_bucket_backend"
+    value               = element(concat(aws_iam_role_policy.vault_s3.*.name, [""]), 0)
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "s3_bucket_id"
+    value               = element(concat(aws_s3_bucket.vault_storage.*.id, [""]), 0)
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "using_auto_unseal"
+    value               = element(concat(aws_iam_role_policy.vault_auto_unseal_kms.*.name, [""]), 0)
+    propagate_at_launch = true
+  }
+
+  dynamic "tag" {
+    for_each = var.cluster_extra_tags
+
+    content {
+      key                 = tag.key
+      value               = tag.value
+      propagate_at_launch = tag.propagate_at_launch
+    }
+  }
+
 
   # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
   # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
@@ -62,22 +83,33 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 
 resource "aws_launch_configuration" "launch_configuration" {
   name_prefix   = "${var.cluster_name}-"
-  image_id      = "${var.ami_id}"
-  instance_type = "${var.instance_type}"
-  user_data     = "${var.user_data}"
+  image_id      = var.ami_id
+  instance_type = var.instance_type
+  user_data     = var.user_data
 
-  iam_instance_profile        = "${aws_iam_instance_profile.instance_profile.name}"
-  key_name                    = "${var.ssh_key_name}"
-  security_groups             = ["${concat(list(aws_security_group.lc_security_group.id), var.additional_security_group_ids)}"]
-  placement_tenancy           = "${var.tenancy}"
-  associate_public_ip_address = "${var.associate_public_ip_address}"
+  iam_instance_profile = aws_iam_instance_profile.instance_profile.name
+  key_name             = var.ssh_key_name
+  # TF-UPGRADE-TODO: In Terraform v0.10 and earlier, it was sometimes necessary to
+  # force an interpolation expression to be interpreted as a list by wrapping it
+  # in an extra set of list brackets. That form was supported for compatibilty in
+  # v0.11, but is no longer supported in Terraform v0.12.
+  #
+  # If the expression in the following list itself returns a list, remove the
+  # brackets to avoid interpretation as a list of lists. If the expression
+  # returns a single list item then leave it as-is and remove this TODO comment.
+  security_groups = concat(
+    [aws_security_group.lc_security_group.id],
+    var.additional_security_group_ids,
+  )
+  placement_tenancy           = var.tenancy
+  associate_public_ip_address = var.associate_public_ip_address
 
-  ebs_optimized = "${var.root_volume_ebs_optimized}"
+  ebs_optimized = var.root_volume_ebs_optimized
 
   root_block_device {
-    volume_type           = "${var.root_volume_type}"
-    volume_size           = "${var.root_volume_size}"
-    delete_on_termination = "${var.root_volume_delete_on_termination}"
+    volume_type           = var.root_volume_type
+    volume_size           = var.root_volume_size
+    delete_on_termination = var.root_volume_delete_on_termination
   }
 
   # Important note: whenever using a launch configuration with an auto scaling group, you must set
@@ -97,9 +129,9 @@ resource "aws_launch_configuration" "launch_configuration" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_security_group" "lc_security_group" {
-  name_prefix = "${var.cluster_name}"
+  name_prefix = var.cluster_name
   description = "Security group for the ${var.cluster_name} launch configuration"
-  vpc_id      = "${var.vpc_id}"
+  vpc_id      = var.vpc_id
 
   # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
   # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
@@ -108,29 +140,34 @@ resource "aws_security_group" "lc_security_group" {
     create_before_destroy = true
   }
 
-  tags = "${merge(map("Name", var.cluster_name), var.security_group_tags)}"
+  tags = merge(
+    {
+      "Name" = var.cluster_name
+    },
+    var.security_group_tags,
+  )
 }
 
 resource "aws_security_group_rule" "allow_ssh_inbound_from_cidr_blocks" {
-  count       = "${length(var.allowed_ssh_cidr_blocks) >= 1 ? 1 : 0}"
+  count       = length(var.allowed_ssh_cidr_blocks) >= 1 ? 1 : 0
   type        = "ingress"
-  from_port   = "${var.ssh_port}"
-  to_port     = "${var.ssh_port}"
+  from_port   = var.ssh_port
+  to_port     = var.ssh_port
   protocol    = "tcp"
-  cidr_blocks = ["${var.allowed_ssh_cidr_blocks}"]
+  cidr_blocks = var.allowed_ssh_cidr_blocks
 
-  security_group_id = "${aws_security_group.lc_security_group.id}"
+  security_group_id = aws_security_group.lc_security_group.id
 }
 
 resource "aws_security_group_rule" "allow_ssh_inbound_from_security_group_ids" {
-  count                    = "${length(var.allowed_ssh_security_group_ids)}"
+  count                    = length(var.allowed_ssh_security_group_ids)
   type                     = "ingress"
-  from_port                = "${var.ssh_port}"
-  to_port                  = "${var.ssh_port}"
+  from_port                = var.ssh_port
+  to_port                  = var.ssh_port
   protocol                 = "tcp"
-  source_security_group_id = "${element(var.allowed_ssh_security_group_ids, count.index)}"
+  source_security_group_id = element(var.allowed_ssh_security_group_ids, count.index)
 
-  security_group_id = "${aws_security_group.lc_security_group.id}"
+  security_group_id = aws_security_group.lc_security_group.id
 }
 
 resource "aws_security_group_rule" "allow_all_outbound" {
@@ -140,7 +177,7 @@ resource "aws_security_group_rule" "allow_all_outbound" {
   protocol    = "-1"
   cidr_blocks = ["0.0.0.0/0"]
 
-  security_group_id = "${aws_security_group.lc_security_group.id}"
+  security_group_id = aws_security_group.lc_security_group.id
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -150,13 +187,13 @@ resource "aws_security_group_rule" "allow_all_outbound" {
 module "security_group_rules" {
   source = "../vault-security-group-rules"
 
-  security_group_id                    = "${aws_security_group.lc_security_group.id}"
-  allowed_inbound_cidr_blocks          = ["${var.allowed_inbound_cidr_blocks}"]
-  allowed_inbound_security_group_ids   = ["${var.allowed_inbound_security_group_ids}"]
-  allowed_inbound_security_group_count = "${var.allowed_inbound_security_group_count}"
+  security_group_id                    = aws_security_group.lc_security_group.id
+  allowed_inbound_cidr_blocks          = var.allowed_inbound_cidr_blocks
+  allowed_inbound_security_group_ids   = var.allowed_inbound_security_group_ids
+  allowed_inbound_security_group_count = var.allowed_inbound_security_group_count
 
-  api_port     = "${var.api_port}"
-  cluster_port = "${var.cluster_port}"
+  api_port     = var.api_port
+  cluster_port = var.cluster_port
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -166,9 +203,9 @@ module "security_group_rules" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_iam_instance_profile" "instance_profile" {
-  name_prefix = "${var.cluster_name}"
-  path        = "${var.instance_profile_path}"
-  role        = "${aws_iam_role.instance_role.name}"
+  name_prefix = var.cluster_name
+  path        = var.instance_profile_path
+  role        = aws_iam_role.instance_role.name
 
   # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
   # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
@@ -179,8 +216,8 @@ resource "aws_iam_instance_profile" "instance_profile" {
 }
 
 resource "aws_iam_role" "instance_role" {
-  name_prefix        = "${var.cluster_name}"
-  assume_role_policy = "${data.aws_iam_policy_document.instance_role.json}"
+  name_prefix        = var.cluster_name
+  assume_role_policy = data.aws_iam_policy_document.instance_role.json
 
   # aws_iam_instance_profile.instance_profile in this module sets create_before_destroy to true, which means
   # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
@@ -203,17 +240,19 @@ data "aws_iam_policy_document" "instance_role" {
 }
 
 resource "aws_s3_bucket" "vault_storage" {
-  count         = "${var.enable_s3_backend ? 1 : 0}"
-  bucket        = "${var.s3_bucket_name}"
-  force_destroy = "${var.force_destroy_s3_bucket}"
+  count         = var.enable_s3_backend ? 1 : 0
+  bucket        = var.s3_bucket_name
+  force_destroy = var.force_destroy_s3_bucket
 
-  tags = "${merge(
-    map("Description", "Used for secret storage with Vault. DO NOT DELETE this Bucket unless you know what you are doing."),
-    var.s3_bucket_tags)
-  }"
+  tags = merge(
+    {
+      "Description" = "Used for secret storage with Vault. DO NOT DELETE this Bucket unless you know what you are doing."
+    },
+    var.s3_bucket_tags,
+  )
 
   versioning {
-    enabled = "${var.enable_s3_bucket_versioning}"
+    enabled = var.enable_s3_bucket_versioning
   }
 
   # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
@@ -225,10 +264,13 @@ resource "aws_s3_bucket" "vault_storage" {
 }
 
 resource "aws_iam_role_policy" "vault_s3" {
-  count  = "${var.enable_s3_backend ? 1 : 0}"
-  name   = "vault_s3"
-  role   = "${aws_iam_role.instance_role.id}"
-  policy = "${element(concat(data.aws_iam_policy_document.vault_s3.*.json, list("")), 0)}"
+  count = var.enable_s3_backend ? 1 : 0
+  name  = "vault_s3"
+  role  = aws_iam_role.instance_role.id
+  policy = element(
+    concat(data.aws_iam_policy_document.vault_s3.*.json, [""]),
+    0,
+  )
 
   # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
   # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
@@ -239,21 +281,21 @@ resource "aws_iam_role_policy" "vault_s3" {
 }
 
 data "aws_iam_policy_document" "vault_s3" {
-  count = "${var.enable_s3_backend ? 1 : 0}"
+  count = var.enable_s3_backend ? 1 : 0
 
   statement {
     effect  = "Allow"
     actions = ["s3:*"]
 
     resources = [
-      "${aws_s3_bucket.vault_storage.arn}",
-      "${aws_s3_bucket.vault_storage.arn}/*",
+      aws_s3_bucket.vault_storage[0].arn,
+      "${aws_s3_bucket.vault_storage[0].arn}/*",
     ]
   }
 }
 
 data "aws_iam_policy_document" "vault_auto_unseal_kms" {
-  count = "${var.enable_auto_unseal ? 1 : 0}"
+  count = var.enable_auto_unseal ? 1 : 0
 
   statement {
     effect = "Allow"
@@ -264,15 +306,21 @@ data "aws_iam_policy_document" "vault_auto_unseal_kms" {
       "kms:DescribeKey",
     ]
 
-    resources = ["${var.auto_unseal_kms_key_arn}"]
+    resources = [var.auto_unseal_kms_key_arn]
   }
 }
 
 resource "aws_iam_role_policy" "vault_auto_unseal_kms" {
-  count  = "${var.enable_auto_unseal ? 1 : 0}"
-  name   = "vault_auto_unseal_kms"
-  role   = "${aws_iam_role.instance_role.id}"
-  policy = "${element(concat(data.aws_iam_policy_document.vault_auto_unseal_kms.*.json, list("")), 0)}"
+  count = var.enable_auto_unseal ? 1 : 0
+  name  = "vault_auto_unseal_kms"
+  role  = aws_iam_role.instance_role.id
+  policy = element(
+    concat(
+      data.aws_iam_policy_document.vault_auto_unseal_kms.*.json,
+      [""],
+    ),
+    0,
+  )
 
   # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
   # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
@@ -281,3 +329,4 @@ resource "aws_iam_role_policy" "vault_auto_unseal_kms" {
     create_before_destroy = true
   }
 }
+

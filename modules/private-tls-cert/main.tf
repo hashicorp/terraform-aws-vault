@@ -63,7 +63,7 @@ resource "tls_locally_signed_cert" "cert" {
   ca_cert_pem        = tls_self_signed_cert.ca.cert_pem
 
   validity_period_hours = var.validity_period_hours
-  allowed_uses          = ["${var.allowed_uses}"]
+  allowed_uses          = var.allowed_uses
 
   # Store the certificate's public key in a file.
   provisioner "local-exec" {

@@ -13,7 +13,7 @@ resource "tls_self_signed_cert" "ca" {
   private_key_pem   = tls_private_key.ca.private_key_pem
   is_ca_certificate = true
 
-  validity_period_hours = var.validity_period_hours"
+  validity_period_hours = var.validity_period_hours
   allowed_uses          = var.ca_allowed_uses
 
   subject {

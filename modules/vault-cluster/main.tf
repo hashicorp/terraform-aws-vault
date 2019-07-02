@@ -62,9 +62,9 @@ resource "aws_autoscaling_group" "autoscaling_group" {
     for_each = var.cluster_extra_tags
 
     content {
-      key                 = tag.key
-      value               = tag.value
-      propagate_at_launch = tag.propagate_at_launch
+      key                 = tag.value.key
+      value               = tag.value.value
+      propagate_at_launch = tag.value.propagate_at_launch
     }
   }
 

@@ -25,10 +25,12 @@ type amiData struct {
 }
 
 var amisData = []amiData{
-	{"vaultEnterpriseUbuntu", "ubuntu16-ami", "ubuntu", true},
-	{"vaultEnterpriseAmazonLinux", "amazon-linux-2-ami", "ec2-user", true},
-	{"vaultUbuntu", "ubuntu16-ami", "ubuntu", false},
-	{"vaultAmazonLinux", "amazon-linux-2-ami", "ec2-user", false},
+	{"vaultEnterpriseOnUbuntu18", "ubuntu18-ami", "ubuntu", true},
+	{"vaultEnterpriseOnUbuntu16", "ubuntu16-ami", "ubuntu", true},
+	{"vaultEnterpriseOnAmazonLinux", "amazon-linux-2-ami", "ec2-user", true},
+	{"vaultOpenSourceOnUbuntu18", "ubuntu18-ami", "ubuntu", false},
+	{"vaultOpenSourceOnUbuntu16", "ubuntu16-ami", "ubuntu", false},
+	{"vaultOpenSourceOnAmazonLinux", "amazon-linux-2-ami", "ec2-user", false},
 }
 
 var testCases = []testCase{

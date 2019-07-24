@@ -14,6 +14,25 @@
   },
   "builders": [{
     "ami_name": "vault-consul-ubuntu-{{isotime | clean_ami_name}}-{{uuid}}",
+    "ami_description": "An Ubuntu 18.04 AMI that has Vault and Consul installed.",
+    "instance_type": "t2.micro",
+    "name": "ubuntu18-ami",
+    "region": "{{user `aws_region`}}",
+    "type": "amazon-ebs",
+    "source_ami_filter": {
+      "filters": {
+        "virtualization-type": "hvm",
+        "architecture": "x86_64",
+        "name": "*ubuntu-xenial-18.04-amd64-server-*",
+        "block-device-mapping.volume-type": "gp2",
+        "root-device-type": "ebs"
+      },
+      "owners": ["099720109477"],
+      "most_recent": true
+    },
+    "ssh_username": "ubuntu"
+  },{
+    "ami_name": "vault-consul-ubuntu-{{isotime | clean_ami_name}}-{{uuid}}",
     "ami_description": "An Ubuntu 16.04 AMI that has Vault and Consul installed.",
     "instance_type": "t2.micro",
     "name": "ubuntu16-ami",

@@ -3,7 +3,8 @@
 # operating systems:
 #
 # 1. Ubuntu 16.04
-# 2. Amazon Linux 2
+# 2. Ubuntu 18.04
+# 3. Amazon Linux 2
 
 set -e
 
@@ -21,7 +22,7 @@ function print_usage {
   echo
   echo "Usage: install-vault [OPTIONS]"
   echo
-  echo "This script can be used to install Vault and its dependencies. This script has been tested with Ubuntu 16.04 and Amazon Linux 2."
+  echo "This script can be used to install Vault and its dependencies. This script has been tested with Ubuntu 16.04, Ubuntu 18.04 and Amazon Linux 2."
   echo
   echo "Options:"
   echo

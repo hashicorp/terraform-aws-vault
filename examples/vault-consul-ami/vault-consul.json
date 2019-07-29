@@ -149,12 +149,11 @@
       " /tmp/terraform-aws-consul/modules/install-consul/install-consul --download-url {{user `consul_download_url`}};",
       "else",
       " /tmp/terraform-aws-consul/modules/install-consul/install-consul --version {{user `consul_version`}};",
-      "fi",
-      "/tmp/terraform-aws-consul/modules/install-dnsmasq/install-dnsmasq"
+      "fi"
     ]
   },{
     "type": "shell",
-    "only": ["ubuntu18-ami", "amazon-linux-2-ami"],
+    "only": ["ubuntu16-ami", "amazon-linux-2-ami"],
     "inline": [
       "/tmp/terraform-aws-consul/modules/install-dnsmasq/install-dnsmasq"
     ]

@@ -3,7 +3,7 @@
   "variables": {
     "aws_region": "us-east-1",
     "vault_version": "1.1.0",
-    "consul_module_version": "v0.7.2",
+    "consul_module_version": "v0.7.3",
     "consul_version": "1.5.3",
     "consul_download_url": "{{env `CONSUL_DOWNLOAD_URL`}}",
     "vault_download_url": "{{env `VAULT_DOWNLOAD_URL`}}",

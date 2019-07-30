@@ -3,7 +3,8 @@
 # operating systems:
 #
 # 1. Ubuntu 16.04
-# 2. Amazon Linux 2
+# 2. Ubuntu 18.04
+# 3. Amazon Linux 2
 
 set -e
 
@@ -21,7 +22,7 @@ function print_usage {
   echo
   echo "Usage: install-vault [OPTIONS]"
   echo
-  echo "This script can be used to install Vault and its dependencies. This script has been tested with Ubuntu 16.04 and Amazon Linux 2."
+  echo "This script can be used to install Vault and its dependencies. This script has been tested with Ubuntu 16.04, Ubuntu 18.04 and Amazon Linux 2."
   echo
   echo "Options:"
   echo
@@ -118,7 +119,7 @@ function install_dependencies {
 
   if $(has_apt_get); then
     sudo apt-get update -y
-    sudo apt-get install -y awscli curl unzip jq
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y awscli curl unzip jq libcap2-bin
   elif $(has_yum); then
     sudo yum update -y
     sudo yum install -y awscli curl unzip jq
@@ -208,6 +209,7 @@ function install_binary {
 # For more info, see: https://www.vaultproject.io/docs/configuration/#disable_mlock
 function configure_mlock {
   echo "Giving Vault permission to use the mlock syscall"
+  # Requires installing libcap2-bin on Ubuntu 18
   sudo setcap cap_ipc_lock=+ep $(readlink -f $(which vault))
 }
 

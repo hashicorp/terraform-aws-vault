@@ -4,6 +4,7 @@ This folder contains a script for configuring and running Vault on an [AWS](http
 script has been tested on the following operating systems:
 
 * Ubuntu 16.04
+* Ubuntu 18.04
 * Amazon Linux 2
 
 There is a good chance it will work on other flavors of Debian, CentOS, and RHEL as well.
@@ -41,7 +42,7 @@ will automatically restart Vault if it crashes or the EC2 instance reboots.
 Note that `systemd` logs to its own journal by default.  To view the Vault logs, run `journalctl -u vault.service`.  To change
 the log output location, you can specify the `StandardOutput` and `StandardError` options by using the `--systemd-stdout` and `--systemd-stderr`
 options.  See the [`systemd.exec` man pages](https://www.freedesktop.org/software/systemd/man/systemd.exec.html#StandardOutput=) for available
-options, but note that the `file:path` option requires [systemd version >= 236](https://stackoverflow.com/a/48052152), which is not provided 
+options, but note that the `file:path` option requires [systemd version >= 236](https://stackoverflow.com/a/48052152), which is not provided
 in the base Ubuntu 16.04 and Amazon Linux 2 images.
 
 See the [root example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example) and
@@ -206,5 +207,3 @@ HTTP. However, you can configure those agents to talk to the Consul servers usin
 encryption docs](https://www.consul.io/docs/agent/encryption.html) and the Consul AWS Module [How do you handle
 encryption docs](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/run-consul#how-do-you-handle-encryption)
 for more info.
-
-

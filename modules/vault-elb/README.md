@@ -5,7 +5,8 @@ Balancer (ELB)](https://aws.amazon.com/elasticloadbalancing/classicloadbalancer/
 from the [vault-cluster module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster). This is useful if you need to access Vault from the public
 Internet. Note that for most users, we recommend NOT making Vault accessible from the public Internet and using
 DNS to access your Vault cluster instead (see the [install-dnsmasq
-module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq) for details).
+module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq) or [setup-systemd-resolved](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/setup-systemd-resolved)
+in the case of Ubuntu 18.04 for details).
 
 
 

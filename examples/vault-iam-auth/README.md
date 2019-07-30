@@ -25,7 +25,8 @@ of a custom VPC.
 You will need to create an [Amazon Machine Image (AMI)][ami] that has both Vault and Consul
 installed, which you can do using the [vault-consul-ami example][vault_consul_ami]). All the EC2
 Instances in this example (including the EC2 Instance that authenticates to Vault) install
-[Dnsmasq][dnsmasq] (via the [install-dnsmasq module][dnsmasq_module]) so that all DNS queries
+[Dnsmasq][dnsmasq] (via the [install-dnsmasq module][dnsmasq_module]) or
+[setup-systemd-resolved][setup_systemd_resolved] (in the case of Ubuntu 18.04) so that all DNS queries
 for `*.consul` will be directed to the Consul Server cluster. Because Consul has knowledge of
 all the Vault nodes (and in some cases, of other services as well), this setup allows the EC2
 Instance to use Consul's DNS server for service discovery, and thereby to discover the IP addresses
@@ -194,6 +195,7 @@ vault login -method=aws header_value=vault.service.consul role=vault-role-name
 [create_role]: https://www.vaultproject.io/api/auth/aws/index.html#create-role
 [dnsmasq_module]: https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq
 [dnsmasq]: http://www.thekelleys.org.uk/dnsmasq/doc.html
+[setup_systemd_resolved]: https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/setup-systemd-resolved
 [ec2_example]: https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-ec2-auth
 [examples_helper]: https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-examples-helper/vault-examples-helper.sh
 [iam_auth]: https://www.vaultproject.io/docs/auth/aws.html#iam-auth-method

@@ -3,8 +3,8 @@
   "variables": {
     "aws_region": "us-east-1",
     "vault_version": "1.1.0",
-    "consul_module_version": "v0.4.2",
-    "consul_version": "1.3.1",
+    "consul_module_version": "v0.7.3",
+    "consul_version": "1.5.3",
     "consul_download_url": "{{env `CONSUL_DOWNLOAD_URL`}}",
     "vault_download_url": "{{env `VAULT_DOWNLOAD_URL`}}",
     "install_auth_signing_script": "true",
@@ -13,7 +13,26 @@
     "tls_private_key_path": null
   },
   "builders": [{
-    "ami_name": "vault-consul-ubuntu-{{isotime | clean_ami_name}}-{{uuid}}",
+    "ami_name": "vault-consul-ubuntu18-{{isotime | clean_ami_name}}-{{uuid}}",
+    "ami_description": "An Ubuntu 18.04 AMI that has Vault and Consul installed.",
+    "instance_type": "t2.micro",
+    "name": "ubuntu18-ami",
+    "region": "{{user `aws_region`}}",
+    "type": "amazon-ebs",
+    "source_ami_filter": {
+      "filters": {
+        "virtualization-type": "hvm",
+        "architecture": "x86_64",
+        "name": "*ubuntu-bionic-18.04-amd64-server-*",
+        "block-device-mapping.volume-type": "gp2",
+        "root-device-type": "ebs"
+      },
+      "owners": ["099720109477"],
+      "most_recent": true
+    },
+    "ssh_username": "ubuntu"
+  },{
+    "ami_name": "vault-consul-ubuntu16-{{isotime | clean_ami_name}}-{{uuid}}",
     "ami_description": "An Ubuntu 16.04 AMI that has Vault and Consul installed.",
     "instance_type": "t2.micro",
     "name": "ubuntu16-ami",
@@ -111,7 +130,7 @@
       "fi"
     ],
     "inline_shebang": "/bin/bash -e",
-    "only": ["ubuntu16-ami"]
+    "only": ["ubuntu16-ami","ubuntu18-ami"]
   },{
     "type": "shell",
     "inline": [
@@ -130,8 +149,21 @@
       " /tmp/terraform-aws-consul/modules/install-consul/install-consul --download-url {{user `consul_download_url`}};",
       "else",
       " /tmp/terraform-aws-consul/modules/install-consul/install-consul --version {{user `consul_version`}};",
-      "fi",
+      "fi"
+    ],
+    "pause_before": "30s"
+  },{
+    "type": "shell",
+    "only": ["ubuntu16-ami", "amazon-linux-2-ami"],
+    "inline": [
       "/tmp/terraform-aws-consul/modules/install-dnsmasq/install-dnsmasq"
     ]
+  },{
+    "type": "shell",
+    "only": ["ubuntu18-ami"],
+    "inline": [
+      "/tmp/terraform-aws-consul/modules/setup-systemd-resolved/setup-systemd-resolved"
+    ],
+    "pause_before": "30s"
   }]
 }

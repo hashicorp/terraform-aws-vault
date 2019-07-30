@@ -2,8 +2,9 @@
 
 This folder shows an example of how to use the [install-vault module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault) from this Module and
 the [install-consul](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-consul)
-and [install-dnsmasq](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq) modules
-from the Consul AWS Module with [Packer](https://www.packer.io/) to create [Amazon Machine Images
+and [install-dnsmasq](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq) or the
+[setup-systemd-resolved](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/setup-systemd-resolved)
+modules from the Consul AWS Module with [Packer](https://www.packer.io/) to create [Amazon Machine Images
 (AMIs)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) that have Vault and Consul installed on top of:
 
 1. Ubuntu 18.04

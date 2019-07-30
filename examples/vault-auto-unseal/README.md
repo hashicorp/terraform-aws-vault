@@ -13,6 +13,7 @@ with the Vault VPC. The Vault cluster uses [Consul][consul] as the storage backe
 so this example also deploys a separate Consul server cluster using the
 [consul-cluster module][consul_cluster] from the Consul AWS Module. Each of the
 servers in this example has [Dnsmasq][dnsmasq] installed (via the [install-dnsmasq module][dnsmasq_module])
+or [setup-systemd-resolved][setup_systemd_resolved] (in the case of Ubuntu 18.04)
 which allows them to use the Consul server cluster for service discovery and thereby
 access Vault via DNS using the domain name `vault.service.consul`.
 
@@ -111,6 +112,7 @@ Enterprise License to the cluster with `vault write /sys/license "text=$LICENSE_
 [consul]: https://www.consul.io/
 [dnsmasq_module]: https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq
 [dnsmasq]: http://www.thekelleys.org.uk/dnsmasq/doc.html
+[setup_systemd_resolved]: https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/setup-systemd-resolved
 [examples_helper]: https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-examples-helper/vault-examples-helper.sh
 [key_creation]: https://docs.aws.amazon.com/kms/latest/developerguide/create-keys.html
 [kms]: https://aws.amazon.com/kms/

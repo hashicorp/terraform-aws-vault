@@ -41,6 +41,7 @@ function print_usage {
   echo -e "  --skip-vault-config\tIf this flag is set, don't generate a Vault configuration file. Optional. Default is false."
   echo -e "  --enable-s3-backend\tIf this flag is set, an S3 backend will be enabled in addition to the HA Consul backend. Default is false."
   echo -e "  --s3-bucket\tSpecifies the S3 bucket to use to store Vault data. Only used if '--enable-s3-backend' is set."
+  echo -e "  --s3-bucket-path\tSpecifies the S3 bucket path to use to store Vault data. Only used if '--enable-s3-backend' is set."
   echo -e "  --s3-bucket-region\tSpecifies the AWS region where '--s3-bucket' lives. Only used if '--enable-s3-backend' is set."
   echo
   echo "Options for Vault Agent:"
@@ -230,11 +231,12 @@ function generate_vault_config {
   local -r user="$7"
   local -r enable_s3_backend="$8"
   local -r s3_bucket="$9"
-  local -r s3_bucket_region="${10}"
-  local -r enable_auto_unseal="${11}"
-  local -r auto_unseal_kms_key_id="${12}"
-  local -r auto_unseal_kms_key_region="${13}"
-  local -r auto_unseal_endpoint="${14}"
+  local -r s3_bucket_path="${10}"
+  local -r s3_bucket_region="${11}"
+  local -r enable_auto_unseal="${12}"
+  local -r auto_unseal_kms_key_id="${13}"
+  local -r auto_unseal_kms_key_region="${14}"
+  local -r auto_unseal_endpoint="${15}"
   local -r config_path="$config_dir/$VAULT_CONFIG_FILE"
 
   local instance_ip_address
@@ -281,6 +283,7 @@ EOF
     s3_config=$(cat <<EOF
 storage "s3" {
   bucket = "$s3_bucket"
+  path   = "$s3_bucket_path"
   region = "$s3_bucket_region"
 }\n
 EOF
@@ -395,7 +398,7 @@ EOF
 function start_vault {
   log_info "Reloading systemd config and starting Vault"
   sudo systemctl daemon-reload
-  sudo systemctl enable vault.service  
+  sudo systemctl enable vault.service
   sudo systemctl restart vault.service
 }
 
@@ -420,6 +423,7 @@ function run {
   local skip_vault_config="false"
   local enable_s3_backend="false"
   local s3_bucket=""
+  local s3_bucket_path=""
   local s3_bucket_region=""
   local agent="false"
   local agent_vault_address="$DEFAULT_AGENT_VAULT_ADDRESS"
@@ -501,6 +505,10 @@ function run {
         ;;
       --s3-bucket)
         s3_bucket="$2"
+        shift
+        ;;
+      --s3-bucket-path)
+        s3_bucket_path="$2"
         shift
         ;;
       --s3-bucket-region)
@@ -656,6 +664,7 @@ function run {
         "$user" \
         "$enable_s3_backend" \
         "$s3_bucket" \
+        "$s3_bucket_path" \
         "$s3_bucket_region" \
         "$enable_auto_unseal" \
         "$auto_unseal_kms_key_id" \

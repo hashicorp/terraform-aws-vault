@@ -74,6 +74,7 @@ The `run-vault` script accepts the following arguments:
   have a custom configuration file and don't want to use any of of the default settings from `run-vault`.
 * `--enable-s3-backend` (optional): If this flag is set, an S3 backend will be enabled in addition to the HA Consul backend.
 * `--s3-bucket` (optional): Specifies the S3 bucket to use to store Vault data. Only used if `--enable-s3-backend` is set.
+* `--s3-bucket-path` (optional): Specifies the S3 bucket path to use to store Vault data. Default is `""`. Only used if `--enable-s3-backend` is set.
 * `--s3-bucket-region` (optional): Specifies the AWS region where `--s3-bucket` lives. Only used if `--enable-s3-backend` is set.
 
 Optional Arguments for enabling the AWS KMS seal (Vault Enterprise only):
@@ -148,6 +149,8 @@ available.
   configure S3 as an additional (non-HA) storage backend with the following settings:
 
     * [bucket](https://www.vaultproject.io/docs/configuration/storage/s3.html#bucket): Set to the `--s3-bucket`
+      parameter.
+    * [path](https://www.vaultproject.io/docs/configuration/storage/s3.html#path): Set to the `--s3-bucket-path`
       parameter.
     * [region](https://www.vaultproject.io/docs/configuration/storage/s3.html#region): Set to the `--s3-bucket-region`
       parameter.

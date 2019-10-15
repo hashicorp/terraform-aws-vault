@@ -1,17 +1,17 @@
+
+# ---------------------------------------------------------------------------------------------------------------------
+# ENVIRONMENT VARIABLES
+# Define these secrets as environment variables
+# ---------------------------------------------------------------------------------------------------------------------
+
+# AWS_ACCESS_KEY_ID
+# AWS_SECRET_ACCESS_KEY
+# AWS_DEFAULT_REGION
+
 # ---------------------------------------------------------------------------------------------------------------------
 # REQUIRED PARAMETERS
 # You must provide a value for each of these parameters.
 # ---------------------------------------------------------------------------------------------------------------------
-
-variable "aws_region" {
-  description = "The AWS region in which all resources will be created"
-  type        = string
-}
-
-variable "aws_account_id" {
-  description = "The ID of the AWS Account in which to create resources."
-  type        = string
-}
 
 variable "ami_id" {
   description = "The ID of the AMI to run in the cluster. This should be an AMI built from the Packer template under examples/vault-consul-ami/vault-consul.json."
@@ -88,20 +88,10 @@ variable "vpc_id" {
   default     = null
 }
 
-variable "vpc_subnet_ids" {
-  description = "Subnets for Consul and Vault"
-  type        = list(string)
-}
-
-variable "vpc_cidr_blocks" {
-  description = "CIDR blocks of the subnets in the VPC"
-  type        = list(string)
-}
-
-variable "vpc_name" {
-  description = "The name of the VPC in which to run the EKS cluster (e.g. stage, prod)"
-  type        = string
-}
+#variable "vpc_subnet_ids" {
+#  description = "Subnets for Consul and Vault"
+#  type        = list(string)
+#}
 
 variable "security_group_id" {
   description = "Security group ID of VPN Server"
@@ -113,15 +103,6 @@ variable "external_account_ssh_grunt_role_arn" {
   type        = string
 }
 
-variable "terraform_state_aws_region" {
-  description = "The AWS region of the S3 bucket used to store Terraform remote state"
-  type        = string
-}
-
-variable "terraform_state_s3_bucket" {
-  description = "The name of the S3 bucket used to store Terraform remote state"
-  type        = string
-}
 ##
 # ---------------------------------------------------------------------------------------------------------------------
 # Encryption

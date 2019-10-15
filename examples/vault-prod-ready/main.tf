@@ -1,32 +1,17 @@
-# ---------------------------------------------------------------------------------------------------------------------
-# CONFIGURE OUR AWS CONNECTION
-# ---------------------------------------------------------------------------------------------------------------------
-
-provider "aws" {
-  # The AWS region in which all resources will be created
-  region = var.aws_region
-
-  # Provider version 2.X series is the latest, but has breaking changes with 1.X series.
-  version = "~> 2.29"
-
-  # Only these AWS Account IDs may be operated on by this template
-  allowed_account_ids = [var.aws_account_id]
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-# CONFIGURE REMOTE STATE STORAGE
-# ---------------------------------------------------------------------------------------------------------------------
-
-terraform {
-  # The configuration for this backend will be filled in by Terragrunt
-  backend "s3" {}
-
-  # Only allow this Terraform version. Note that if you upgrade to a newer version, Terraform won't allow you to use an
-  # older version, so when you upgrade, you should upgrade everyone on your team and your CI servers all at once.
-  required_version = "= 0.12.4"
-}
 # ----------------------------------------------------------------------------------------------------------------------
-# EXTRA
+# REQUIRE A SPECIFIC TERRAFORM VERSION OR HIGHER
+# This module has been updated with 0.12 syntax, which means it is no longer compatible with any versions below 0.12.
+# ----------------------------------------------------------------------------------------------------------------------
+terraform {
+  required_version = ">= 0.12"
+}
+
+data "aws_kms_alias" "vault-example" {
+  name = "alias/${var.auto_unseal_kms_key_alias}"
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# SECURITY GROUPS
 # ----------------------------------------------------------------------------------------------------------------------
 # Only allow vault to be accessed from the OpenVPN server
 resource "aws_security_group_rule" "allow_vault_inbound_ssh" {
@@ -104,7 +89,7 @@ module "vault_cluster" {
   user_data = data.template_file.user_data_vault_cluster.rendered
 
   vpc_id     = var.vpc_id
-  subnet_ids = var.vpc_subnet_ids
+#  subnet_ids = var.vpc_subnet_ids
 
   # This setting will create the AWS policy that allows the vault cluster to
   # access KMS and use this key for encryption and decryption
@@ -264,7 +249,7 @@ module "consul_cluster" {
   user_data = data.template_file.user_data_consul.rendered
 
   vpc_id     = var.vpc_id
-  subnet_ids = var.vpc_subnet_ids
+#  subnet_ids = var.vpc_subnet_ids
 
   # To make testing easier, we allow Consul and SSH requests from any IP address here but in a production
   # deployment, we strongly recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
@@ -308,7 +293,7 @@ data "template_file" "user_data_consul" {
 
 resource "aws_elb" "load_balancer_consul" {
   name            = var.consul_cluster_name
-  subnets         = var.vpc_subnet_ids
+#  subnets         = var.vpc_subnet_ids
   security_groups = [aws_security_group.elb_consul.id]
   internal        = true
 
@@ -391,7 +376,7 @@ resource "aws_autoscaling_attachment" "elb_consul" {
 
 resource "aws_elb" "load_balancer_vault" {
   name                        = var.vault_cluster_name
-  subnets                     = var.vpc_subnet_ids
+#  subnets                     = var.vpc_subnet_ids
   security_groups             = [aws_security_group.elb_vault.id]
   internal                    = true
   connection_draining         = true
@@ -531,3 +516,23 @@ resource "aws_iam_role_policy_attachment" "vault_secretsmanager" {
 }
 
 data "aws_caller_identity" "current" {}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# DEPLOY THE CLUSTERS IN THE DEFAULT VPC AND AVAILABILITY ZONES
+# Using the default VPC and subnets makes this example easy to run and test, but it means Consul and Vault are
+# accessible from the public Internet. In a production deployment, we strongly recommend deploying into a custom VPC
+# and private subnets.
+# ---------------------------------------------------------------------------------------------------------------------
+
+data "aws_vpc" "default" {
+  default = var.vpc_id == null ? true : false
+  id      = var.vpc_id
+}
+
+data "aws_subnet_ids" "default" {
+  vpc_id = data.aws_vpc.default.id
+}
+
+data "aws_region" "current" {
+}
+

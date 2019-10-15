@@ -68,10 +68,6 @@ resource "aws_security_group_rule" "allow_consul_inbound_http_from_elb" {
   security_group_id        = module.consul_cluster.security_group_id
 }
 
-data "aws_kms_alias" "vault-example" {
-  name = "alias/${var.auto_unseal_kms_key_alias}"
-}
-
 # ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY THE VAULT SERVER CLUSTER
 # ---------------------------------------------------------------------------------------------------------------------

@@ -167,6 +167,11 @@ variable "health_check_grace_period" {
   default     = 300
 }
 
+variable "iam_instance_profile_arn" {
+  description = "The ARN of the IAM Instance profilee to use for the Vault instances'. Use this setting to ensure a deterministic IAM instance role ARN, otherwise the default will see terraform create a unique IAM instance profile name."
+  default     = ""
+}
+
 variable "instance_profile_path" {
   description = "Path in which to create the IAM instance profile."
   default     = "/"

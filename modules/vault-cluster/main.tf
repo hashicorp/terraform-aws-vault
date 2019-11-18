@@ -203,6 +203,7 @@ module "security_group_rules" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_iam_instance_profile" "instance_profile" {
+  count       = var.iam_instance_profile_arn == null ? 1 : 0
   name_prefix = var.cluster_name
   path        = var.instance_profile_path
   role        = aws_iam_role.instance_role.name
@@ -216,6 +217,7 @@ resource "aws_iam_instance_profile" "instance_profile" {
 }
 
 resource "aws_iam_role" "instance_role" {
+  count              = var.iam_instance_profile_arn == null ? 1 : 0
   name_prefix        = var.cluster_name
   assume_role_policy = data.aws_iam_policy_document.instance_role.json
 
@@ -228,6 +230,8 @@ resource "aws_iam_role" "instance_role" {
 }
 
 data "aws_iam_policy_document" "instance_role" {
+  count = var.iam_instance_profile_arn == null ? 1 : 0
+
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
@@ -240,7 +244,7 @@ data "aws_iam_policy_document" "instance_role" {
 }
 
 resource "aws_s3_bucket" "vault_storage" {
-  count         = var.enable_s3_backend ? 1 : 0
+  count         = var.enable_s3_backend && var.iam_instance_profile_arn == null ? 1 : 0
   bucket        = var.s3_bucket_name
   force_destroy = var.force_destroy_s3_bucket
 
@@ -264,7 +268,7 @@ resource "aws_s3_bucket" "vault_storage" {
 }
 
 resource "aws_iam_role_policy" "vault_s3" {
-  count = var.enable_s3_backend ? 1 : 0
+  count = var.enable_s3_backend && var.iam_instance_profile_arn == null ? 1 : 0
   name  = "vault_s3"
   role  = aws_iam_role.instance_role.id
   policy = element(
@@ -281,7 +285,7 @@ resource "aws_iam_role_policy" "vault_s3" {
 }
 
 data "aws_iam_policy_document" "vault_s3" {
-  count = var.enable_s3_backend ? 1 : 0
+  count = var.enable_s3_backend && var.iam_instance_profile_arn == null ? 1 : 0
 
   statement {
     effect  = "Allow"
@@ -295,7 +299,7 @@ data "aws_iam_policy_document" "vault_s3" {
 }
 
 data "aws_iam_policy_document" "vault_auto_unseal_kms" {
-  count = var.enable_auto_unseal ? 1 : 0
+  count = var.enable_auto_unseal && var.iam_instance_profile_arn == null ? 1 : 0
 
   statement {
     effect = "Allow"
@@ -311,7 +315,7 @@ data "aws_iam_policy_document" "vault_auto_unseal_kms" {
 }
 
 resource "aws_iam_role_policy" "vault_auto_unseal_kms" {
-  count = var.enable_auto_unseal ? 1 : 0
+  count = var.enable_auto_unseal && var.iam_instance_profile_arn == null ? 1 : 0
   name  = "vault_auto_unseal_kms"
   role  = aws_iam_role.instance_role.id
   policy = element(

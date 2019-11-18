@@ -313,7 +313,7 @@ Check out the [Security section](#security) for more details.
 ### IAM Role and Permissions
 
 Each EC2 Instance in the ASG has an [IAM Role](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html) attached.
-The IAM Role ARN is exported as an output variable so you can add custom permissions.
+The IAM Role ARN is exported as an output variable so you can add custom permissions. If you require a deterministic IAM role ARN, the `iam_instance_profile_arn` variable can be set to your desired IAM Instance profile ARN.
 
 
 ### S3 bucket (Optional)

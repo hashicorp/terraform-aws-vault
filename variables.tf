@@ -90,6 +90,13 @@ variable "vault_instance_type" {
   default     = "t2.micro"
 }
 
+variable "vault_iam_instance_profile_arn" {
+  description = "The ARN of the IAM Instance profilee to use for the Vault instances'. Use this setting to ensure a deterministic IAM instance role ARN, otherwise the default will see terraform create a unique IAM instance profile name."
+  type        = "string"
+  default     = "null"
+}
+
+
 variable "consul_instance_type" {
   description = "The type of EC2 Instance to run in the Consul ASG"
   type        = string

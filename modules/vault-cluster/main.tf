@@ -244,7 +244,7 @@ data "aws_iam_policy_document" "instance_role" {
 }
 
 resource "aws_s3_bucket" "vault_storage" {
-  count         = var.enable_s3_backend && var.iam_instance_profile_arn == null ? 1 : 0
+  count         = var.enable_s3_backend ? 1 : 0
   bucket        = var.s3_bucket_name
   force_destroy = var.force_destroy_s3_bucket
 

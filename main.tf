@@ -66,8 +66,6 @@ module "vault_cluster" {
   ami_id    = var.ami_id == null ? data.aws_ami.vault_consul.image_id : var.ami_id
   user_data = data.template_file.user_data_vault_cluster.rendered
 
-  iam_instance_profile_arn = var.vault_iam_instance_profile_arn
-
   vpc_id     = data.aws_vpc.default.id
   subnet_ids = data.aws_subnet_ids.default.ids
 

@@ -77,7 +77,7 @@ See the [vault-consul-ami example](https://github.com/hashicorp/terraform-aws-va
 
 ## Command line Arguments
 
-The `run-vault` script accepts the following arguments:
+The `update-certificate-script` script accepts the following arguments:
 
 * `--cert-file-path` (required): The path to the CA certificate public key to add to the OS certificate store.
 * `--dest-file-name` (optional): This script will copy `--cert-file-path` to a file with this name in a shared

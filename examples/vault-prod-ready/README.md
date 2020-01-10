@@ -1,6 +1,6 @@
 # Vault auto unseal cluster private with kms and acl for consul with encryption. PROD READY
 
-This example icombines the followings: Vault auto unseal - Vault private cluster - Consul with encryption and also adds some stuff that we expect in a prod ready working state, mainly:
+This example combines the following: Vault auto unseal, Vault private cluster, and Consul with encryption and also adds a few items that we expect in a production Vault deployment, including:
 * Secure instances using security groups and remove [0.0.0.0/0]
 * Enable ACL on consul and pass the token in a secure way using AWS Secrets manager
 * Enable encryption on Consul (based on https://github.com/hashicorp/terraform-aws-consul/tree/master/examples/example-with-encryption)

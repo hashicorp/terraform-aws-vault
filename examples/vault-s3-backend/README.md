@@ -36,7 +36,7 @@ To deploy a Vault Cluster:
    example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-consul-ami) documentation for
    instructions. Make sure to note down the ID of the AMI.
 1. Install [Terraform](https://www.terraform.io/).
-1. Open `vars.tf`, set the environment variables specified at the top of the file, and fill in any other variables that
+1. Open `variables.tf`, set the environment variables specified at the top of the file, and fill in any other variables that
    don't have a default. If you built a custom AMI, put the AMI ID into the `ami_id` variable. Otherwise, one of our
    public example AMIs will be used by default. These AMIs are great for learning/experimenting, but are NOT
    recommended for production use.

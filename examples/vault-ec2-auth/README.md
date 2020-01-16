@@ -38,7 +38,7 @@ of the Vault nodes.
 1. Build a Vault and Consul AMI. See the [vault-consul-ami example][vault_consul_ami] documentation for
    instructions. Make sure to note down the ID of the AMI.
 1. Install [Terraform](https://www.terraform.io/).
-1. Open `vars.tf`, set the environment variables specified at the top of the file, and fill in any other variables that
+1. Open `variables.tf`, set the environment variables specified at the top of the file, and fill in any other variables that
    don't have a default. Put the AMI ID you previously took note into the `ami_id` variable.
 1. Run `terraform init`.
 1. Run `terraform apply`.

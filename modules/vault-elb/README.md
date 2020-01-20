@@ -23,7 +23,7 @@ module "vault_elb" {
 
   vault_asg_name = "${module.vault_cluster.asg_name}"
 
-  # ... See vars.tf for the other parameters you must define for the vault-cluster module
+  # ... See variables.tf for the other parameters you must define for the vault-cluster module
 }
 
 # Configure the Vault cluster to use the ELB
@@ -47,7 +47,7 @@ Note the following parameters:
   [vault-cluster module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster)
   tells it to register each server with the ELB when it is booting.
 
-You can find the other parameters in [vars.tf](vars.tf).
+You can find the other parameters in [variables.tf](variables.tf).
 
 Check out the [root example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example) for working sample code.
 

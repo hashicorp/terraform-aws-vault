@@ -38,7 +38,7 @@ even if you immediately delete it.
   Make sure to note down the ID of the AMI.
 1. Install [Terraform][terraform].
 1. [Create an AWS KMS key][key_creation]. Take note of the key alias.
-1. Open `vars.tf`, set the environment variables specified at the top of the file,
+1. Open `variables.tf`, set the environment variables specified at the top of the file,
   and fill in any other variables that don't have a default. Put the AMI ID you
   previously took note into the `ami_id` variable and the KMS key alias into
   `auto_unseal_kms_key_alias`.

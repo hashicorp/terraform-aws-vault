@@ -44,7 +44,7 @@ module "vault_cluster" {
     }
   ]
 
-  # ... See vars.tf for the other parameters you must define for the vault-cluster module
+  # ... See variables.tf for the other parameters you must define for the vault-cluster module
 }
 ```
 
@@ -66,7 +66,7 @@ Note the following parameters:
   run Vault. The `run-vault` script is one of the scripts installed by the [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault)
   module.
 
-You can find the other parameters in [vars.tf](vars.tf).
+You can find the other parameters in [variables.tf](variables.tf).
 
 Check out the [root example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example) and
 [vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) examples for working sample code.
@@ -437,7 +437,7 @@ This module attaches a security group to each EC2 Instance that allows inbound r
   [CIDR blocks](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) that will be allowed access. You can use the `allowed_ssh_security_group_ids` parameter to control the list of source Security Groups that will be allowed access.
 
 Note that all the ports mentioned above are configurable via the `xxx_port` variables (e.g. `api_port`). See
-[vars.tf](vars.tf) for the full list.  
+[variables.tf](variables.tf) for the full list.  
 
 
 

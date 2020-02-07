@@ -219,3 +219,18 @@ variable "enabled_metrics" {
   default     = []
 }
 
+variable "enable_dynamo_backend" {
+  description = "Whether to configure a DynamoDB storage backend (No Consul)"
+  type        = bool
+  default     = false
+}
+
+variable "dynamo_table_name" {
+  description = "The name of the Dynamo Table to create and use as a storage backend. Only used if 'enable_dynamo_backend' is set to true."
+  default     = ""
+}
+
+variable "dynamodb_table_arn" {
+  description = "ARN of the table, used for policies."
+  default     = ""
+}

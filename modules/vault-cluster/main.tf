@@ -52,6 +52,11 @@ resource "aws_autoscaling_group" "autoscaling_group" {
     propagate_at_launch = true
   }
 
+
+  # Use table policy name in tags for depending on them when they are there
+  # And only create the cluster after dynamo exists
+  # Otherwise Vault might boot and not find the bucket or not yet have the necessary permissions
+  # Not using `depends_on` because these resources might not exist
   tag {
     key                 = "using_dynamodb_backend"
     value               = element(concat(aws_iam_role_policy.vault_dynamo.*.name, [""]), 0)

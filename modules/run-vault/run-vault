@@ -717,7 +717,7 @@ function run {
     fi
   fi
 
-  generate_systemd_config "$SYSTEMD_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_level" "$systemd_stdout" "$systemd_stderr" "$user" "$agent" "$enable_dynamo_backend" "$dynamo_region" "$dynamo_table"
+  generate_systemd_config "$SYSTEMD_CONFIG_PATH" "$config_dir" "$bin_dir" "$log_level" "$systemd_stdout" "$systemd_stderr" "$user" "$agent"
   start_vault
 }
 

@@ -59,12 +59,6 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   }
 
   tag {
-    key                 = "dynamodb_table_id"
-    value               = var.dynamodb_table_arn
-    propagate_at_launch = true
-  }
-
-  tag {
     key                 = "using_auto_unseal"
     value               = element(concat(aws_iam_role_policy.vault_auto_unseal_kms.*.name, [""]), 0)
     propagate_at_launch = true
@@ -306,24 +300,11 @@ data "aws_iam_policy_document" "vault_s3" {
   }
 }
 
-data "aws_iam_policy_document" "vault_dynamo" {
-  count = var.enable_dynamo_backend ? 1 : 0
-
-  statement {
-    effect    = "Allow"
-    actions   = ["dynamodb:*"]
-    resources = [var.dynamodb_table_arn]
-  }
-}
-
 resource "aws_iam_role_policy" "vault_dynamo" {
   count = var.enable_dynamo_backend ? 1 : 0
   name  = "vault_dynamo"
   role  = aws_iam_role.instance_role.id
-  policy = element(
-    concat(data.aws_iam_policy_document.vault_dynamo.*.json, list("")),
-    0,
-  )
+  policy = var.dynamo_backend_policy
 }
 
 data "aws_iam_policy_document" "vault_auto_unseal_kms" {

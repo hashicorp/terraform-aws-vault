@@ -226,7 +226,7 @@ variable "enable_dynamo_backend" {
 }
 
 variable "dynamo_table_name" {
-  description = "The name of the Dynamo Table to create and use as a storage backend. Only used if 'enable_dynamo_backend' is set to true."
+  description = "The name of the DynamoDB Table to create and use as a storage backend. Only used if 'enable_dynamo_backend' is set to true."
   default     = ""
 }
 

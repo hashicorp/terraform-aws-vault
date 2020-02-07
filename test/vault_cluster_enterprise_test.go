@@ -12,7 +12,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/gruntwork-io/terratest/modules/test-structure"
+	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
 // To test this on circle ci you need a url set as an environment variable, VAULT_AMI_TEMPLATE_VAR_DOWNLOAD_URL
@@ -51,7 +51,12 @@ func runVaultEnterpriseClusterTest(t *testing.T, amiId string, awsRegion string,
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
-		deployCluster(t, amiId, awsRegion, examplesDir, random.UniqueId(), nil)
+		uniqueId := random.UniqueId()
+		terraformVars := map[string]interface{}{
+			VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
+			VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
+		}
+		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {

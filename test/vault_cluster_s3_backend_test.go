@@ -1,10 +1,11 @@
 package test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/random"
-	"github.com/gruntwork-io/terratest/modules/test-structure"
+	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
 const VAULT_CLUSTER_S3_BACKEND_PATH = "examples/vault-s3-backend"
@@ -40,6 +41,8 @@ func runVaultWithS3BackendClusterTest(t *testing.T, amiId string, awsRegion, ssh
 		terraformVars := map[string]interface{}{
 			VAR_S3_BUCKET_NAME:          s3BucketName(uniqueId),
 			VAR_FORCE_DESTROY_S3_BUCKET: true,
+			VAR_CONSUL_CLUSTER_NAME:     fmt.Sprintf("consul-test-%s", uniqueId),
+			VAR_CONSUL_CLUSTER_TAG_KEY:  fmt.Sprintf("consul-test-%s", uniqueId),
 		}
 		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
 	})

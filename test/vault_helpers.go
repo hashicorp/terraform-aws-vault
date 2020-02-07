@@ -18,7 +18,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/gruntwork-io/terratest/modules/test-structure"
+	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/hashicorp/vault/api"
 	"github.com/stretchr/testify/require"
 )
@@ -102,11 +102,9 @@ func deployCluster(t *testing.T, amiId string, awsRegion string, examplesDir str
 	terraformOptions := &terraform.Options{
 		TerraformDir: examplesDir,
 		Vars: mergeMaps(terraformVars, map[string]interface{}{
-			VAR_AMI_ID:                 amiId,
-			VAR_VAULT_CLUSTER_NAME:     fmt.Sprintf("vault-test-%s", uniqueId),
-			VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
-			VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
-			VAR_SSH_KEY_NAME:           keyPair.Name,
+			VAR_AMI_ID:             amiId,
+			VAR_VAULT_CLUSTER_NAME: fmt.Sprintf("vault-test-%s", uniqueId),
+			VAR_SSH_KEY_NAME:       keyPair.Name,
 		}),
 		EnvVars: map[string]string{
 			ENV_VAR_AWS_REGION: awsRegion,

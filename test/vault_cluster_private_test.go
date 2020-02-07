@@ -1,10 +1,11 @@
 package test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/random"
-	"github.com/gruntwork-io/terratest/modules/test-structure"
+	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
 const VAULT_CLUSTER_PRIVATE_PATH = "examples/vault-cluster-private"
@@ -33,7 +34,12 @@ func runVaultPrivateClusterTest(t *testing.T, amiId string, awsRegion string, ss
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
-		deployCluster(t, amiId, awsRegion, examplesDir, random.UniqueId(), nil)
+		uniqueId := random.UniqueId()
+		terraformVars := map[string]interface{}{
+			VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
+			VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
+		}
+		deployCluster(t, amiId, awsRegion, examplesDir, random.UniqueId(), terraformVars)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {

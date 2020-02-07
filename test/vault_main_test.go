@@ -6,7 +6,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/packer"
-	"github.com/gruntwork-io/terratest/modules/test-structure"
+	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
 const AMI_EXAMPLE_PATH = "../examples/vault-consul-ami/vault-consul.json"
@@ -57,6 +57,11 @@ var testCases = []testCase{
 	{
 		"TestVaultWithS3Backend",
 		runVaultWithS3BackendClusterTest,
+		false,
+	},
+	{
+		"TestVaultWithDynamoDBBackend",
+		runVaultWithDynamoBackendClusterTest,
 		false,
 	},
 	{

@@ -10,22 +10,11 @@ terraform {
 # DEPLOY THE VAULT SERVER CLUSTER
 # ---------------------------------------------------------------------------------------------------------------------
 
-resource "aws_dynamodb_table" "vault_dynamo" {
-  name           = var.dynamo_table_name
-  hash_key       = "Path"
-  range_key      = "Key"
+module "backend" {
+  source         = "./backend"
+  table_name     = var.dynamo_table_name
   read_capacity  = var.dynamo_read_capacity
   write_capacity = var.dynamo_write_capacity
-
-  attribute {
-    name = "Path"
-    type = "S"
-  }
-
-  attribute {
-    name = "Key"
-    type = "S"
-  }
 }
 
 module "vault_cluster" {
@@ -54,9 +43,7 @@ module "vault_cluster" {
   ssh_key_name                         = var.ssh_key_name
 
   enable_dynamo_backend = true
-  dynamo_table_name     = var.dynamo_table_name
-  # pass the arn into the module since we can't lookup a global table
-  dynamodb_table_arn = aws_dynamodb_table.vault_dynamo.arn
+  dynamo_backend_policy = [module.dynamo_table.backend_policy]
 }
 
 data "template_file" "user_data_vault_cluster" {

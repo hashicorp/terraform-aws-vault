@@ -74,6 +74,11 @@
     "type": "shell",
     "inline": ["mkdir -p /tmp/terraform-aws-vault/modules"]
   },{
+    "type": "shell",
+    "inline": [
+      "sudo apt-get update"
+    ]
+  },{
     "type": "file",
     "source": "{{template_dir}}/../../modules/",
     "destination": "/tmp/terraform-aws-vault/modules",

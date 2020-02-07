@@ -220,7 +220,7 @@ variable "enabled_metrics" {
 }
 
 variable "enable_dynamo_backend" {
-  description = "Whether to configure a DynamoDB storage backend (No Consul)"
+  description = "Whether to use a DynamoDB storage backend instead of Consul"
   type        = bool
   default     = false
 }

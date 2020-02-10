@@ -227,6 +227,6 @@ variable "enable_dynamo_backend" {
 
 variable "dynamo_backend_policy" {
   description = "Policy to attach to the instance role"
-  type = string
-  default = ""
+  type        = string
+  default     = ""
 }

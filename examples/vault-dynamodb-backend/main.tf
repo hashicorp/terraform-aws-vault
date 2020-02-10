@@ -43,7 +43,7 @@ module "vault_cluster" {
   ssh_key_name                         = var.ssh_key_name
 
   enable_dynamo_backend = true
-  dynamo_backend_policy = [module.dynamo_table.backend_policy]
+  dynamo_backend_policy = [module.backend.backend_policy]
 }
 
 data "template_file" "user_data_vault_cluster" {
@@ -57,7 +57,7 @@ data "template_file" "user_data_vault_cluster" {
 
 # ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY THE CLUSTERS IN THE DEFAULT VPC AND AVAILABILITY ZONES
-# Using the default VPC and subnets makes this example easy to run and test, but it means Consul and Vault are
+# Using the default VPC and subnets makes this example easy to run and test, but it means Vault is
 # accessible from the public Internet. In a production deployment, we strongly recommend deploying into a custom VPC
 # and private subnets.
 # ---------------------------------------------------------------------------------------------------------------------

@@ -306,9 +306,9 @@ data "aws_iam_policy_document" "vault_s3" {
 }
 
 resource "aws_iam_role_policy" "vault_dynamo" {
-  count = var.enable_dynamo_backend ? 1 : 0
-  name  = "vault_dynamo"
-  role  = aws_iam_role.instance_role.id
+  count  = var.enable_dynamo_backend ? 1 : 0
+  name   = "vault_dynamo"
+  role   = aws_iam_role.instance_role.id
   policy = var.dynamo_backend_policy
 }
 

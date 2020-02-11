@@ -6,6 +6,10 @@ terraform {
   required_version = ">= 0.12"
 }
 
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # CREATE AN AUTO SCALING GROUP (ASG) TO RUN VAULT
 # ---------------------------------------------------------------------------------------------------------------------
@@ -301,6 +305,39 @@ data "aws_iam_policy_document" "vault_s3" {
     resources = [
       aws_s3_bucket.vault_storage[0].arn,
       "${aws_s3_bucket.vault_storage[0].arn}/*",
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "vault_dynamo" {
+  count = var.enable_dynamo_backend ? 1 : 0
+  statement {
+    effect = "Allow"
+    actions = [
+      "dynamodb:DescribeLimits",
+      "dynamodb:DescribeTimeToLive",
+      "dynamodb:ListTagsOfResource",
+      "dynamodb:DescribeReservedCapacityOfferings",
+      "dynamodb:DescribeReservedCapacity",
+      "dynamodb:ListTables",
+      "dynamodb:BatchGetItem",
+      "dynamodb:BatchWriteItem",
+      "dynamodb:CreateTable",
+      "dynamodb:DeleteItem",
+      "dynamodb:GetItem",
+      "dynamodb:GetRecords",
+      "dynamodb:PutItem",
+      "dynamodb:Query",
+      "dynamodb:UpdateItem",
+      "dynamodb:Scan",
+      "dynamodb:DescribeTable"
+    ]
+    resources = [
+      format("arn:aws:dynamodb:%s:%s:table/%s",
+        var.dynamo_table_region == "" ? data.aws_region.current.name : var.dynamo_table_region,
+        data.aws_caller_identity.current.account_id,
+        var.dynamo_table_name
+      )
     ]
   }
 }

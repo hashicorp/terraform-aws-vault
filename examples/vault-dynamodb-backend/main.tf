@@ -11,7 +11,7 @@ terraform {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "backend" {
-  source         = "./backend"
+  source         = "./dynamodb"
   table_name     = var.dynamo_table_name
   read_capacity  = var.dynamo_read_capacity
   write_capacity = var.dynamo_write_capacity

@@ -42,7 +42,7 @@ jobs:
           paths:
             - $HOME/.go_workspace/src/github.com/hashicorp/terraform-aws-vault/test/vendor
       - run: mkdir -p /tmp/logs
-      - run: run-go-tests --path test | tee /tmp/logs/all.log
+      - run: run-go-tests --path test --timeout 90m | tee /tmp/logs/all.log
       - run:
           command: terratest_log_parser --testlog /tmp/logs/all.log --outputdir /tmp/logs
           when: always

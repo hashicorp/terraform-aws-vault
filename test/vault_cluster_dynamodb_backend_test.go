@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -36,7 +37,7 @@ func runVaultWithDynamoBackendClusterTest(t *testing.T, amiId string, awsRegion,
 
 	test_structure.RunTestStage(t, "deploy", func() {
 		terraformVars := map[string]interface{}{
-			VAR_DYNAMO_TABLE_NAME: VAR_DYNAMO_TABLE_NAME,
+			VAR_DYNAMO_TABLE_NAME: fmt.Sprintf("vault-dynamo-test-%s", random.UniqueId()),
 		}
 		deployCluster(t, amiId, awsRegion, examplesDir, random.UniqueId(), terraformVars)
 	})

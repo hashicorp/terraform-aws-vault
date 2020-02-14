@@ -6,6 +6,10 @@ terraform {
   required_version = ">= 0.12"
 }
 
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # CREATE AN AUTO SCALING GROUP (ASG) TO RUN VAULT
 # ---------------------------------------------------------------------------------------------------------------------
@@ -49,6 +53,17 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   tag {
     key                 = "s3_bucket_id"
     value               = element(concat(aws_s3_bucket.vault_storage.*.id, [""]), 0)
+    propagate_at_launch = true
+  }
+
+
+  # Use table policy name in tags for depending on them when they are there
+  # And only create the cluster after dynamo exists
+  # Otherwise Vault might boot and not find the bucket or not yet have the necessary permissions
+  # Not using `depends_on` because these resources might not exist
+  tag {
+    key                 = "using_dynamodb_backend"
+    value               = element(concat(aws_iam_role_policy.vault_dynamo.*.name, [""]), 0)
     propagate_at_launch = true
   }
 
@@ -292,6 +307,49 @@ data "aws_iam_policy_document" "vault_s3" {
       "${aws_s3_bucket.vault_storage[0].arn}/*",
     ]
   }
+}
+
+data "aws_iam_policy_document" "vault_dynamo" {
+  count = var.enable_dynamo_backend ? 1 : 0
+  statement {
+    effect = "Allow"
+    actions = [
+      "dynamodb:DescribeLimits",
+      "dynamodb:DescribeTimeToLive",
+      "dynamodb:ListTagsOfResource",
+      "dynamodb:DescribeReservedCapacityOfferings",
+      "dynamodb:DescribeReservedCapacity",
+      "dynamodb:ListTables",
+      "dynamodb:BatchGetItem",
+      "dynamodb:BatchWriteItem",
+      "dynamodb:CreateTable",
+      "dynamodb:DeleteItem",
+      "dynamodb:GetItem",
+      "dynamodb:GetRecords",
+      "dynamodb:PutItem",
+      "dynamodb:Query",
+      "dynamodb:UpdateItem",
+      "dynamodb:Scan",
+      "dynamodb:DescribeTable"
+    ]
+    resources = [
+      format("arn:aws:dynamodb:%s:%s:table/%s",
+        var.dynamo_table_region == "" ? data.aws_region.current.name : var.dynamo_table_region,
+        data.aws_caller_identity.current.account_id,
+        var.dynamo_table_name
+      )
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "vault_dynamo" {
+  count  = var.enable_dynamo_backend ? 1 : 0
+  name   = "vault_dynamo"
+  role   = aws_iam_role.instance_role.id
+  policy = element(
+    concat(data.aws_iam_policy_document.vault_dynamo.*.json, [""]),
+    0,
+  )
 }
 
 data "aws_iam_policy_document" "vault_auto_unseal_kms" {

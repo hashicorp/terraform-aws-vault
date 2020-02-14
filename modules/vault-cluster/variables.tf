@@ -219,3 +219,20 @@ variable "enabled_metrics" {
   default     = []
 }
 
+variable "enable_dynamo_backend" {
+  description = "Whether to use a DynamoDB storage backend instead of Consul"
+  type        = bool
+  default     = false
+}
+
+variable "dynamo_table_name" {
+  description = "Table name for the storage backend, required if `enable_dynamo_backend = true`"
+  type        = string
+  default     = ""
+}
+
+variable "dynamo_table_region" {
+  description = "Table region used for the instance policy. Uses the current region if not supplied. Global tables should use `*` to allow for a cross region deployment to write to their respective table"
+  type        = string
+  default     = ""
+}

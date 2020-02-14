@@ -11,7 +11,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/gruntwork-io/terratest/modules/test-structure"
+	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
 // This is the alias of a KMS key we have previously created that lives in the
@@ -52,6 +52,8 @@ func runVaultAutoUnsealTest(t *testing.T, amiId string, awsRegion string, sshUse
 		terraformVars := map[string]interface{}{
 			VAR_VAULT_AUTO_UNSEAL_KMS_KEY_ALIAS: AUTO_UNSEAL_KMS_KEY_ALIAS,
 			VAR_VAULT_CLUSTER_SIZE:              1,
+			VAR_CONSUL_CLUSTER_NAME:             fmt.Sprintf("consul-test-%s", uniqueId),
+			VAR_CONSUL_CLUSTER_TAG_KEY:          fmt.Sprintf("consul-test-%s", uniqueId),
 		}
 		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
 	})

@@ -1,10 +1,11 @@
 package test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/random"
-	"github.com/gruntwork-io/terratest/modules/test-structure"
+	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
 const VAULT_CLUSTER_PUBLIC_PATH = REPO_ROOT
@@ -37,10 +38,13 @@ func runVaultPublicClusterTest(t *testing.T, amiId string, awsRegion string, ssh
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
+		uniqueId := random.UniqueId()
 		terraformVars := map[string]interface{}{
 			VAULT_CLUSTER_PUBLIC_VAR_CREATE_DNS_ENTRY:        boolToTerraformVar(false),
 			VAULT_CLUSTER_PUBLIC_VAR_HOSTED_ZONE_DOMAIN_NAME: "",
 			VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME:       "",
+			VAR_CONSUL_CLUSTER_NAME:                          fmt.Sprintf("consul-test-%s", uniqueId),
+			VAR_CONSUL_CLUSTER_TAG_KEY:                       fmt.Sprintf("consul-test-%s", uniqueId),
 		}
 		deployCluster(t, amiId, awsRegion, examplesDir, random.UniqueId(), terraformVars)
 	})

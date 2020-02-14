@@ -10,11 +10,11 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/files"
-	"github.com/gruntwork-io/terratest/modules/http-helper"
+	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/gruntwork-io/terratest/modules/test-structure"
+	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
 const VAULT_EC2_AUTH_PATH = "examples/vault-ec2-auth"
@@ -55,6 +55,8 @@ func runVaultEC2AuthTest(t *testing.T, amiId string, awsRegion string, sshUserNa
 		terraformVars := map[string]interface{}{
 			VAR_VAULT_AUTH_SERVER_NAME: fmt.Sprintf("vault-auth-test-%s", uniqueId),
 			VAR_VAULT_SECRET_NAME:      exampleSecret,
+			VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
+			VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
 		}
 		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
 	})
@@ -93,6 +95,8 @@ func runVaultIAMAuthTest(t *testing.T, amiId string, awsRegion string, sshUserNa
 			VAR_VAULT_AUTH_SERVER_NAME: fmt.Sprintf("vault-auth-test-%s", uniqueId),
 			VAR_VAULT_IAM_AUTH_ROLE:    fmt.Sprintf("vault-auth-role-test-%s", uniqueId),
 			VAR_VAULT_SECRET_NAME:      exampleSecret,
+			VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
+			VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
 		}
 		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
 	})
@@ -131,6 +135,8 @@ func runVaultAgentTest(t *testing.T, amiId string, awsRegion string, sshUserName
 			VAR_VAULT_AUTH_SERVER_NAME: fmt.Sprintf("vault-auth-test-%s", uniqueId),
 			VAR_VAULT_IAM_AUTH_ROLE:    fmt.Sprintf("vault-auth-role-test-%s", uniqueId),
 			VAR_VAULT_SECRET_NAME:      exampleSecret,
+			VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
+			VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
 		}
 		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
 	})

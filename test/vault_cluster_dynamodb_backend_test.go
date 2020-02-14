@@ -8,12 +8,11 @@ import (
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
-const VAULT_CLUSTER_S3_BACKEND_PATH = "examples/vault-s3-backend"
+const VAULT_CLUSTER_DYNAMODB_BACKEND_PATH = "examples/vault-dynamodb-backend"
 
-const VAR_S3_BUCKET_NAME = "s3_bucket_name"
-const VAR_FORCE_DESTROY_S3_BUCKET = "force_destroy_s3_bucket"
+const VAR_DYNAMO_TABLE_NAME = "dynamo_table_name"
 
-// Test the Vault with S3 Backend example by:
+// Test the Vault with DynamoDB Backend example by:
 //
 // 1. Copy the code in this repo to a temp folder so tests on the Terraform code can run in parallel without the
 //    state files overwriting each other.
@@ -22,8 +21,8 @@ const VAR_FORCE_DESTROY_S3_BUCKET = "force_destroy_s3_bucket"
 // 4. SSH to a Vault node and initialize the Vault cluster
 // 5. SSH to each Vault node and unseal it
 // 6. Connect to the Vault cluster via the ELB
-func runVaultWithS3BackendClusterTest(t *testing.T, amiId string, awsRegion, sshUserName string) {
-	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_CLUSTER_S3_BACKEND_PATH)
+func runVaultWithDynamoBackendClusterTest(t *testing.T, amiId string, awsRegion, sshUserName string) {
+	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_CLUSTER_DYNAMODB_BACKEND_PATH)
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
 		teardownResources(t, examplesDir)
@@ -33,25 +32,20 @@ func runVaultWithS3BackendClusterTest(t *testing.T, amiId string, awsRegion, ssh
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
 
-		getVaultLogs(t, "vaultClusterWithS3Backend", terraformOptions, amiId, awsRegion, sshUserName, keyPair)
+		getVaultLogs(t, "vaultClusterWithDynamoBackend", terraformOptions, amiId, awsRegion, sshUserName, keyPair)
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
-		uniqueId := random.UniqueId()
 		terraformVars := map[string]interface{}{
-			VAR_S3_BUCKET_NAME:          s3BucketName(uniqueId),
-			VAR_FORCE_DESTROY_S3_BUCKET: true,
-			VAR_CONSUL_CLUSTER_NAME:     fmt.Sprintf("consul-test-%s", uniqueId),
-			VAR_CONSUL_CLUSTER_TAG_KEY:  fmt.Sprintf("consul-test-%s", uniqueId),
+			VAR_DYNAMO_TABLE_NAME: fmt.Sprintf("vault-dynamo-test-%s", random.UniqueId()),
 		}
-		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
+		deployCluster(t, amiId, awsRegion, examplesDir, random.UniqueId(), terraformVars)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
 
-		cluster := initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
-		testVaultUsesConsulForDns(t, cluster)
+		initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
 	})
 }

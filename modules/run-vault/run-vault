@@ -43,6 +43,9 @@ function print_usage {
   echo -e "  --s3-bucket\tSpecifies the S3 bucket to use to store Vault data. Only used if '--enable-s3-backend' is set."
   echo -e "  --s3-bucket-path\tSpecifies the S3 bucket path to use to store Vault data. Only used if '--enable-s3-backend' is set."
   echo -e "  --s3-bucket-region\tSpecifies the AWS region where '--s3-bucket' lives. Only used if '--enable-s3-backend' is set."
+  echo -e "  --enable-dynamo-backend\tIf this flag is set, DynamoDB will be enabled as the backend storage (HA)"
+  echo -e "  --dynamo-region\tSpecifies the AWS region where --dynamo-table lives.  Only used if '--enable-dynamo-backend is on'"
+  echo -e "  --dynamo--table\tSpecifies the DynamoDB table to use for HA Storage.  Only used if '--enable-dynamo-backend is on'"
   echo
   echo "Options for Vault Agent:"
   echo
@@ -233,10 +236,13 @@ function generate_vault_config {
   local -r s3_bucket="$9"
   local -r s3_bucket_path="${10}"
   local -r s3_bucket_region="${11}"
-  local -r enable_auto_unseal="${12}"
-  local -r auto_unseal_kms_key_id="${13}"
-  local -r auto_unseal_kms_key_region="${14}"
-  local -r auto_unseal_endpoint="${15}"
+  local -r enable_dynamo_backend="${12}"
+  local -r dynamo_region="${13}"
+  local -r dynamo_table="${14}"
+  local -r enable_auto_unseal="${15}"
+  local -r auto_unseal_kms_key_id="${16}"
+  local -r auto_unseal_kms_key_region="${17}"
+  local -r auto_unseal_endpoint="${18}"
   local -r config_path="$config_dir/$VAULT_CONFIG_FILE"
 
   local instance_ip_address
@@ -278,7 +284,9 @@ EOF
 )
 
   local consul_storage_type="storage"
+  local dynamodb_storage_type="storage"
   local s3_config=""
+  local vault_storage_backend=""
   if [[ "$enable_s3_backend" == "true" ]]; then
     s3_config=$(cat <<EOF
 storage "s3" {
@@ -289,29 +297,43 @@ storage "s3" {
 EOF
 )
     consul_storage_type="ha_storage"
+    dynamodb_storage_type="ha_storage"
   fi
 
-  local -r consul_storage=$(cat <<EOF
+
+  if [[ "$enable_dynamo_backend" == "true" ]]; then
+    vault_storage_backend=$(cat <<EOF
+$dynamodb_storage_type "dynamodb" {
+  ha_enabled = "true"
+  region = "$dynamo_region"
+  table  = "$dynamo_table"
+}
+# HA settings
+cluster_addr  = "https://$instance_ip_address:$cluster_port"
+api_addr      = "$api_addr"
+EOF
+)
+  else
+    vault_storage_backend=$(cat <<EOF
 $consul_storage_type "consul" {
   address = "127.0.0.1:8500"
   path    = "vault/"
   scheme  = "http"
   service = "vault"
 }
-
 # HA settings
 cluster_addr  = "https://$instance_ip_address:$cluster_port"
 api_addr      = "$api_addr"
-
 EOF
 )
+  fi
 
   vault_version_at_least "$config_path" "$ui_config"
 
   echo -e "$auto_unseal_config" >> "$config_path"
   echo -e "$listener_config" >> "$config_path"
   echo -e "$s3_config" >> "$config_path"
-  echo -e "$consul_storage" >> "$config_path"
+  echo -e "$vault_storage_backend" >> "$config_path"
 
   chown "$user:$user" "$config_path"
 }
@@ -425,6 +447,9 @@ function run {
   local s3_bucket=""
   local s3_bucket_path=""
   local s3_bucket_region=""
+  local enable_dynamo_backend="false"
+  local dynamo_region=""
+  local dynamo_table=""
   local agent="false"
   local agent_vault_address="$DEFAULT_AGENT_VAULT_ADDRESS"
   local agent_vault_port="$DEFAULT_PORT"
@@ -515,6 +540,17 @@ function run {
         s3_bucket_region="$2"
         shift
         ;;
+      --enable-dynamo-backend)
+        enable_dynamo_backend="true"
+        ;;
+      --dynamo-region)
+        dynamo_region="$2"
+        shift
+        ;;
+      --dynamo-table)
+        dynamo_table="$2"
+        shift
+        ;;
       --agent)
         agent="true"
         ;;
@@ -598,6 +634,11 @@ function run {
       assert_not_empty "--s3-bucket-region" "$s3_bucket_region"
     fi
   fi
+  
+  if [[ "$enable_dynamo_backend" == "true" ]]; then
+    assert_not_empty "--dynamo-table" "$dynamo_table"
+    assert_not_empty "--dynamo-region" "$dynamo_region"
+  fi
 
   assert_is_installed "systemctl"
   assert_is_installed "aws"
@@ -666,6 +707,9 @@ function run {
         "$s3_bucket" \
         "$s3_bucket_path" \
         "$s3_bucket_region" \
+        "$enable_dynamo_backend" \
+        "$dynamo_region" \
+        "$dynamo_table" \
         "$enable_auto_unseal" \
         "$auto_unseal_kms_key_id" \
         "$auto_unseal_kms_key_region" \

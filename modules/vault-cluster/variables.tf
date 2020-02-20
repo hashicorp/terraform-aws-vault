@@ -132,6 +132,12 @@ variable "tenancy" {
   default     = "default"
 }
 
+variable "root_volume_encrypted" {
+  description = "If true, the launched EC2 instance will have volume encryption. Must be configured to perform drift detection."
+  type        = bool
+  default     = false
+}
+
 variable "root_volume_ebs_optimized" {
   description = "If true, the launched EC2 instance will be EBS-optimized."
   default     = false

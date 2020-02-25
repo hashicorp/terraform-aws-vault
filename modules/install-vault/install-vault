@@ -8,7 +8,7 @@
 
 set -e
 
-echo "mabadillamycwt modified - install-vault 5"
+echo "mabadillamycwt modified - install-vault 7"
 
 readonly DEFAULT_INSTALL_PATH="/opt/vault"
 readonly DEFAULT_VAULT_USER="vault"
@@ -94,7 +94,7 @@ function retry_download {
 
     # The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
     # beginning of this script which exits the script immediatelly for error status while not losing the exit status code
-    output=$(wget -O ${DOWNLOAD_PACKAGE_PATH} ${DOWNLOAD_URL} --quiet) && exit_status=0 || exit_status=$
+    output=$(wget -O ${DOWNLOAD_PACKAGE_PATH} "${DOWNLOAD_URL}" --quiet) && exit_status=0 || exit_status=$
     log_info "$output"
     if [[ $exit_status -eq 0 ]]; then
       echo "$output"

@@ -8,6 +8,8 @@
 
 set -e
 
+echo "mabadillamycwt modified - install-vault"
+
 readonly DEFAULT_INSTALL_PATH="/opt/vault"
 readonly DEFAULT_VAULT_USER="vault"
 

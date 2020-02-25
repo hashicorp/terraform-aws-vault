@@ -8,7 +8,7 @@
 
 set -e
 
-echo "mabadillamycwt modified - install-vault"
+echo "mabadillamycwt modified - install-vault 2"
 
 readonly DEFAULT_INSTALL_PATH="/opt/vault"
 readonly DEFAULT_VAULT_USER="vault"
@@ -85,8 +85,8 @@ function assert_either_or {
 }
 
 # A retry function that attempts to run a command a number of times and returns the output
-function retry {
-  local -r cmd="$1"
+function retry_download {
+  local -r download_url="$1"
   local -r description="$2"
 
   for i in $(seq 1 5); do
@@ -94,7 +94,7 @@ function retry {
 
     # The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
     # beginning of this script which exits the script immediatelly for error status while not losing the exit status code
-    output=$("${cmd}") && exit_status=0 || exit_status=$?
+    output=$("curl -o ${DOWNLOAD_PACKAGE_PATH} ${download_url} --location --silent --fail --show-error") && exit_status=0 || exit_status=$?
     log_info "$output"
     if [[ $exit_status -eq 0 ]]; then
       echo "$output"
@@ -174,8 +174,8 @@ function fetch_binary {
     download_url="https://releases.hashicorp.com/vault/${version}/vault_${version}_linux_amd64.zip"
   fi
 
-  retry \
-    "curl -o ${DOWNLOAD_PACKAGE_PATH} ${download_url} --location --silent --fail --show-error" \
+  retry_download \
+    $download_url \
     "Downloading Vault to $DOWNLOAD_PACKAGE_PATH"
 }
 

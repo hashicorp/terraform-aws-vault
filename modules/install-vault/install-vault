@@ -92,7 +92,7 @@ function retry {
 
     # The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
     # beginning of this script which exits the script immediatelly for error status while not losing the exit status code
-    output=$(eval "$cmd") && exit_status=0 || exit_status=$?
+    output=$("${cmd}") && exit_status=0 || exit_status=$?
     log_info "$output"
     if [[ $exit_status -eq 0 ]]; then
       echo "$output"

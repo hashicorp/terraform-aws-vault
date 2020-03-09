@@ -45,7 +45,7 @@ function print_usage {
   echo -e "  --s3-bucket-region\tSpecifies the AWS region where '--s3-bucket' lives. Only used if '--enable-s3-backend' is set."
   echo -e "  --enable-dynamo-backend\tIf this flag is set, DynamoDB will be enabled as the backend storage (HA)"
   echo -e "  --dynamo-region\tSpecifies the AWS region where --dynamo-table lives.  Only used if '--enable-dynamo-backend is on'"
-  echo -e "  --dynamo--table\tSpecifies the DynamoDB table to use for HA Storage.  Only used if '--enable-dynamo-backend is on'"
+  echo -e "  --dynamo-table\tSpecifies the DynamoDB table to use for HA Storage.  Only used if '--enable-dynamo-backend is on'"
   echo
   echo "Options for Vault Agent:"
   echo
@@ -243,6 +243,7 @@ function generate_vault_config {
   local -r auto_unseal_kms_key_id="${16}"
   local -r auto_unseal_kms_key_region="${17}"
   local -r auto_unseal_endpoint="${18}"
+  local -r enable_ui="${19}"
   local -r config_path="$config_dir/$VAULT_CONFIG_FILE"
 
   local instance_ip_address
@@ -268,7 +269,7 @@ EOF
 
   log_info "Creating default Vault config file in $config_path"
   local -r ui_config=$(cat <<EOF
-ui = true
+ui = $enable_ui
 
 EOF
 )
@@ -463,6 +464,7 @@ function run {
   local auto_unseal_kms_key_id=""
   local auto_unseal_kms_key_region=""
   local auto_unseal_endpoint=""
+  local enable_ui="true"
   local all_args=()
 
   while [[ $# > 0 ]]; do
@@ -713,7 +715,8 @@ function run {
         "$enable_auto_unseal" \
         "$auto_unseal_kms_key_id" \
         "$auto_unseal_kms_key_region" \
-        "$auto_unseal_endpoint"
+        "$auto_unseal_endpoint" \
+        "$enable_ui"
     fi
   fi
 

@@ -25,60 +25,65 @@ type amiData struct {
 }
 
 var amisData = []amiData{
-	{"vaultEnterpriseOnUbuntu18", "ubuntu18-ami", "ubuntu", true},
-	{"vaultEnterpriseOnUbuntu16", "ubuntu16-ami", "ubuntu", true},
-	{"vaultEnterpriseOnAmazonLinux", "amazon-linux-2-ami", "ec2-user", true},
+	// {"vaultEnterpriseOnUbuntu18", "ubuntu18-ami", "ubuntu", true},
+	// {"vaultEnterpriseOnUbuntu16", "ubuntu16-ami", "ubuntu", true},
+	// {"vaultEnterpriseOnAmazonLinux", "amazon-linux-2-ami", "ec2-user", true},
 	{"vaultOpenSourceOnUbuntu18", "ubuntu18-ami", "ubuntu", false},
-	{"vaultOpenSourceOnUbuntu16", "ubuntu16-ami", "ubuntu", false},
+	// {"vaultOpenSourceOnUbuntu16", "ubuntu16-ami", "ubuntu", false},
 	{"vaultOpenSourceOnAmazonLinux", "amazon-linux-2-ami", "ec2-user", false},
 }
 
 var testCases = []testCase{
-	{
-		"TestVaultAutoUnseal",
-		runVaultAutoUnsealTest,
-		false,
-	},
-	{
-		"TestEnterpriseInstallation",
-		runVaultEnterpriseClusterTest,
-		true,
-	},
-	{
-		"TestVaultEC2Auth",
-		runVaultEC2AuthTest,
-		false,
-	},
-	{
-		"TestVaultIAMAuth",
-		runVaultIAMAuthTest,
-		false,
-	},
+	// {
+	// 	"TestVaultAutoUnseal",
+	// 	runVaultAutoUnsealTest,
+	// 	false,
+	// },
+	// {
+	// 	"TestEnterpriseInstallation",
+	// 	runVaultEnterpriseClusterTest,
+	// 	true,
+	// },
+	// {
+	// 	"TestVaultEC2Auth",
+	// 	runVaultEC2AuthTest,
+	// 	false,
+	// },
+	// {
+	// 	"TestVaultIAMAuth",
+	// 	runVaultIAMAuthTest,
+	// 	false,
+	// },
 	{
 		"TestVaultWithS3Backend",
 		runVaultWithS3BackendClusterTest,
 		false,
 	},
-	{
-		"TestVaultWithDynamoDBBackend",
-		runVaultWithDynamoBackendClusterTest,
-		false,
-	},
-	{
-		"TestVaultPrivateCluster",
-		runVaultPrivateClusterTest,
-		false,
-	},
-	{
-		"TestVaultPublicCluster",
-		runVaultPublicClusterTest,
-		false,
-	},
-	{
-		"TestVaultAgent",
-		runVaultAgentTest,
-		false,
-	},
+	// {
+	// 	"TestVaultWithDynamoDBBackend",
+	// 	runVaultWithDynamoBackendClusterTest,
+	// 	false,
+	// },
+	// {
+	// 	"TestVaultWithDynamoDBStorageConsulBackend",
+	// 	runVaultWithDynamoStorageConsulHABackendClusterTest,
+	// 	false,
+	// },
+	// {
+	// 	"TestVaultPrivateCluster",
+	// 	runVaultPrivateClusterTest,
+	// 	false,
+	// },
+	// {
+	// 	"TestVaultPublicCluster",
+	// 	runVaultPublicClusterTest,
+	// 	false,
+	// },
+	// {
+	// 	"TestVaultAgent",
+	// 	runVaultAgentTest,
+	// 	false,
+	// },
 }
 
 func TestMainVaultCluster(t *testing.T) {
@@ -100,8 +105,8 @@ func TestMainVaultCluster(t *testing.T) {
 
 		amisPackerOptions := map[string]*packer.Options{}
 		for _, ami := range amisData {
-			// Exclude eu-north-1 as it is missing the instance types we use
-			awsRegion := aws.GetRandomRegion(t, nil, []string{"eu-north-1"})
+			// Exclude eu-north-1 & ap-south-1 as it is missing the instance types we use
+			awsRegion := aws.GetRandomRegion(t, nil, []string{"eu-north-1", "ap-south-1"})
 
 			test_structure.SaveString(t, WORK_DIR, fmt.Sprintf("awsRegion-%s", ami.Name), awsRegion)
 

@@ -39,13 +39,15 @@ function print_usage {
   echo -e "  --systemd-stderr\t\tThe StandardError option of the systemd unit.  Optional.  If not configured, uses systemd's default (inherit)."
   echo -e "  --user\t\tThe user to run Vault as. Optional. Default is to use the owner of --config-dir."
   echo -e "  --skip-vault-config\tIf this flag is set, don't generate a Vault configuration file. Optional. Default is false."
-  echo -e "  --enable-s3-backend\tIf this flag is set, an S3 backend will be enabled in addition to the HA Consul backend. Default is false."
-  echo -e "  --s3-bucket\tSpecifies the S3 bucket to use to store Vault data. Only used if '--enable-s3-backend' is set."
-  echo -e "  --s3-bucket-path\tSpecifies the S3 bucket path to use to store Vault data. Only used if '--enable-s3-backend' is set."
-  echo -e "  --s3-bucket-region\tSpecifies the AWS region where '--s3-bucket' lives. Only used if '--enable-s3-backend' is set."
-  echo -e "  --enable-dynamo-backend\tIf this flag is set, DynamoDB will be enabled as the backend storage (HA)"
-  echo -e "  --dynamo-region\tSpecifies the AWS region where --dynamo-table lives.  Only used if '--enable-dynamo-backend is on'"
-  echo -e "  --dynamo--table\tSpecifies the DynamoDB table to use for HA Storage.  Only used if '--enable-dynamo-backend is on'"
+  echo -e "  --storage-backend\tStorage backend type to use for secrets. Default is consul"
+  echo -e "  --ha-storage-backend\tStorage backend type to use for HA. Default is consul"
+  echo -e "  --s3-bucket\tSpecifies the S3 bucket to use to store Vault data. Only used if '--storage-backend' is s3"
+  echo -e "  --s3-bucket-path\tSpecifies the S3 bucket path to use to store Vault data. Only used if '--storage-backend' is s3"
+  echo -e "  --s3-bucket-region\tSpecifies the AWS region where '--s3-bucket' lives. Only used if '--storage-backend' is s3"
+  echo -e "  --dynamo-region\tSpecifies the AWS region where --dynamo-table lives.  Only used if '--storage-backend' is dynamodb"
+  echo -e "  --dynamo-table\tSpecifies the DynamoDB table to use for HA Storage.  Only used if '--storage-backend' is dynamodb"
+  echo -e "  --dynamo-ha-region\tSpecifies the AWS region where --dynamo-table lives.  Only used if '--ha-storage-backend' is dynamodb"
+  echo -e "  --dynamo-ha-table\tSpecifies the DynamoDB table to use for HA Storage.  Only used if '--ha-storage-backend' is dynamodb"
   echo
   echo "Options for Vault Agent:"
   echo
@@ -72,7 +74,7 @@ function print_usage {
   echo
   echo "Or"
   echo
-  echo "  run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --enable-s3-backend --s3-bucket my-vault-bucket --s3-bucket-region us-east-1"
+  echo "  run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --storage-backend s3 --s3-bucket my-vault-bucket --s3-bucket-region us-east-1"
 }
 
 function log {
@@ -232,17 +234,19 @@ function generate_vault_config {
   local -r api_addr="$5"
   local -r config_dir="$6"
   local -r user="$7"
-  local -r enable_s3_backend="$8"
-  local -r s3_bucket="$9"
-  local -r s3_bucket_path="${10}"
-  local -r s3_bucket_region="${11}"
-  local -r enable_dynamo_backend="${12}"
+  local -r storage_backend="${8}"
+  local -r ha_storage_backend="${9}"
+  local -r s3_bucket="${10}"
+  local -r s3_bucket_path="${11}"
+  local -r s3_bucket_region="${12}"
   local -r dynamo_region="${13}"
   local -r dynamo_table="${14}"
-  local -r enable_auto_unseal="${15}"
-  local -r auto_unseal_kms_key_id="${16}"
-  local -r auto_unseal_kms_key_region="${17}"
-  local -r auto_unseal_endpoint="${18}"
+  local -r dynamo_ha_region="${15}"
+  local -r dynamo_ha_table="${16}"
+  local -r enable_auto_unseal="${17}"
+  local -r auto_unseal_kms_key_id="${18}"
+  local -r auto_unseal_kms_key_region="${19}"
+  local -r auto_unseal_endpoint="${20}"
   local -r config_path="$config_dir/$VAULT_CONFIG_FILE"
 
   local instance_ip_address
@@ -282,13 +286,22 @@ listener "tcp" {
 }\n
 EOF
 )
-
-  local consul_storage_type="storage"
-  local dynamodb_storage_type="storage"
-  local s3_config=""
   local vault_storage_backend=""
-  if [[ "$enable_s3_backend" == "true" ]]; then
-    s3_config=$(cat <<EOF
+  local vault_ha_storage_backend=""
+  if [[ "$storage_backend" == "consul" ]]; then
+    vault_storage_backend=$(cat <<EOF
+storage "consul" {
+  address = "127.0.0.1:8500"
+  path    = "vault/"
+  scheme  = "http"
+  service = "vault"
+}\n
+EOF
+)
+  fi
+
+  if [[ "$storage_backend" == "s3" ]]; then
+    vault_storage_backend=$(cat <<EOF
 storage "s3" {
   bucket = "$s3_bucket"
   path   = "$s3_bucket_path"
@@ -296,44 +309,56 @@ storage "s3" {
 }\n
 EOF
 )
-    consul_storage_type="ha_storage"
-    dynamodb_storage_type="ha_storage"
   fi
 
-
-  if [[ "$enable_dynamo_backend" == "true" ]]; then
+  if [[ "$storage_backend" == "dynamodb" ]]; then
     vault_storage_backend=$(cat <<EOF
-$dynamodb_storage_type "dynamodb" {
-  ha_enabled = "true"
+storage "dynamodb" {
   region = "$dynamo_region"
   table  = "$dynamo_table"
-}
-# HA settings
-cluster_addr  = "https://$instance_ip_address:$cluster_port"
-api_addr      = "$api_addr"
+}\n
 EOF
 )
-  else
-    vault_storage_backend=$(cat <<EOF
-$consul_storage_type "consul" {
+  fi
+
+  if [[ "$ha_storage_backend" == "dynamodb" ]]; then
+    vault_ha_storage_backend=$(cat <<EOF
+ha_storage "dynamodb" {
+  ha_enabled = "true"
+  region = "$dynamo_ha_region"
+  table  = "$dynamo_ha_table"
+}\n
+EOF
+)
+  fi
+
+  if [[ "$ha_storage_backend" == "consul" ]]; then
+    vault_ha_storage_backend=$(cat <<EOF
+ha_storage "consul" {
   address = "127.0.0.1:8500"
   path    = "vault/"
   scheme  = "http"
   service = "vault"
-}
-# HA settings
-cluster_addr  = "https://$instance_ip_address:$cluster_port"
-api_addr      = "$api_addr"
+}\n
 EOF
 )
   fi
+
+  local -r ha_settings=$(cat <<EOF
+# HA settings
+cluster_addr  = "https://$instance_ip_address:$cluster_port"
+api_addr      = "$api_addr"
+\n
+EOF
+)
 
   vault_version_at_least "$config_path" "$ui_config"
 
   echo -e "$auto_unseal_config" >> "$config_path"
   echo -e "$listener_config" >> "$config_path"
-  echo -e "$s3_config" >> "$config_path"
   echo -e "$vault_storage_backend" >> "$config_path"
+  echo -e "$vault_ha_storage_backend" >> "$config_path"
+  echo -e "$ha_settings" >> "$config_path"
 
   chown "$user:$user" "$config_path"
 }
@@ -443,13 +468,15 @@ function run {
   local systemd_stderr=""
   local user=""
   local skip_vault_config="false"
-  local enable_s3_backend="false"
+  local storage_backend="consul"
+  local ha_storage_backend="consul"
   local s3_bucket=""
   local s3_bucket_path=""
   local s3_bucket_region=""
-  local enable_dynamo_backend="false"
   local dynamo_region=""
   local dynamo_table=""
+  local dynamo_ha_region=""
+  local dynamo_ha_table=""
   local agent="false"
   local agent_vault_address="$DEFAULT_AGENT_VAULT_ADDRESS"
   local agent_vault_port="$DEFAULT_PORT"
@@ -525,8 +552,15 @@ function run {
       --skip-vault-config)
         skip_vault_config="true"
         ;;
-      --enable-s3-backend)
-        enable_s3_backend="true"
+      --storage-backend)
+        assert_not_empty "$key" "$2"
+        storage_backend="$2"
+        shift
+        ;;
+      --ha-storage-backend)
+        assert_not_empty "$key" "$2"
+        ha_storage_backend="$2"
+        shift
         ;;
       --s3-bucket)
         s3_bucket="$2"
@@ -540,15 +574,20 @@ function run {
         s3_bucket_region="$2"
         shift
         ;;
-      --enable-dynamo-backend)
-        enable_dynamo_backend="true"
-        ;;
       --dynamo-region)
         dynamo_region="$2"
         shift
         ;;
       --dynamo-table)
         dynamo_table="$2"
+        shift
+        ;;
+      --dynamo-ha-region)
+        dynamo_ha_region="$2"
+        shift
+        ;;
+      --dynamo-ha-table)
+        dynamo_ha_table="$2"
         shift
         ;;
       --agent)
@@ -629,15 +668,20 @@ function run {
     assert_not_empty "--tls-cert-file" "$tls_cert_file"
     assert_not_empty "--tls-key-file" "$tls_key_file"
 
-    if [[ "$enable_s3_backend" == "true" ]]; then
+    if [[ "$storage_backend" == "s3" ]]; then
       assert_not_empty "--s3-bucket" "$s3_bucket"
       assert_not_empty "--s3-bucket-region" "$s3_bucket_region"
     fi
-  fi
-  
-  if [[ "$enable_dynamo_backend" == "true" ]]; then
-    assert_not_empty "--dynamo-table" "$dynamo_table"
-    assert_not_empty "--dynamo-region" "$dynamo_region"
+
+    if [[ "$storage_backend" == "dynamodb" ]]; then
+      assert_not_empty "--dynamo-table" "$dynamo_table"
+      assert_not_empty "--dynamo-region" "$dynamo_region"
+    fi
+
+    if [[ "$ha_storage_backend" == "dynamodb" ]]; then
+      assert_not_empty "--dynamo-ha-table" "$dynamo_ha_table"
+      assert_not_empty "--dynamo-ha-region" "$dynamo_ha_region"
+    fi
   fi
 
   assert_is_installed "systemctl"
@@ -703,13 +747,15 @@ function run {
         "$api_addr" \
         "$config_dir" \
         "$user" \
-        "$enable_s3_backend" \
+        "$storage_backend" \
+        "$ha_storage_backend" \
         "$s3_bucket" \
         "$s3_bucket_path" \
         "$s3_bucket_region" \
-        "$enable_dynamo_backend" \
         "$dynamo_region" \
         "$dynamo_table" \
+        "$dynamo_ha_region" \
+        "$dynamo_ha_table" \
         "$enable_auto_unseal" \
         "$auto_unseal_kms_key_id" \
         "$auto_unseal_kms_key_region" \

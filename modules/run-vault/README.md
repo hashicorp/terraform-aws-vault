@@ -54,7 +54,7 @@ See the [root example](https://github.com/hashicorp/terraform-aws-vault/tree/mas
 
 The `run-vault` script accepts the following arguments:
 
-Options for Vault Server:
+### Options for Vault Server
 
 * `--tls-cert-file` (required) Specifies the path to the certificate for TLS. Required. To use a CA certificate, concatenate the primary certificate and the CA certificate together. See [How do you handle encryption?](#how-do-you_handle-encryption) for more info.
 * `--tls-key-file` (required) Specifies the path to the private key for the certificate. Required. See [How do you handle encryption?](#how-do-you_handle-encryption) for more info.
@@ -73,7 +73,7 @@ Options for Vault Server:
 * `--s3-bucket-path` Specifies the S3 bucket path to use to store Vault data. Only used if `--enable-s3-backend` is set.
 * `--s3-bucket-region` Specifies the AWS region where `--s3-bucket` lives. Only used if `--enable-s3-backend` is set.
 
-Options for Vault Agent (`--agent`):
+### Options for Vault Agent (`--agent`)
 
 * `--agent` If set, run in Vault Agent mode.  If not set, run as a regular Vault server.  Optional.
 * `--agent-vault-address` The hostname or IP address of the Vault server to connect to.  Optional. Default is `vault.service.consul`
@@ -85,7 +85,7 @@ Options for Vault Agent (`--agent`):
 * `--agent-auth-type` The Vault AWS auth type to use for auto-auth.  Required with `--agent`.  Must be either `iam` or `ec2`
 * `--agent-auth-role` The Vault role to authenticate against.  Required with `--agent`
 
-Optional Arguments for enabling the [AWS KMS auto-unseal](https://learn.hashicorp.com/vault/operations/ops-autounseal-aws-kms) (Vault Enterprise or 1.0 and above):
+### Options for enabling [AWS KMS auto-unseal](https://learn.hashicorp.com/vault/operations/ops-autounseal-aws-kms) (Vault Enterprise or 1.0 and above)
 
 * `--enable-auto-unseal` If this flag is set, enable the AWS KMS Auto-unseal feature. Default is false.
 * `--auto-unseal-kms-key-id` The key id of the AWS KMS key to be used for encryption and decryption. Required if `--enable-auto-unseal` is enabled.

@@ -56,18 +56,18 @@ The `run-vault` script accepts the following arguments:
 
 Options for Vault Server:
 
-* `--tls-cert-file` (required) Specifies the path to the certificate for TLS. Required. To use a CA certificate, concatenate the primary certificate and the CA certificate together.
-* `--tls-key-file` (required) Specifies the path to the private key for the certificate. Required.
+* `--tls-cert-file` (required) Specifies the path to the certificate for TLS. Required. To use a CA certificate, concatenate the primary certificate and the CA certificate together. See [How do you handle encryption?](#how-do-you_handle-encryption) for more info.
+* `--tls-key-file` (required) Specifies the path to the private key for the certificate. Required. See [How do you handle encryption?](#how-do-you_handle-encryption) for more info.
 * `--port` The port for Vault to listen on. Optional. Default is `8200`.
 * `--cluster-port` The port for Vault to listen on for server-to-server requests. Optional. Default is `--port + 1`.
 * `--api-addr` The full address to use for [Client Redirection](https://www.vaultproject.io/docs/concepts/ha.html#client-redirection) when running Vault in HA mode. Defaults to "https://[instance_ip]:8200". Optional.
 * `--config-dir` The path to the Vault config folder. Optional. Default is the absolute path of `../config`, relative to this script.
 * `--bin-dir` The path to the folder with Vault binary. Optional. Default is the absolute path of the parent folder of this script.
-* `--log-level	The log verbosity to use with Vault. Optional. Default is `info`.
+* `--log-level` The log verbosity to use with Vault. Optional. Default is `info`.
 * `--systemd-stdout` The StandardOutput option of the systemd unit.  Optional.  If not configured, uses systemd's default (journal).
 * `--systemd-stderr` The StandardError option of the systemd unit.  Optional.  If not configured, uses systemd's default (inherit).
 * `--user` The user to run Vault as. Optional. Default is to use the owner of `--config-dir`.
-* `--skip-vault-config` If this flag is set, don't generate a Vault configuration file. Optional. Default is false.
+* `--skip-vault-config` If this flag is set, don't generate a Vault configuration file. Optional. Default is false. This is useful if you have a custom configuration file and don't want to use any of of the default settings from `run-vault`.
 * `--enable-s3-backend` If this flag is set, an S3 backend will be enabled in addition to the HA Consul backend. Default is false.
 * `--s3-bucket` Specifies the S3 bucket to use to store Vault data. Only used if `--enable-s3-backend` is set.
 * `--s3-bucket-path` Specifies the S3 bucket path to use to store Vault data. Only used if `--enable-s3-backend` is set.
@@ -90,7 +90,7 @@ Optional Arguments for enabling the [AWS KMS auto-unseal](https://learn.hashicor
 * `--enable-auto-unseal` If this flag is set, enable the AWS KMS Auto-unseal feature. Default is false.
 * `--auto-unseal-kms-key-id` The key id of the AWS KMS key to be used for encryption and decryption. Required if `--enable-auto-unseal` is enabled.
 * `--auto-unseal-kms-key-region` The AWS region where the encryption key lives. Required if `--enable-auto-unseal` is enabled.
-* `--auto-unseal-endpoint` The KMS API endpoint to be used to make AWS KMS requests. Optional. Defaults to "". Only used if `--enable-auto-unseal` is enabled.
+* `--auto-unseal-endpoint` The KMS API endpoint to be used to make AWS KMS requests. Optional. Defaults to `""`. Only used if `--enable-auto-unseal` is enabled.
 
 Example:
 

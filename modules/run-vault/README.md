@@ -92,7 +92,7 @@ The `run-vault` script accepts the following arguments:
 * `--auto-unseal-kms-key-region` The AWS region where the encryption key lives. Required if `--enable-auto-unseal` is enabled.
 * `--auto-unseal-endpoint` The KMS API endpoint to be used to make AWS KMS requests. Optional. Defaults to `""`. Only used if `--enable-auto-unseal` is enabled.
 
-Example:
+### Examples
 
 ```
 /opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem

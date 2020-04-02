@@ -81,7 +81,7 @@ Options for Vault Agent (`--agent`):
 * `--agent-ca-cert-file` Specifies the path to a CA certificate to verify the Vault server's TLS certificate.  Optional.
 * `--agent-client-cert-file` Specifies the path to a certificate to use for TLS authentication to the Vault server.  Optional.
 * `--agent-client-key-file` Specifies the path to the private key for the client certificate used for TLS authentication to the Vault server.  Optional.
-* `--agent-auth-mount-path` The Vault mount path to the auth method used for auto-auth.  Optional.  Defaults to auth/aws
+* `--agent-auth-mount-path` The Vault mount path to the auth method used for auto-auth.  Optional.  Defaults to `auth/aws`
 * `--agent-auth-type` The Vault AWS auth type to use for auto-auth.  Required with `--agent`.  Must be either `iam` or `ec2`
 * `--agent-auth-role` The Vault role to authenticate against.  Required with `--agent`
 

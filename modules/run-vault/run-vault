@@ -25,7 +25,7 @@ function print_usage {
   echo
   echo "This script is used to configure and run Vault on an AWS server."
   echo
-  echo "Options:"
+  echo "Options for Vault Server:"
   echo
   echo -e "  --tls-cert-file\tSpecifies the path to the certificate for TLS. Required. To use a CA certificate, concatenate the primary certificate and the CA certificate together."
   echo -e "  --tls-key-file\tSpecifies the path to the private key for the certificate. Required."
@@ -45,9 +45,9 @@ function print_usage {
   echo -e "  --s3-bucket-region\tSpecifies the AWS region where '--s3-bucket' lives. Only used if '--enable-s3-backend' is set."
   echo -e "  --enable-dynamo-backend\tIf this flag is set, DynamoDB will be enabled as the backend storage (HA)"
   echo -e "  --dynamo-region\tSpecifies the AWS region where --dynamo-table lives.  Only used if '--enable-dynamo-backend is on'"
-  echo -e "  --dynamo--table\tSpecifies the DynamoDB table to use for HA Storage.  Only used if '--enable-dynamo-backend is on'"
+  echo -e "  --dynamo-table\tSpecifies the DynamoDB table to use for HA Storage.  Only used if '--enable-dynamo-backend is on'"
   echo
-  echo "Options for Vault Agent:"
+  echo "Options for Vault Agent (--agent):"
   echo
   echo -e "  --agent\t\t\tIf set, run in Vault Agent mode.  If not set, run as a regular Vault server.  Optional."
   echo -e "  --agent-vault-address\t\tThe hostname or IP address of the Vault server to connect to.  Optional. Default is $DEFAULT_AGENT_VAULT_ADDRESS"
@@ -56,8 +56,8 @@ function print_usage {
   echo -e "  --agent-client-cert-file\tSpecifies the path to a certificate to use for TLS authentication to the Vault server.  Optional."
   echo -e "  --agent-client-key-file\tSpecifies the path to the private key for the client certificate used for TLS authentication to the Vault server.  Optional."
   echo -e "  --agent-auth-mount-path\tThe Vault mount path to the auth method used for auto-auth.  Optional.  Defaults to $DEFAULT_AGENT_AUTH_MOUNT_PATH"
-  echo -e "  --agent-auth-type\t\tThe Vault AWS auth type to use for auto-auth.  Required.  Must be either iam or ec2"
-  echo -e "  --agent-auth-role\t\tThe Vault role to authenticate against.  Required."
+  echo -e "  --agent-auth-type\t\tThe Vault AWS auth type to use for auto-auth.  Required with --agent.  Must be either iam or ec2"
+  echo -e "  --agent-auth-role\t\tThe Vault role to authenticate against.  Required with --agent."
   echo
   echo "Optional Arguments for enabling the AWS KMS seal (Vault Enterprise or 1.0 and above):"
   echo
@@ -564,7 +564,8 @@ function run {
         agent_vault_port="$2"
         shift
         ;;
-      --agent-ca-cert_file)
+      --agent-ca-cert_file | --agent-ca-cert-file)
+        # Both versions of this flag are supported for backward compatibility (see https://github.com/hashicorp/terraform-aws-vault/issues/191 )
         assert_not_empty "$key" "$2"
         agent_ca_cert_file="$2"
         shift

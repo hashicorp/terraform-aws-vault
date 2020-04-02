@@ -50,38 +50,47 @@ See the [root example](https://github.com/hashicorp/terraform-aws-vault/tree/mas
 
 
 
-
 ## Command line Arguments
 
 The `run-vault` script accepts the following arguments:
 
-* `--tls-cert-file` (required): Specifies the path to the certificate for TLS. To configure the listener to use a CA
-  certificate, concatenate the primary certificate and the CA certificate together. The primary certificate should
-  appear first in the combined file. See [How do you handle encryption?](#how-do-you_handle-encryption) for more info.
-* `--tls-key-file` (required): Specifies the path to the private key for the certificate. See [How do you handle
-  encryption?](#how-do-you_handle-encryption) for more info.
-* `--port` (optional): The port Vault should listen on. Default is `8200`.
-* `--log-level` (optional): The log verbosity to use with Vault. Default is `info`.
-* `--systemd-stdout` (optional): The StandardOutput option of the systemd unit. If not specified, it will use systemd's default (journal).
-* `--systemd-stderr` (optional): The StandardError option of the systemd unit. If not specified, it will use systemd's default (inherit).
-* `--cluster-port` (optional): The port Vault should listen on for server-to-server communication. Default is
-  `--port + 1`.
-* `--api-addr`: The full address to use for [Client Redirection](https://www.vaultproject.io/docs/concepts/ha.html#client-redirection) when running Vault in HA mode. Defaults to "https://[instance_ip]:8200". Optional.
-* `config-dir` (optional): The path to the Vault config folder. Default is to take the absolute path of `../config`,
-  relative to the `run-vault` script itself.
-* `user` (optional): The user to run Vault as. Default is to use the owner of `config-dir`.
-* `skip-vault-config` (optional): If this flag is set, don't generate a Vault configuration file. This is useful if you
-  have a custom configuration file and don't want to use any of of the default settings from `run-vault`.
-* `--enable-s3-backend` (optional): If this flag is set, an S3 backend will be enabled in addition to the HA Consul backend.
-* `--s3-bucket` (optional): Specifies the S3 bucket to use to store Vault data. Only used if `--enable-s3-backend` is set.
-* `--s3-bucket-path` (optional): Specifies the S3 bucket path to use to store Vault data. Default is `""`. Only used if `--enable-s3-backend` is set.
-* `--s3-bucket-region` (optional): Specifies the AWS region where `--s3-bucket` lives. Only used if `--enable-s3-backend` is set.
+Options for Vault Server:
 
-Optional Arguments for enabling the AWS KMS seal (Vault Enterprise only):
- * `--enable-auto-unseal`: If this flag is set, enable the AWS KMS Auto-unseal feature. Default is false.
- * `--auto-unseal-kms-key-id`: The key id of the AWS KMS key to be used for encryption and decryption. Required if `--enable-auto-unseal` is enabled.
- * `--auto-unseal-kms-key-region`: The AWS region where the encryption key lives. Required if --enable-auto-unseal is enabled.
- * `--auto-unseal-endpoint`: The KMS API endpoint to be used to make AWS KMS requests. Optional. Defaults to `""`. Only used if --enable-auto-unseal is enabled.
+* `--tls-cert-file` (required) Specifies the path to the certificate for TLS. Required. To use a CA certificate, concatenate the primary certificate and the CA certificate together.
+* `--tls-key-file` (required) Specifies the path to the private key for the certificate. Required.
+* `--port` The port for Vault to listen on. Optional. Default is `8200`.
+* `--cluster-port` The port for Vault to listen on for server-to-server requests. Optional. Default is `--port + 1`.
+* `--api-addr` The full address to use for [Client Redirection](https://www.vaultproject.io/docs/concepts/ha.html#client-redirection) when running Vault in HA mode. Defaults to "https://[instance_ip]:8200". Optional.
+* `--config-dir` The path to the Vault config folder. Optional. Default is the absolute path of `../config`, relative to this script.
+* `--bin-dir` The path to the folder with Vault binary. Optional. Default is the absolute path of the parent folder of this script.
+* `--log-level	The log verbosity to use with Vault. Optional. Default is `info`.
+* `--systemd-stdout` The StandardOutput option of the systemd unit.  Optional.  If not configured, uses systemd's default (journal).
+* `--systemd-stderr` The StandardError option of the systemd unit.  Optional.  If not configured, uses systemd's default (inherit).
+* `--user` The user to run Vault as. Optional. Default is to use the owner of `--config-dir`.
+* `--skip-vault-config` If this flag is set, don't generate a Vault configuration file. Optional. Default is false.
+* `--enable-s3-backend` If this flag is set, an S3 backend will be enabled in addition to the HA Consul backend. Default is false.
+* `--s3-bucket` Specifies the S3 bucket to use to store Vault data. Only used if `--enable-s3-backend` is set.
+* `--s3-bucket-path` Specifies the S3 bucket path to use to store Vault data. Only used if `--enable-s3-backend` is set.
+* `--s3-bucket-region` Specifies the AWS region where `--s3-bucket` lives. Only used if `--enable-s3-backend` is set.
+
+Options for Vault Agent (`--agent`):
+
+* `--agent` If set, run in Vault Agent mode.  If not set, run as a regular Vault server.  Optional.
+* `--agent-vault-address` The hostname or IP address of the Vault server to connect to.  Optional. Default is `vault.service.consul`
+* `--agent-vault-port` The port of the Vault server to connect to.  Optional. Default is `8200`
+* `--agent-ca-cert-file` Specifies the path to a CA certificate to verify the Vault server's TLS certificate.  Optional.
+* `--agent-client-cert-file` Specifies the path to a certificate to use for TLS authentication to the Vault server.  Optional.
+* `--agent-client-key-file` Specifies the path to the private key for the client certificate used for TLS authentication to the Vault server.  Optional.
+* `--agent-auth-mount-path` The Vault mount path to the auth method used for auto-auth.  Optional.  Defaults to auth/aws
+* `--agent-auth-type` The Vault AWS auth type to use for auto-auth.  Required with `--agent`.  Must be either `iam` or `ec2`
+* `--agent-auth-role` The Vault role to authenticate against.  Required with `--agent`
+
+Optional Arguments for enabling the [AWS KMS auto-unseal](https://learn.hashicorp.com/vault/operations/ops-autounseal-aws-kms) (Vault Enterprise or 1.0 and above):
+
+* `--enable-auto-unseal` If this flag is set, enable the AWS KMS Auto-unseal feature. Default is false.
+* `--auto-unseal-kms-key-id` The key id of the AWS KMS key to be used for encryption and decryption. Required if `--enable-auto-unseal` is enabled.
+* `--auto-unseal-kms-key-region` The AWS region where the encryption key lives. Required if `--enable-auto-unseal` is enabled.
+* `--auto-unseal-endpoint` The KMS API endpoint to be used to make AWS KMS requests. Optional. Defaults to "". Only used if `--enable-auto-unseal` is enabled.
 
 Example:
 

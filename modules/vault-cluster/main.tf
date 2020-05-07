@@ -186,12 +186,12 @@ resource "aws_security_group_rule" "allow_ssh_inbound_from_security_group_ids" {
   security_group_id = aws_security_group.lc_security_group.id
 }
 
-resource "aws_security_group_rule" "allow_all_outbound" {
+resource "aws_security_group_rule" "allow_outbound" {
   type        = "egress"
   from_port   = 0
   to_port     = 0
   protocol    = "-1"
-  cidr_blocks = ["0.0.0.0/0"]
+  cidr_blocks = var.allowed_outbound_cidr_blocks
 
   security_group_id = aws_security_group.lc_security_group.id
 }

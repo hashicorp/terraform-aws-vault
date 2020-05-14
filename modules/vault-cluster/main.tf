@@ -343,9 +343,9 @@ data "aws_iam_policy_document" "vault_dynamo" {
 }
 
 resource "aws_iam_role_policy" "vault_dynamo" {
-  count  = var.enable_dynamo_backend ? 1 : 0
-  name   = "vault_dynamo"
-  role   = aws_iam_role.instance_role.id
+  count = var.enable_dynamo_backend ? 1 : 0
+  name  = "vault_dynamo"
+  role  = aws_iam_role.instance_role.id
   policy = element(
     concat(data.aws_iam_policy_document.vault_dynamo.*.json, [""]),
     0,
@@ -388,3 +388,38 @@ resource "aws_iam_role_policy" "vault_auto_unseal_kms" {
   }
 }
 
+data "aws_iam_policy_document" "vault_consul_auto_join" {
+  count = var.enable_consul_auto_join ? 1 : 0
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ec2:DescribeInstances",
+      "ec2:DescribeTags",
+      "autoscaling:DescribeAutoScalingGroups",
+    ]
+
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "vault_consul_auto_join" {
+  count = var.enable_consul_auto_join ? 1 : 0
+  name  = "vault_consul_auto_join"
+  role  = aws_iam_role.instance_role.id
+  policy = element(
+    concat(
+      data.aws_iam_policy_document.vault_consul_auto_join.*.json,
+      [""],
+    ),
+    0,
+  )
+
+  # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
+  # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
+  # when you try to do a terraform destroy.
+  lifecycle {
+    create_before_destroy = true
+  }
+}

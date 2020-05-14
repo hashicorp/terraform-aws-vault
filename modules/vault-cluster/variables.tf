@@ -56,6 +56,11 @@ variable "auto_unseal_kms_key_arn" {
   default     = ""
 }
 
+variable "enable_consul_auto_join" {
+  description = "Enable auto join of the consul clients in the Vault cluster (if using Consul as the backend)"
+  default     = false
+}
+
 variable "subnet_ids" {
   description = "The subnet IDs into which the EC2 Instances should be deployed. You should typically pass in one subnet ID per node in the cluster_size variable. We strongly recommend that you run Vault in private subnets. At least one of var.subnet_ids or var.availability_zones must be non-empty."
   type        = list(string)

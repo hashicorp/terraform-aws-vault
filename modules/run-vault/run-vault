@@ -564,7 +564,7 @@ function run {
         agent_vault_port="$2"
         shift
         ;;
-      --agent-ca-cert_file)
+      --agent-ca-cert-file)
         assert_not_empty "$key" "$2"
         agent_ca_cert_file="$2"
         shift

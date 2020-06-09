@@ -7,7 +7,7 @@ using the [consul-cluster module](https://github.com/hashicorp/terraform-aws-con
 from the Consul AWS Module.
 
 This example creates a private Vault cluster, which is private in the sense that the EC2 Instances are not fronted by a
-load balancer, as is the case in the [Vault Public Example](/examples/root-example). Keep in mind that if the Vault
+load balancer, as is the case in the [Vault Public Example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example). Keep in mind that if the Vault
 nodes are deployed to public subnets (i.e. subnets that have a route to the public Internet), this "private" cluster will
 still be accessible from the public Internet.
 

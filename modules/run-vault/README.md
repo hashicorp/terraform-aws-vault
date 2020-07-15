@@ -72,10 +72,15 @@ The `run-vault` script accepts the following arguments:
 * `user` (optional): The user to run Vault as. Default is to use the owner of `config-dir`.
 * `skip-vault-config` (optional): If this flag is set, don't generate a Vault configuration file. This is useful if you
   have a custom configuration file and don't want to use any of of the default settings from `run-vault`.
-* `--enable-s3-backend` (optional): If this flag is set, an S3 backend will be enabled in addition to the HA Consul backend.
-* `--s3-bucket` (optional): Specifies the S3 bucket to use to store Vault data. Only used if `--enable-s3-backend` is set.
-* `--s3-bucket-path` (optional): Specifies the S3 bucket path to use to store Vault data. Default is `""`. Only used if `--enable-s3-backend` is set.
-* `--s3-bucket-region` (optional): Specifies the AWS region where `--s3-bucket` lives. Only used if `--enable-s3-backend` is set.
+* `--storage-backend` (optional): If this flag is set, the backend will be enabled in addition to the HA backend. Default is `consul`.
+* `--ha-storage-backend` (optional): If this flag is set, the HA backend will be enabled in addition to the storage backend. Default is `consul`.
+* `--s3-bucket` (optional): Specifies the S3 bucket to use to store Vault data. Only used if `--storage-backend` is set to `s3`.
+* `--s3-bucket-path` (optional): Specifies the S3 bucket path to use to store Vault data. Default is `""`. Only used if `--storage-backend` is set to `s3`.
+* `--s3-bucket-region` (optional): Specifies the AWS region where `--s3-bucket` lives. Only used if `--storage-backend` is set to `s3`.
+* `--dynamo-region` (optional): Specifies the AWS region where `--dynamo-table` lives. Only used if `--storage-backend` is set to `dynamodb`.
+* `--dynamo-table` (optional): Specifies the DynamoDB table name. Only used if `--storage-backend` is set to `dynamodb`.
+* `--dynamo-ha-region` (optional): Specifies the AWS region where `--dynamo-table` lives. Only used if `--ha-storage-backend` is set to `dynamodb`.
+* `--dynamo-ha-table` (optional): Specifies the DynamoDB table name. Only used if `--ha-storage-backend` is set to `dynamodb`.
 
 Optional Arguments for enabling the AWS KMS seal (Vault Enterprise only):
  * `--enable-auto-unseal`: If this flag is set, enable the AWS KMS Auto-unseal feature. Default is false.
@@ -92,7 +97,7 @@ Example:
 Or if you want to enable an S3 backend:
 
 ```
-/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --enable-s3-backend --s3-bucket my-vault-bucket --s3-bucket-region us-east-1
+/opt/vault/bin/run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --storage-backend s3 --s3-bucket my-vault-bucket --s3-bucket-region us-east-1
 ```
 
 
@@ -145,8 +150,8 @@ available.
 
 `run-vault` can optionally set the following configuration values:
 
-* [storage](https://www.vaultproject.io/docs/configuration/index.html#storage): Set the `--enable-s3-backend` flag to
-  configure S3 as an additional (non-HA) storage backend with the following settings:
+* [storage- S3](https://www.vaultproject.io/docs/configuration/index.html#storage): Set the `--storage-backend` flag to
+  `s3` to configure S3 as an additional (non-HA) storage backend with the following settings:
 
     * [bucket](https://www.vaultproject.io/docs/configuration/storage/s3.html#bucket): Set to the `--s3-bucket`
       parameter.
@@ -154,6 +159,23 @@ available.
       parameter.
     * [region](https://www.vaultproject.io/docs/configuration/storage/s3.html#region): Set to the `--s3-bucket-region`
       parameter.
+
+* [storage - DynamoDB](https://www.vaultproject.io/docs/configuration/index.html#storage): Set the `--storage-backend` flag to
+  `dynamodb` to configure DynamoDB as an additional storage backend with the following settings:
+
+    * [table](https://www.vaultproject.io/docs/configuration/storage/dynamodb/#inlinecode-table-18): Set to the `--dynamo-table`
+      parameter.
+    * [region](https://www.vaultproject.io/docs/configuration/storage/dynamodb/#inlinecode-region-21): Set to the `--dynamo-region`
+      parameter.
+
+* [HA storage - DynamoDB](https://www.vaultproject.io/docs/configuration/index.html#storage): Set the `--ha-storage-backend` flag to
+  `dynamodb` to configure DynamoDB as an additional storage backend with the following settings:
+
+    * [ha-table](https://www.vaultproject.io/docs/configuration/storage/dynamodb/#inlinecode-table-18): Set to the `--dynamo-ha-table`
+      parameter for the HA storage.
+    * [ha-region](https://www.vaultproject.io/docs/configuration/storage/dynamodb/#inlinecode-region-21): Set to the `--dynamo-ha-region`
+      parameter for the HA storage.
+
 
 ### Overriding the configuration
 

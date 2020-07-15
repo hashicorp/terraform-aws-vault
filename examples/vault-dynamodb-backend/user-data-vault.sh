@@ -16,8 +16,11 @@ readonly VAULT_TLS_KEY_FILE="/opt/vault/tls/vault.key.pem"
 
 # The variables below are filled in via Terraform interpolation
 /opt/vault/bin/run-vault \
-  --enable-dynamo-backend \
+  --storage-backend "dynamodb" \
+  --ha-storage-backend "dynamodb" \
   --dynamo-table "${dynamo_table_name}" \
   --dynamo-region "${aws_region}" \
+  --dynamo-ha-table "${dynamo_table_name}" \
+  --dynamo-ha-region "${aws_region}" \
   --tls-cert-file "$VAULT_TLS_CERT_FILE" \
   --tls-key-file "$VAULT_TLS_KEY_FILE"

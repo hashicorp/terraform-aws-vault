@@ -100,8 +100,8 @@ func TestMainVaultCluster(t *testing.T) {
 
 		amisPackerOptions := map[string]*packer.Options{}
 		for _, ami := range amisData {
-			// Exclude eu-north-1 as it is missing the instance types we use
-			awsRegion := aws.GetRandomRegion(t, nil, []string{"eu-north-1"})
+			// Exclude eu-north-1 & ap-south-1 as it is missing the instance types we use
+			awsRegion := aws.GetRandomRegion(t, nil, []string{"eu-north-1", "ap-south-1"})
 
 			test_structure.SaveString(t, WORK_DIR, fmt.Sprintf("awsRegion-%s", ami.Name), awsRegion)
 

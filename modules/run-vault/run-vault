@@ -34,6 +34,7 @@ function print_usage {
   echo -e "  --api-addr\t\tThe full address to use for Client Redirection when running Vault in HA mode. Defaults to \"https://[instance_ip]:$DEFAULT_PORT\". Optional."
   echo -e "  --config-dir\t\tThe path to the Vault config folder. Optional. Default is the absolute path of '../config', relative to this script."
   echo -e "  --bin-dir\t\tThe path to the folder with Vault binary. Optional. Default is the absolute path of the parent folder of this script."
+  echo -e "  --data-dir\t\tThe path to the Vault data folder. Optional. Default is the absolute path of '../data', relative to this script."
   echo -e "  --log-level\t\tThe log verbosity to use with Vault. Optional. Default is $DEFAULT_LOG_LEVEL."
   echo -e "  --systemd-stdout\t\tThe StandardOutput option of the systemd unit.  Optional.  If not configured, uses systemd's default (journal)."
   echo -e "  --systemd-stderr\t\tThe StandardError option of the systemd unit.  Optional.  If not configured, uses systemd's default (inherit)."
@@ -438,6 +439,7 @@ function run {
   local api_addr=""
   local config_dir=""
   local bin_dir=""
+  local data_dir=""
   local log_level="$DEFAULT_LOG_LEVEL"
   local systemd_stdout=""
   local systemd_stderr=""
@@ -500,6 +502,11 @@ function run {
       --bin-dir)
         assert_not_empty "$key" "$2"
         bin_dir="$2"
+        shift
+        ;;
+      --data-dir)
+        assert_not_empty "$key" "$2"
+        data_dir="$2"
         shift
         ;;
       --log-level)

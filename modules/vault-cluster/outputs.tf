@@ -18,6 +18,18 @@ output "launch_config_name" {
   value = aws_launch_configuration.launch_configuration.name
 }
 
+output "iam_instance_profile_arn" {
+  value = aws_iam_instance_profile.instance_profile.arn
+}
+
+output "iam_instance_profile_id" {
+  value = aws_iam_instance_profile.instance_profile.id
+}
+
+output "iam_instance_profile_name" {
+  value = aws_iam_instance_profile.instance_profile.name
+}
+
 output "iam_role_arn" {
   value = aws_iam_role.instance_role.arn
 }

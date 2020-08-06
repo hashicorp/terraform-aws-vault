@@ -157,6 +157,11 @@ variable "wait_for_capacity_timeout" {
   default     = "10m"
 }
 
+variable "max_instance_lifetime" {
+  description = "The maximum amount of time, in seconds, that an instance can be in service, values must be either equal to 0 or between 604800 and 31536000 seconds."
+  default = 0
+}
+
 variable "health_check_type" {
   description = "Controls how health checking is done. Must be one of EC2 or ELB."
   default     = "EC2"

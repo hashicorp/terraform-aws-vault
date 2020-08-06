@@ -34,6 +34,8 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 
   enabled_metrics = var.enabled_metrics
 
+  max_instance_lifetime = var.max_instance_lifetime
+  
   # Use bucket and policies names in tags for depending on them when they are there
   # And only create the cluster after S3 bucket and policies exist
   # Otherwise Vault might boot and not find the bucket or not yet have the necessary permissions

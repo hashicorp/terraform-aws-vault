@@ -89,6 +89,7 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   # when you try to do a terraform destroy.
   lifecycle {
     create_before_destroy = true
+    ignore_changes        = [load_balancers, target_group_arns]
   }
 }
 
@@ -343,9 +344,9 @@ data "aws_iam_policy_document" "vault_dynamo" {
 }
 
 resource "aws_iam_role_policy" "vault_dynamo" {
-  count  = var.enable_dynamo_backend ? 1 : 0
-  name   = "vault_dynamo"
-  role   = aws_iam_role.instance_role.id
+  count = var.enable_dynamo_backend ? 1 : 0
+  name  = "vault_dynamo"
+  role  = aws_iam_role.instance_role.id
   policy = element(
     concat(data.aws_iam_policy_document.vault_dynamo.*.json, [""]),
     0,

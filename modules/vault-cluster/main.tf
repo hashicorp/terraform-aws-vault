@@ -89,6 +89,14 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   # when you try to do a terraform destroy.
   lifecycle {
     create_before_destroy = true
+    
+    ignore_changes = [
+      # Ignore changes here because the vault-elb module creates an aws_autoscaling_attachment which manages the
+      # state for the target_group_arns
+      # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_attachment#with-an-autoscaling-group-resource
+      load_balancers,
+      target_group_arns
+    ]
   }
 }
 

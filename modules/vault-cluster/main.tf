@@ -92,7 +92,7 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 
     # As of AWS Provider 3.x, inline load_balancers and target_group_arns
     # in an aws_autoscaling_group take precedence over attachment resources.
-    # Since the consul-cluster module does not define any Load Balancers,
+    # Since the vault-cluster module does not define any Load Balancers,
     # it's safe to assume that we will always want to favor an attachment
     # over these inline properties.
     #

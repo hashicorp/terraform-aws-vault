@@ -84,12 +84,21 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   }
 
 
-  # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
-  # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
-  # when you try to do a terraform destroy.
   lifecycle {
+    # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
+    # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
+    # when you try to do a terraform destroy.
     create_before_destroy = true
-    ignore_changes        = [load_balancers, target_group_arns]
+
+    # As of AWS Provider 3.x, inline load_balancers and target_group_arns
+    # in an aws_autoscaling_group take precedence over attachment resources.
+    # Since the consul-cluster module does not define any Load Balancers,
+    # it's safe to assume that we will always want to favor an attachment
+    # over these inline properties.
+    #
+    # For further discussion and links to relevant documentation, see
+    # https://github.com/hashicorp/terraform-aws-vault/issues/210
+    ignore_changes = [load_balancers, target_group_arns]
   }
 }
 

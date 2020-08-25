@@ -117,10 +117,10 @@ function has_apt_get {
 function install_dependencies {
   log_info "Installing dependencies"
 
-  if $(has_apt_get); then
+  if has_apt_get; then
     sudo apt-get update -y
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y awscli curl unzip jq libcap2-bin
-  elif $(has_yum); then
+  elif has_yum; then
     sudo yum update -y
     sudo yum install -y awscli curl unzip jq
   else
@@ -137,7 +137,7 @@ function user_exists {
 function create_vault_user {
   local -r username="$1"
 
-  if $(user_exists "$username"); then
+  if user_exists "$username"; then
     echo "User $username already exists. Will not create again."
   else
     log_info "Creating user named $username"
@@ -219,7 +219,7 @@ function install {
   local path="$DEFAULT_INSTALL_PATH"
   local user="$DEFAULT_VAULT_USER"
 
-  while [[ $# > 0 ]]; do
+  while [[ $# -gt 0 ]]; do
     local key="$1"
 
     case "$key" in

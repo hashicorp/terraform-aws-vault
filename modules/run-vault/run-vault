@@ -128,7 +128,7 @@ function get_instance_ip_address {
 function assert_is_installed {
   local -r name="$1"
 
-  if [[ ! $(command -v ${name}) ]]; then
+  if [[ ! $(command -v "$name") ]]; then
     log_error "The binary '$name' is required by this script but is not installed or in the system's PATH."
     exit 1
   fi
@@ -175,7 +175,7 @@ function generate_vault_agent_config {
   local -r pid_config="pid_file   = \"$data_dir/$VAULT_PID_FILE\""
 
   local ca_cert_config=""
-  if [[ ! -z $ca_cert_file ]]; then
+  if [[ -n $ca_cert_file ]]; then
    ca_cert_config=$(cat <<EOF
   ca_cert = "$ca_cert_file"\n
 EOF
@@ -183,7 +183,7 @@ EOF
   fi
 
   local client_cert_config=""
-  if [[ ! -z $client_cert_file ]] && [[ ! -z $client_key_file ]]; then
+  if [[ -n $client_cert_file ]] && [[ -n $client_key_file ]]; then
    client_cert_config=$(cat <<EOF
   client_cert = "$client_cert_file"
   client_key = "$client_key_file"\n
@@ -399,10 +399,10 @@ EOF
 )
 
   local log_config=""
-  if [[ ! -z $vault_systemd_stdout ]]; then
+  if [[ -n $vault_systemd_stdout ]]; then
     log_config+="StandardOutput=$vault_systemd_stdout\n"
   fi
-  if [[ ! -z $vault_systemd_stderr ]]; then
+  if [[ -n $vault_systemd_stderr ]]; then
     log_config+="StandardError=$vault_systemd_stderr\n"
   fi
 
@@ -465,9 +465,8 @@ function run {
   local auto_unseal_kms_key_id=""
   local auto_unseal_kms_key_region=""
   local auto_unseal_endpoint=""
-  local all_args=()
 
-  while [[ $# > 0 ]]; do
+  while [[ $# -gt 0 ]]; do
     local key="$1"
 
     case "$key" in
@@ -641,7 +640,7 @@ function run {
       assert_not_empty "--s3-bucket-region" "$s3_bucket_region"
     fi
   fi
-  
+
   if [[ "$enable_dynamo_backend" == "true" ]]; then
     assert_not_empty "--dynamo-table" "$dynamo_table"
     assert_not_empty "--dynamo-region" "$dynamo_region"

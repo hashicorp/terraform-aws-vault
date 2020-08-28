@@ -14,33 +14,19 @@ jobs:
     machine: true
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - dep-{{ checksum "test/Gopkg.lock" }}
-            - external-dep
       - run: echo 'export PATH=$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
       # Domain name of Route 53 hosted zone to use at test time
       - run: echo 'export VAULT_HOSTED_ZONE_DOMAIN_NAME=gruntwork.in' >> $BASH_ENV
 
       # Install the gruntwork-module-circleci-helpers and use it to configure the build environment and run tests.
-      - run: curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version v0.0.21
-      - run: gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.14.0"
-      - run: gruntwork-install --module-name "build-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.14.0"
-      - run: gruntwork-install --module-name "aws-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.14.0"
-      - run: gruntwork-install --module-name "git-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.14.0"
-      - run: gruntwork-install --binary-name "terratest_log_parser" --repo "https://github.com/gruntwork-io/terratest" --tag v0.17.4
-      - run: configure-environment-for-gruntwork-module --go-src-path test --use-go-dep --circle-ci-2 --circle-ci-2-machine-executor
+      - run: curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version v0.0.22
+      - run: gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.27.2"
+      - run: gruntwork-install --module-name "build-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.27.2"
+      - run: gruntwork-install --module-name "aws-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.27.2"
+      - run: gruntwork-install --module-name "git-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.27.2"
+      - run: gruntwork-install --binary-name "terratest_log_parser" --repo "https://github.com/gruntwork-io/terratest" --tag v0.28.15
+      - run: configure-environment-for-gruntwork-module --go-src-path test
 
-      - save_cache:
-          key: external-dep
-          paths:
-            - $HOME/terraform
-            - $HOME/packer
-            - $HOME/dep
-      - save_cache:
-          key: dep-{{ checksum "test/Gopkg.lock" }}
-          paths:
-            - $HOME/.go_workspace/src/github.com/hashicorp/terraform-aws-vault/test/vendor
       - run: mkdir -p /tmp/logs
       - run: run-go-tests --path test --timeout 90m | tee /tmp/logs/all.log
       - run:

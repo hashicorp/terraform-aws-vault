@@ -43,7 +43,7 @@ module "vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_iam_policies_servers" {
-  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-iam-policies?ref=v0.7.0"
+  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-iam-policies?ref=v0.7.7"
 
   iam_role_id = module.vault_cluster.iam_role_id
 }
@@ -70,7 +70,7 @@ data "template_file" "user_data_vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "security_group_rules" {
-  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-client-security-group-rules?ref=v0.7.0"
+  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-client-security-group-rules?ref=v0.7.7"
 
   security_group_id = module.vault_cluster.security_group_id
 
@@ -85,7 +85,7 @@ module "security_group_rules" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_cluster" {
-  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-cluster?ref=v0.7.0"
+  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-cluster?ref=v0.7.7"
 
   cluster_name  = var.consul_cluster_name
   cluster_size  = var.consul_cluster_size

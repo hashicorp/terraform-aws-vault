@@ -26,7 +26,7 @@ jobs:
       - run: gruntwork-install --module-name "git-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.27.2"
       - run: gruntwork-install --binary-name "terratest_log_parser" --repo "https://github.com/gruntwork-io/terratest" --tag v0.28.15
       # Note: we had to pin the Packer version as the latest version 1.6.2 doesn't seem to have binaries published yet
-      - run: configure-environment-for-gruntwork-module --go-src-path test --packer-version 1.6.1
+      - run: configure-environment-for-gruntwork-module --packer-version 1.6.1
 
       - run: mkdir -p /tmp/logs
       - run: run-go-tests --path test --timeout 90m | tee /tmp/logs/all.log

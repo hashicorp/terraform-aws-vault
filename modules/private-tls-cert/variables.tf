@@ -81,25 +81,25 @@ variable "allowed_uses" {
 
 variable "permissions" {
   description = "The Unix file permission to assign to the cert files (e.g. 0600)."
-  default     = "0600"
   type        = string
+  default     = "0600"
 }
 
 variable "private_key_algorithm" {
   description = "The name of the algorithm to use for private keys. Must be one of: RSA or ECDSA."
-  default     = "RSA"
   type        = string
+  default     = "RSA"
 }
 
 variable "private_key_ecdsa_curve" {
   description = "The name of the elliptic curve to use. Should only be used if var.private_key_algorithm is ECDSA. Must be one of P224, P256, P384 or P521."
-  default     = "P256"
   type        = string
+  default     = "P256"
 }
 
 variable "private_key_rsa_bits" {
   description = "The size of the generated RSA key in bits. Should only be used if var.private_key_algorithm is RSA."
-  default     = "2048"
   type        = string
+  default     = "2048"
 }
 

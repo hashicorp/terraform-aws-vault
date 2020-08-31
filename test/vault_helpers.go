@@ -111,8 +111,12 @@ func deployCluster(t *testing.T, amiId string, awsRegion string, examplesDir str
 		},
 		// There might be transient errors with the http requests to fetch files
 		RetryableTerraformErrors: map[string]string{
-			"Error installing provider": "Failed to download terraform package",
+			"Error installing provider":            "Failed to download terraform package",
+			"registry service is unreachable":      "Intermittent issue when https://status.hashicorp.com/ is down or unresponsive",
+			"all SubConns are in TransientFailure": "Intermittent connectivity issue. Full error looks something like: Unavailable desc = all SubConns are in TransientFailure, latest connection error: connection error: desc = \"transport: authentication handshake failed: context deadline exceeded",
 		},
+		MaxRetries:         3,
+		TimeBetweenRetries: 10 * time.Second,
 	}
 	test_structure.SaveTerraformOptions(t, examplesDir, terraformOptions)
 

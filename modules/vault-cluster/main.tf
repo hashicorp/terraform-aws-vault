@@ -206,6 +206,16 @@ resource "aws_security_group_rule" "allow_https_outbound" {
   security_group_id = aws_security_group.lc_security_group.id
 }
 
+resource "aws_security_group_rule" "allow_proxy_outbound" {
+  type        = "egress"
+  from_port   = 3128
+  to_port     = 3128
+  protocol    = "TCP"
+  cidr_blocks = var.allowed_outbound_proxy_cidr_blocks
+
+  security_group_id = aws_security_group.lc_security_group.id
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # THE INBOUND/OUTBOUND RULES FOR THE SECURITY GROUP COME FROM THE VAULT-SECURITY-GROUP-RULES MODULE
 # ---------------------------------------------------------------------------------------------------------------------

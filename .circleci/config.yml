@@ -1,4 +1,11 @@
 ---
+workspace_root: &workspace_root /go/src/github.com/hashicorp/terraform-aws-vault
+
+defaults: &defaults
+  working_directory: *workspace_root
+  docker:
+    - image: 087285199408.dkr.ecr.us-east-1.amazonaws.com/circle-ci-test-image-base:go1.13
+
 version: 2
 jobs:
   validate_terraform:
@@ -10,40 +17,67 @@ jobs:
           name: Validate Terraform Formatting
           command: '[ -z "$(terraform fmt -write=false)" ] || { terraform fmt -write=false -diff; exit 1; }'
 
-  build:
-    machine: true
+  test:
+    <<: *defaults
     steps:
       - checkout
       - run: echo 'export PATH=$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
       # Domain name of Route 53 hosted zone to use at test time
       - run: echo 'export VAULT_HOSTED_ZONE_DOMAIN_NAME=gruntwork.in' >> $BASH_ENV
-
-      # Install the gruntwork-module-circleci-helpers and use it to configure the build environment and run tests.
-      - run: curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version v0.0.22
-      - run: gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.27.2"
-      - run: gruntwork-install --module-name "build-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.27.2"
-      - run: gruntwork-install --module-name "aws-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.27.2"
-      - run: gruntwork-install --module-name "git-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.27.2"
-      - run: gruntwork-install --binary-name "terratest_log_parser" --repo "https://github.com/gruntwork-io/terratest" --tag v0.28.15
-      # Note: we had to pin the Packer version as the latest version 1.6.2 doesn't seem to have binaries published yet
-      - run: configure-environment-for-gruntwork-module --packer-version 1.6.1
-
-      - run: mkdir -p /tmp/logs
-      - run: run-go-tests --path test --timeout 90m | tee /tmp/logs/all.log
+      - attach_workspace:
+          at: *workspace_root
       - run:
-          command: terratest_log_parser --testlog /tmp/logs/all.log --outputdir /tmp/logs
+          command: |
+            mkdir -p /tmp/logs
+            run-go-tests --path test --timeout 90m | tee /tmp/logs/test-all.log
+      - run:
+          command: terratest_log_parser --testlog /tmp/logs/test-all.log --outputdir /tmp/logs
           when: always
       - store_artifacts:
           path: /tmp/logs
       - store_test_results:
           path: /tmp/logs
 
+  deploy:
+    <<: *defaults
+    steps:
+      - checkout
+      - run: echo 'export PATH=$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
+      - run: sudo -E gruntwork-install --module-name "aws-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.28.1"
+      - run: sudo -E gruntwork-install --module-name "git-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.28.1"
+      - run: sudo -E gruntwork-install --module-name "build-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "v0.28.1"
+
       # We generally only want to build AMIs on new releases, but when we are setting up AMIs in a new account for the
       # first time, we want to build the AMIs but NOT run automated tests, since those tests will fail without an existing
       # AMI already in the AWS Account.
+      - run: /go/src/github.com/hashicorp/terraform-aws-vault/_ci/publish-amis.sh "ubuntu16-ami"
+      - run: /go/src/github.com/hashicorp/terraform-aws-vault/_ci/publish-amis.sh "ubuntu18-ami"
+      - run: /go/src/github.com/hashicorp/terraform-aws-vault/_ci/publish-amis.sh "amazon-linux-ami"
+
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - test:
+          filters:
+            branches:
+              ignore: publish-amis
       - deploy:
-          command: |
-            if [[ $CIRCLE_BRANCH == "publish-amis" || -n $CIRCLE_TAG ]]; then
-              ./_ci/publish-amis.sh "ubuntu16-ami"
-              ./_ci/publish-amis.sh "amazon-linux-ami"
-            fi
+          filters:
+            branches:
+              only: publish-amis
+            tags:
+              only: /^v.*/
+  nightly-test:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - build
+      - test:
+          requires:
+            - build

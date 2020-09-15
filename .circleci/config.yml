@@ -52,7 +52,7 @@ jobs:
       # AMI already in the AWS Account.
       - run: /go/src/github.com/hashicorp/terraform-aws-vault/_ci/publish-amis.sh "ubuntu16-ami"
       - run: /go/src/github.com/hashicorp/terraform-aws-vault/_ci/publish-amis.sh "ubuntu18-ami"
-      - run: /go/src/github.com/hashicorp/terraform-aws-vault/_ci/publish-amis.sh "amazon-linux-ami"
+      - run: /go/src/github.com/hashicorp/terraform-aws-vault/_ci/publish-amis.sh "amazon-linux-2-ami"
 
 workflows:
   version: 2

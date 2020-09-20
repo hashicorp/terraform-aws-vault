@@ -19,7 +19,6 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 
   launch_configuration = aws_launch_configuration.launch_configuration.name
 
-  availability_zones  = var.availability_zones
   vpc_zone_identifier = var.subnet_ids
 
   # Use a fixed-size cluster

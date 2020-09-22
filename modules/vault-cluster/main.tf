@@ -246,6 +246,8 @@ resource "aws_iam_role" "instance_role" {
   name_prefix        = var.cluster_name
   assume_role_policy = data.aws_iam_policy_document.instance_role.json
 
+  permissions_boundary = var.iam_permissions_boundary
+
   # aws_iam_instance_profile.instance_profile in this module sets create_before_destroy to true, which means
   # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
   # when you try to do a terraform destroy.

@@ -1,8 +1,8 @@
 package test
 
 import (
-	"testing"
 	"github.com/gruntwork-io/terratest/modules/aws"
+	"testing"
 )
 
 // Get the public IP addresses of the EC2 Instances in an Auto Scaling Group of the given name in the given

@@ -52,10 +52,6 @@ workflows:
   version: 2
   build-and-test:
     jobs:
-      - validate_terraform:
-          filters:
-            branches:
-              ignore: publish-amis
       - test:
           filters:
             branches:
@@ -75,5 +71,4 @@ workflows:
               only:
                 - master
     jobs:
-      - validate_terraform
       - test

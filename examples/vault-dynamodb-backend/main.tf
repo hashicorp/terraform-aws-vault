@@ -45,7 +45,7 @@ module "vault_cluster" {
   ssh_key_name                         = var.ssh_key_name
 
   enable_dynamo_backend = true
-  dynamo_table_name = var.dynamo_table_name
+  dynamo_table_name     = var.dynamo_table_name
 }
 
 data "template_file" "user_data_vault_cluster" {

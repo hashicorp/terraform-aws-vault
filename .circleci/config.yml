@@ -1,22 +1,10 @@
 ---
-workspace_root: &workspace_root /go/src/github.com/hashicorp/terraform-aws-vault
-
 defaults: &defaults
-  working_directory: *workspace_root
   docker:
-    - image: 087285199408.dkr.ecr.us-east-1.amazonaws.com/circle-ci-test-image-base:go1.13
+    - image: 087285199408.dkr.ecr.us-east-1.amazonaws.com/circle-ci-test-image-base:tf13.4
 
 version: 2
 jobs:
-  validate_terraform:
-    docker:
-      - image: hashicorp/terraform
-    steps:
-      - checkout
-      - run:
-          name: Validate Terraform Formatting
-          command: '[ -z "$(terraform fmt -write=false)" ] || { terraform fmt -write=false -diff; exit 1; }'
-
   test:
     <<: *defaults
     steps:
@@ -24,8 +12,14 @@ jobs:
       - run: echo 'export PATH=$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
       # Domain name of Route 53 hosted zone to use at test time
       - run: echo 'export VAULT_HOSTED_ZONE_DOMAIN_NAME=gruntwork.in' >> $BASH_ENV
-      - attach_workspace:
-          at: *workspace_root
+      - run:
+          # Fail the build if the pre-commit hooks don't pass. Note: if you run $ pre-commit install locally within this repo, these hooks will
+          # execute automatically every time before you commit, ensuring the build never fails at this step!
+          name: run pre-commit hooks
+          command: |
+            pip install pre-commit==1.21.0 cfgv==2.0.1
+            pre-commit install
+            pre-commit run --all-files
       - run:
           command: |
             mkdir -p /tmp/logs
@@ -50,9 +44,9 @@ jobs:
       # We generally only want to build AMIs on new releases, but when we are setting up AMIs in a new account for the
       # first time, we want to build the AMIs but NOT run automated tests, since those tests will fail without an existing
       # AMI already in the AWS Account.
-      - run: /go/src/github.com/hashicorp/terraform-aws-vault/_ci/publish-amis.sh "ubuntu16-ami"
-      - run: /go/src/github.com/hashicorp/terraform-aws-vault/_ci/publish-amis.sh "ubuntu18-ami"
-      - run: /go/src/github.com/hashicorp/terraform-aws-vault/_ci/publish-amis.sh "amazon-linux-2-ami"
+      - run: _ci/publish-amis.sh "ubuntu16-ami"
+      - run: _ci/publish-amis.sh "ubuntu18-ami"
+      - run: _ci/publish-amis.sh "amazon-linux-2-ami"
 
 workflows:
   version: 2

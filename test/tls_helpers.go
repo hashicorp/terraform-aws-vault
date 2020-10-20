@@ -1,12 +1,12 @@
 package test
 
 import (
-	"testing"
-	"os/user"
-	"io/ioutil"
-	"github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/gruntwork-io/terratest/modules/test-structure"
+	"io/ioutil"
+	"os/user"
 	"strings"
+	"testing"
 )
 
 type TlsCert struct {

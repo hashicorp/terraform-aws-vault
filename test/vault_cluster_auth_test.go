@@ -159,7 +159,7 @@ func testRequestSecret(t *testing.T, terraformOptions *terraform.Options, expect
 	instanceIP := terraform.Output(t, terraformOptions, OUTPUT_AUTH_CLIENT_IP)
 	url := fmt.Sprintf("http://%s:%s", instanceIP, "8080")
 
-	http_helper.HttpGetWithRetry(t, url, nil, 200, expectedResponse, 30, 10*time.Second)
+	http_helper.HttpGetWithRetry(t, url, nil, 200, expectedResponse, 60, 10*time.Second)
 }
 
 func getSyslogs(t *testing.T, terraformOptions *terraform.Options, amiId string, awsRegion string, testName string) {

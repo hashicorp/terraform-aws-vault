@@ -137,6 +137,7 @@ resource "aws_launch_configuration" "launch_configuration" {
     volume_type           = var.root_volume_type
     volume_size           = var.root_volume_size
     delete_on_termination = var.root_volume_delete_on_termination
+    encrypted             = var.root_volume_encrypted
   }
 
   # Important note: whenever using a launch configuration with an auto scaling group, you must set

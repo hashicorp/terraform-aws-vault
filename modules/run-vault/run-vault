@@ -47,6 +47,8 @@ function print_usage {
   echo -e "  --enable-dynamo-backend\tIf this flag is set, DynamoDB will be enabled as the backend storage (HA)"
   echo -e "  --dynamo-region\tSpecifies the AWS region where --dynamo-table lives.  Only used if '--enable-dynamo-backend is on'"
   echo -e "  --dynamo--table\tSpecifies the DynamoDB table to use for HA Storage.  Only used if '--enable-dynamo-backend is on'"
+  echo -e "  --enable-raft-backend\tIf this flag is set, Vault's Integrated Storage will be enabled as the backend storage (HA)"
+  echo -e "  --raft-dir\t\tSpecifies the path to store Vault's Integrated Storage data. Optional.  Default is the absolute path of '../raft', relative to this script."
   echo
   echo "Options for Vault Agent:"
   echo
@@ -244,6 +246,8 @@ function generate_vault_config {
   local -r auto_unseal_kms_key_id="${16}"
   local -r auto_unseal_kms_key_region="${17}"
   local -r auto_unseal_endpoint="${18}"
+  local -r enable_raft_backend="${19}"
+  local -r raft_dir="${20}"
   local -r config_path="$config_dir/$VAULT_CONFIG_FILE"
 
   local instance_ip_address
@@ -301,8 +305,19 @@ EOF
     dynamodb_storage_type="ha_storage"
   fi
 
+  if [[ "$enable_raft_backend" == "true" ]]; then
+    vault_storage_backend=$(cat <<EOF
+ha_storage "raft" {
+  path    = "$raft_dir"
+  node_id = "$instance_ip_address"
+}
+# HA settings
+cluster_addr  = "https://$instance_ip_address:$cluster_port"
+api_addr      = "$api_addr"
+EOF
+)
 
-  if [[ "$enable_dynamo_backend" == "true" ]]; then
+  elif [[ "$enable_dynamo_backend" == "true" ]]; then
     vault_storage_backend=$(cat <<EOF
 $dynamodb_storage_type "dynamodb" {
   ha_enabled = "true"
@@ -438,6 +453,7 @@ function run {
   local cluster_port=""
   local api_addr=""
   local config_dir=""
+  local raft_dir=""
   local bin_dir=""
   local data_dir=""
   local log_level="$DEFAULT_LOG_LEVEL"
@@ -452,6 +468,7 @@ function run {
   local enable_dynamo_backend="false"
   local dynamo_region=""
   local dynamo_table=""
+  local enable_raft_backend="false"
   local agent="false"
   local agent_vault_address="$DEFAULT_AGENT_VAULT_ADDRESS"
   local agent_vault_port="$DEFAULT_PORT"
@@ -558,6 +575,14 @@ function run {
         dynamo_table="$2"
         shift
         ;;
+      --enable-raft-backend)
+        enable_raft_backend="true"
+        ;;
+      --raft-dir)
+        assert_not_empty "$key" "$2"
+        raft_dir="$2"
+        shift
+        ;;
       --agent)
         agent="true"
         ;;
@@ -641,7 +666,7 @@ function run {
       assert_not_empty "--s3-bucket-region" "$s3_bucket_region"
     fi
   fi
-  
+
   if [[ "$enable_dynamo_backend" == "true" ]]; then
     assert_not_empty "--dynamo-table" "$dynamo_table"
     assert_not_empty "--dynamo-region" "$dynamo_region"
@@ -664,6 +689,10 @@ function run {
 
   if [[ -z "$data_dir" ]]; then
     data_dir=$(cd "$SCRIPT_DIR/../data" && pwd)
+  fi
+
+  if [[ -z "$raft_dir" ]]; then
+    raft_dir=$(cd "$SCRIPT_DIR/../raft" && pwd)
   fi
 
   if [[ -z "$user" ]]; then
@@ -720,7 +749,9 @@ function run {
         "$enable_auto_unseal" \
         "$auto_unseal_kms_key_id" \
         "$auto_unseal_kms_key_region" \
-        "$auto_unseal_endpoint"
+        "$auto_unseal_endpoint" \
+        "$enable_raft_backend" \
+        "$raft_dir"
     fi
   fi
 

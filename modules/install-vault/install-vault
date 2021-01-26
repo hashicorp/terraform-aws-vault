@@ -156,6 +156,7 @@ function create_vault_install_paths {
   sudo mkdir -p "$path/data"
   sudo mkdir -p "$path/tls"
   sudo mkdir -p "$path/scripts"
+  sudo mkdir -p "$path/raft"
   sudo chmod 755 "$path"
   sudo chmod 755 "$path/bin"
   sudo chmod 755 "$path/data"

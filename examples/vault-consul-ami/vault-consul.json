@@ -1,10 +1,10 @@
 {
-  "min_packer_version": "0.12.0",
+  "min_packer_version": "1.5.4",
   "variables": {
     "aws_region": "us-east-1",
-    "vault_version": "1.5.4",
+    "vault_version": "1.6.1",
     "consul_module_version": "v0.8.0",
-    "consul_version": "1.5.3",
+    "consul_version": "1.9.2",
     "consul_download_url": "{{env `CONSUL_DOWNLOAD_URL`}}",
     "vault_download_url": "{{env `VAULT_DOWNLOAD_URL`}}",
     "install_auth_signing_script": "true",

@@ -288,6 +288,7 @@ EOF
   local dynamodb_storage_type="storage"
   local s3_config=""
   local vault_storage_backend=""
+  local service_registration=""
   if [[ "$enable_s3_backend" == "true" ]]; then
     s3_config=$(cat <<EOF
 storage "s3" {
@@ -299,8 +300,13 @@ EOF
 )
     consul_storage_type="ha_storage"
     dynamodb_storage_type="ha_storage"
+    service_registration=$(cat <<EOF
+service_registration "consul" {
+  address = "127.0.0.1:8500"
+}\n
+EOF
+)
   fi
-
 
   if [[ "$enable_dynamo_backend" == "true" ]]; then
     vault_storage_backend=$(cat <<EOF
@@ -335,6 +341,7 @@ EOF
   echo -e "$listener_config" >> "$config_path"
   echo -e "$s3_config" >> "$config_path"
   echo -e "$vault_storage_backend" >> "$config_path"
+  echo -e "$service_registration" >> "$config_path"
 
   chown "$user:$user" "$config_path"
 }
@@ -368,6 +375,8 @@ Documentation=https://www.vaultproject.io/docs/
 Requires=network-online.target
 After=network-online.target
 ConditionFileNotEmpty=$config_path
+StartLimitIntervalSec=60
+StartLimitBurst=3
 
 EOF
 )
@@ -392,9 +401,12 @@ KillSignal=SIGINT
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=30
+StartLimitInterval=60
 StartLimitIntervalSec=60
 StartLimitBurst=3
 LimitNOFILE=65536
+LimitMEMLOCK=infinity
+
 EOF
 )
 

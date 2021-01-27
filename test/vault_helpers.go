@@ -191,6 +191,24 @@ func initializeAndUnsealVaultCluster(t *testing.T, asgNameOutputVar string, sshU
 	return cluster
 }
 
+// Find the initialized and unsealed Vault cluster,
+// exit if cluster is not initialized and unsealed
+func getInitializedAndUnsealedVaultCluster(t *testing.T, asgNameOutputVar string, sshUserName string, terraformOptions *terraform.Options, awsRegion string, keyPair *aws.Ec2Keypair) VaultCluster {
+	cluster := findVaultClusterNodes(t, asgNameOutputVar, sshUserName, terraformOptions, awsRegion, keyPair)
+
+	establishConnectionToCluster(t, cluster)
+	isInitializedAndUnsealed, err := isVaultClusterInitializedAndUnsealed(t, cluster)
+	if err != nil {
+		t.Logf("Failed to check is vault cluster is already initialized and unsealed: %v", err)
+	}
+	// exit if cluster is not initialized and unsealed
+	if !isInitializedAndUnsealed {
+		t.Fatalf("Expected to find an initialized and unsealed cluster but it wasn't: %v", cluster)
+	}
+
+	return cluster
+}
+
 // Find the nodes in the given Vault ASG and return them in a VaultCluster struct
 func findVaultClusterNodes(t *testing.T, asgNameOutputVar string, sshUserName string, terraformOptions *terraform.Options, awsRegion string, keyPair *aws.Ec2Keypair) VaultCluster {
 	asgName := terraform.Output(t, terraformOptions, asgNameOutputVar)
@@ -401,7 +419,7 @@ func boolToTerraformVar(val bool) int {
 	}
 }
 
-// Check that the Vault node at the given host has the given
+// Check that the Vault node at the given host has the given status
 func assertStatus(t *testing.T, host ssh.Host, expectedStatus VaultStatus) {
 	description := fmt.Sprintf("Check that the Vault node %s has status %d", host.Hostname, int(expectedStatus))
 	logger.Logf(t, description)
@@ -442,5 +460,47 @@ func checkStatus(t *testing.T, host ssh.Host, expectedStatus VaultStatus) (strin
 		return fmt.Sprintf("Got expected status code %d", status), nil
 	} else {
 		return "", fmt.Errorf("Expected status code %d for host %s, but got %d", int(expectedStatus), host.Hostname, status)
+	}
+}
+
+// Check if the given Vault cluster has been initialized and unsealed.
+func isVaultClusterInitializedAndUnsealed(t *testing.T, cluster VaultCluster) (bool, error) {
+	leader, err := hasExpectedStatus(t, cluster.Leader, Leader)
+	if err != nil {
+		return false, err
+	}
+	standby1, err := hasExpectedStatus(t, cluster.Standby1, Standby)
+	if err != nil {
+		return false, err
+	}
+	standby2, err := hasExpectedStatus(t, cluster.Standby2, Standby)
+	if err != nil {
+		return false, err
+	}
+	if leader && standby1 && standby2 {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
+// Check the status of the given Vault node and ensure it matches the expected status.
+// Returns true if the status match, false otherwise.
+func hasExpectedStatus(t *testing.T, host ssh.Host, expectedStatus VaultStatus) (bool, error) {
+	curlCommand := "curl -s -o /dev/null -w '%{http_code}' https://127.0.0.1:8200/v1/sys/health"
+	logger.Logf(t, "Using curl to check status of Vault server %s: %s", host.Hostname, curlCommand)
+
+	output, err := ssh.CheckSshCommandE(t, host, curlCommand)
+	if err != nil {
+		return false, err
+	}
+	status, err := strconv.Atoi(output)
+	if err != nil {
+		return false, err
+	}
+	if status == int(expectedStatus) {
+		return true, nil
+	} else {
+		return false, nil
 	}
 }

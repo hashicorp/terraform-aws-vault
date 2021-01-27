@@ -39,14 +39,21 @@ func runVaultPrivateClusterTest(t *testing.T, amiId string, awsRegion string, ss
 			VAR_CONSUL_CLUSTER_NAME:    fmt.Sprintf("consul-test-%s", uniqueId),
 			VAR_CONSUL_CLUSTER_TAG_KEY: fmt.Sprintf("consul-test-%s", uniqueId),
 		}
-		deployCluster(t, amiId, awsRegion, examplesDir, random.UniqueId(), terraformVars)
+		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
+	})
+
+	test_structure.RunTestStage(t, "initialize_unseal", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+
+		initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
 
-		cluster := initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
+		cluster := getInitializedAndUnsealedVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
 		testVaultUsesConsulForDns(t, cluster)
 	})
 }

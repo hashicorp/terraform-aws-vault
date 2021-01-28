@@ -44,6 +44,7 @@ function print_usage {
   echo -e "  --s3-bucket\tSpecifies the S3 bucket to use to store Vault data. Only used if '--enable-s3-backend' is set."
   echo -e "  --s3-bucket-path\tSpecifies the S3 bucket path to use to store Vault data. Only used if '--enable-s3-backend' is set."
   echo -e "  --s3-bucket-region\tSpecifies the AWS region where '--s3-bucket' lives. Only used if '--enable-s3-backend' is set."
+  echo -e "  --consul-agent-service-registration-address\tSpecifies the address of the Consul agent to communicate with when using a different storage backend, in this case an S3 backend. Only used if '--enable-s3-backend' is set."
   echo -e "  --enable-dynamo-backend\tIf this flag is set, DynamoDB will be enabled as the backend storage (HA)"
   echo -e "  --dynamo-region\tSpecifies the AWS region where --dynamo-table lives.  Only used if '--enable-dynamo-backend is on'"
   echo -e "  --dynamo--table\tSpecifies the DynamoDB table to use for HA Storage.  Only used if '--enable-dynamo-backend is on'"
@@ -73,7 +74,7 @@ function print_usage {
   echo
   echo "Or"
   echo
-  echo "  run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --enable-s3-backend --s3-bucket my-vault-bucket --s3-bucket-region us-east-1"
+  echo "  run-vault --tls-cert-file /opt/vault/tls/vault.crt.pem --tls-key-file /opt/vault/tls/vault.key.pem --enable-s3-backend --s3-bucket my-vault-bucket --s3-bucket-region us-east-1 --consul-agent-service-registration-address 127.0.0.1:8500"
 }
 
 function log {
@@ -237,13 +238,14 @@ function generate_vault_config {
   local -r s3_bucket="$9"
   local -r s3_bucket_path="${10}"
   local -r s3_bucket_region="${11}"
-  local -r enable_dynamo_backend="${12}"
-  local -r dynamo_region="${13}"
-  local -r dynamo_table="${14}"
+  local -r consul_agent_service_registration_address="${12}"
+  local -r enable_dynamo_backend="${13}"
+  local -r dynamo_region="${14}"
+  local -r dynamo_table="${15}"
   local -r enable_auto_unseal="${15}"
-  local -r auto_unseal_kms_key_id="${16}"
-  local -r auto_unseal_kms_key_region="${17}"
-  local -r auto_unseal_endpoint="${18}"
+  local -r auto_unseal_kms_key_id="${17}"
+  local -r auto_unseal_kms_key_region="${18}"
+  local -r auto_unseal_endpoint="${19}"
   local -r config_path="$config_dir/$VAULT_CONFIG_FILE"
 
   local instance_ip_address
@@ -302,7 +304,7 @@ EOF
     dynamodb_storage_type="ha_storage"
     service_registration=$(cat <<EOF
 service_registration "consul" {
-  address = "127.0.0.1:8500"
+  address = "$consul_agent_service_registration_address"
 }\n
 EOF
 )
@@ -461,6 +463,7 @@ function run {
   local s3_bucket=""
   local s3_bucket_path=""
   local s3_bucket_region=""
+  local consul_agent_service_registration_address=""
   local enable_dynamo_backend="false"
   local dynamo_region=""
   local dynamo_table=""
@@ -559,6 +562,10 @@ function run {
         s3_bucket_region="$2"
         shift
         ;;
+      --consul-agent-service-registration-address)
+        consul_agent_service_registration_address="$2"
+        shift
+        ;;
       --enable-dynamo-backend)
         enable_dynamo_backend="true"
         ;;
@@ -651,6 +658,7 @@ function run {
     if [[ "$enable_s3_backend" == "true" ]]; then
       assert_not_empty "--s3-bucket" "$s3_bucket"
       assert_not_empty "--s3-bucket-region" "$s3_bucket_region"
+      assert_not_empty "--consul-agent-service-registration-address" "$consul_agent_service_registration_address"
     fi
   fi
   
@@ -726,6 +734,7 @@ function run {
         "$s3_bucket" \
         "$s3_bucket_path" \
         "$s3_bucket_region" \
+        "$consul_agent_service_registration_address" \
         "$enable_dynamo_backend" \
         "$dynamo_region" \
         "$dynamo_table" \

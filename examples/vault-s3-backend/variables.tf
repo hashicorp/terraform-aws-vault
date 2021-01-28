@@ -87,3 +87,8 @@ variable "force_destroy_s3_bucket" {
   default     = false
 }
 
+variable "consul_agent_service_registration_address" {
+  description = "Specifies the address of the Consul agent to communicate with. This can be an IP address, DNS record, or unix socket. It is recommended that you communicate with a local Consul agent; do not communicate directly with a server."
+  type        = string
+  default     = "127.0.0.1:8500"
+}

@@ -63,10 +63,11 @@ data "template_file" "user_data_vault_cluster" {
   template = file("${path.module}/user-data-vault.sh")
 
   vars = {
-    aws_region               = data.aws_region.current.name
-    s3_bucket_name           = var.s3_bucket_name
-    consul_cluster_tag_key   = var.consul_cluster_tag_key
-    consul_cluster_tag_value = var.consul_cluster_name
+    aws_region                                = data.aws_region.current.name
+    s3_bucket_name                            = var.s3_bucket_name
+    consul_cluster_tag_key                    = var.consul_cluster_tag_key
+    consul_cluster_tag_value                  = var.consul_cluster_name
+    consul_agent_service_registration_address = var.consul_agent_service_registration_address
   }
 }
 

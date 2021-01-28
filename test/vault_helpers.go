@@ -199,11 +199,11 @@ func getInitializedAndUnsealedVaultCluster(t *testing.T, asgNameOutputVar string
 	establishConnectionToCluster(t, cluster)
 	isInitializedAndUnsealed, err := isVaultClusterInitializedAndUnsealed(t, cluster)
 	if err != nil {
-		t.Logf("Failed to check is vault cluster is already initialized and unsealed: %v", err)
+		require.NoError(t, err, "Failed to check is vault cluster is already initialized and unsealed")
 	}
 	// exit if cluster is not initialized and unsealed
 	if !isInitializedAndUnsealed {
-		t.Fatalf("Expected to find an initialized and unsealed cluster but it wasn't: %v", cluster)
+		t.Fatalf("Expected to find an initialized and unsealed cluster but it wasn't: [Leader: %s, Standby1:%s , Standby2: %s]", cluster.Leader.Hostname, cluster.Standby1.Hostname, cluster.Standby2.Hostname)
 	}
 
 	return cluster

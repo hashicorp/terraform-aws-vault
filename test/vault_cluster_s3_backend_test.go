@@ -12,7 +12,6 @@ const VAULT_CLUSTER_S3_BACKEND_PATH = "examples/vault-s3-backend"
 
 const VAR_S3_BUCKET_NAME = "s3_bucket_name"
 const VAR_FORCE_DESTROY_S3_BUCKET = "force_destroy_s3_bucket"
-const VAR_CONSUL_AGENT_SERVICE_REGISTRATION_ADDRESS = "consul_agent_service_registration_address"
 
 // Test the Vault with S3 Backend example by:
 //
@@ -40,11 +39,10 @@ func runVaultWithS3BackendClusterTest(t *testing.T, amiId string, awsRegion, ssh
 	test_structure.RunTestStage(t, "deploy", func() {
 		uniqueId := random.UniqueId()
 		terraformVars := map[string]interface{}{
-			VAR_S3_BUCKET_NAME:                            s3BucketName(uniqueId),
-			VAR_FORCE_DESTROY_S3_BUCKET:                   true,
-			VAR_CONSUL_CLUSTER_NAME:                       fmt.Sprintf("consul-test-%s", uniqueId),
-			VAR_CONSUL_CLUSTER_TAG_KEY:                    fmt.Sprintf("consul-test-%s", uniqueId),
-			VAR_CONSUL_AGENT_SERVICE_REGISTRATION_ADDRESS: "127.0.0.1:8500",
+			VAR_S3_BUCKET_NAME:          s3BucketName(uniqueId),
+			VAR_FORCE_DESTROY_S3_BUCKET: true,
+			VAR_CONSUL_CLUSTER_NAME:     fmt.Sprintf("consul-test-%s", uniqueId),
+			VAR_CONSUL_CLUSTER_TAG_KEY:  fmt.Sprintf("consul-test-%s", uniqueId),
 		}
 		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
 	})

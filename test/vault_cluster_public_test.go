@@ -23,6 +23,7 @@ const VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME = "vault_domain_name"
 // 4. SSH to a Vault node and initialize the Vault cluster
 // 5. SSH to each Vault node and unseal it
 // 6. Connect to the Vault cluster via the ELB
+// 7. SSH to a Vault node and make sure you can communicate with the nodes via Consul-managed DNS
 func runVaultPublicClusterTest(t *testing.T, amiId string, awsRegion string, sshUserName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, ".")
 

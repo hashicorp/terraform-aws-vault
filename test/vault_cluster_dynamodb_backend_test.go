@@ -20,7 +20,6 @@ const VAR_DYNAMO_TABLE_NAME = "dynamo_table_name"
 // 3. Deploy that AMI using the example Terraform code
 // 4. SSH to a Vault node and initialize the Vault cluster
 // 5. SSH to each Vault node and unseal it
-// 6. Connect to the Vault cluster via the ELB
 func runVaultWithDynamoBackendClusterTest(t *testing.T, amiId string, awsRegion, sshUserName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_CLUSTER_DYNAMODB_BACKEND_PATH)
 
@@ -36,10 +35,13 @@ func runVaultWithDynamoBackendClusterTest(t *testing.T, amiId string, awsRegion,
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
+		uniqueId := random.UniqueId()
 		terraformVars := map[string]interface{}{
-			VAR_DYNAMO_TABLE_NAME: fmt.Sprintf("vault-dynamo-test-%s", random.UniqueId()),
+			VAR_DYNAMO_TABLE_NAME:       fmt.Sprintf("vault-dynamo-test-%s", uniqueId),
+			VAR_S3_BUCKET_NAME:          s3BucketName(uniqueId),
+			VAR_FORCE_DESTROY_S3_BUCKET: true,
 		}
-		deployCluster(t, amiId, awsRegion, examplesDir, random.UniqueId(), terraformVars)
+		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {

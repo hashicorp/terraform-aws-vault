@@ -21,7 +21,7 @@ const VAR_FORCE_DESTROY_S3_BUCKET = "force_destroy_s3_bucket"
 // 3. Deploy that AMI using the example Terraform code
 // 4. SSH to a Vault node and initialize the Vault cluster
 // 5. SSH to each Vault node and unseal it
-// 6. Connect to the Vault cluster via the ELB
+// 6. SSH to a Vault node and make sure you can communicate with the nodes via Consul-managed DNS
 func runVaultWithS3BackendClusterTest(t *testing.T, amiId string, awsRegion, sshUserName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, VAULT_CLUSTER_S3_BACKEND_PATH)
 

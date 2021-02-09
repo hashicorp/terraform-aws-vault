@@ -59,11 +59,18 @@ func runVaultEnterpriseClusterTest(t *testing.T, amiId string, awsRegion string,
 		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
 	})
 
+	test_structure.RunTestStage(t, "initialize_unseal", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+
+		initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
+	})
+
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
 
-		cluster := initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
+		cluster := getInitializedAndUnsealedVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
 		testVaultUsesConsulForDns(t, cluster)
 		checkEnterpriseInstall(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
 	})

@@ -83,7 +83,7 @@ function log {
   local -r level="$1"
   local -r message="$2"
   local -r timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-  >&2 echo -e "$timestamp [$level] [$SCRIPT_NAME] $message"
+  >&2 echo -e "${timestamp} [${level}] [$SCRIPT_NAME] ${message}"
 }
 
 function log_info {
@@ -131,7 +131,7 @@ function get_instance_ip_address {
 function assert_is_installed {
   local -r name="$1"
 
-  if [[ ! $(command -v $name) ]]; then
+  if [[ ! $(command -v ${name}) ]]; then
     log_error "The binary '$name' is required by this script but is not installed or in the system's PATH."
     exit 1
   fi
@@ -145,8 +145,8 @@ function get_vault_version {
 }
 
 function vault_version_at_least {
-  local -r config_path="$1"
-  local -r ui_config="$2"
+  local -r config_path=$1
+  local -r ui_config=$2
   VAULT_VERSION=$(get_vault_version)
 
   #This if statement will echo the current vault version and the minimum version required for ui support.
@@ -698,7 +698,7 @@ function run {
   fi
 
   if [[ -z "$api_addr" ]]; then
-    api_addr="https://$(get_instance_ip_address):$port"
+    api_addr="https://$(get_instance_ip_address):${port}"
   fi
 
   if [[ "$agent" == "false" ]] && [[ "$enable_auto_unseal" == "true" ]]; then

@@ -20,4 +20,7 @@ readonly VAULT_TLS_KEY_FILE="/opt/vault/tls/vault.key.pem"
   --dynamo-table "${dynamo_table_name}" \
   --dynamo-region "${aws_region}" \
   --tls-cert-file "$VAULT_TLS_CERT_FILE" \
-  --tls-key-file "$VAULT_TLS_KEY_FILE"
+  --tls-key-file "$VAULT_TLS_KEY_FILE" \
+  --enable-s3-backend \
+  --s3-bucket "${s3_bucket_name}" \
+  --s3-bucket-region "${aws_region}"

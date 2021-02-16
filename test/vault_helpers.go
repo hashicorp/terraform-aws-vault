@@ -61,10 +61,11 @@ func (cluster VaultCluster) Nodes() []ssh.Host {
 type VaultStatus int
 
 const (
-	Leader        VaultStatus = 200
-	Standby                   = 429
-	Uninitialized             = 501
-	Sealed                    = 503
+	Leader             VaultStatus = 200
+	Standby                        = 429
+	PerformanceStandby             = 473
+	Uninitialized                  = 501
+	Sealed                         = 503
 )
 
 func teardownResources(t *testing.T, examplesDir string) {
@@ -187,6 +188,100 @@ func initializeAndUnsealVaultCluster(t *testing.T, asgNameOutputVar string, sshU
 	assertStatus(t, cluster.Standby2, Sealed)
 	unsealVaultNode(t, cluster.Standby2, cluster.UnsealKeys)
 	assertStatus(t, cluster.Standby2, Standby)
+
+	logger.Logf(t, "Successfully initialized and unsealed Vault Cluster: [Leader: %s, Standby1: %s , Standby2: %s]", cluster.Leader.Hostname, cluster.Standby1.Hostname, cluster.Standby2.Hostname)
+
+	return cluster
+}
+
+// Find and return the initialized and unsealed Vault cluster, or exit if cluster is not initialized and unsealed:
+// has not any of the expected staus codes: 200 for Leader node, 429 for Standby node or 473 for PerformanceStandby node (enterprise version)
+//
+// 1. Get the public IP addresses of the EC2 Instances in an Auto Scaling Group of the given name in the given region
+// 2. SSH to each Vault nodes and get node status
+// 3. Set Vault node status (Leader or Standby|PerformanceStandby) based on returned node status
+// 4. Double check cluster node status
+func getInitializedAndUnsealedVaultCluster(t *testing.T, asgNameOutputVar string, sshUserName string, terraformOptions *terraform.Options, awsRegion string, keyPair *aws.Ec2Keypair) VaultCluster {
+	asgName := terraform.Output(t, terraformOptions, asgNameOutputVar)
+	nodeIpAddresses := getIpAddressesOfAsgInstances(t, asgName, awsRegion)
+	if len(nodeIpAddresses) != 3 {
+		t.Fatalf("Expected to get three IP addresses for Vault cluster, but got %d: %v", len(nodeIpAddresses), nodeIpAddresses)
+	}
+
+	// build vault cluster variable
+	// because findVaultClusterNodes method does not guarantee
+	// that node0 is Leader and node1 and node2 are Standby
+	cluster := VaultCluster{
+		Leader: ssh.Host{
+			Hostname:    "",
+			SshUserName: sshUserName,
+			SshKeyPair:  keyPair.KeyPair,
+		},
+
+		Standby1: ssh.Host{
+			Hostname:    "",
+			SshUserName: sshUserName,
+			SshKeyPair:  keyPair.KeyPair,
+		},
+
+		Standby2: ssh.Host{
+			Hostname:    "",
+			SshUserName: sshUserName,
+			SshKeyPair:  keyPair.KeyPair,
+		},
+	}
+
+	// ssh each node and get its status
+	for _, node := range nodeIpAddresses {
+		if node != "" {
+			description := fmt.Sprintf("Trying to establish SSH connection to %s", node)
+			logger.Logf(t, description)
+			// connection to each of the Vault cluster nodes must be already working
+			// retrying only 3 times
+			maxRetries := 3
+			sleepBetweenRetries := 10 * time.Second
+			host := ssh.Host{
+				Hostname:    node,
+				SshUserName: sshUserName,
+				SshKeyPair:  keyPair.KeyPair,
+			}
+			retry.DoWithRetry(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {
+				return "", ssh.CheckSshConnectionE(t, host)
+			})
+			// update leader and standby nodes in vault cluster variable
+			status, err := getNodeStatus(t, host)
+			if err != nil {
+				require.NoError(t, err, "Failed to check if vault cluster is already initialized and unsealed")
+			}
+			switch status {
+			case int(Leader):
+				cluster.Leader.Hostname = node
+				assertStatus(t, cluster.Leader, Leader)
+			case int(Standby):
+				if cluster.Standby1.Hostname == "" {
+					cluster.Standby1.Hostname = node
+					assertStatus(t, cluster.Standby1, Standby)
+				} else if cluster.Standby2.Hostname == "" {
+					cluster.Standby2.Hostname = node
+				}
+			// Managing Performance Standby Nodes status
+			// https://www.vaultproject.io/docs/enterprise/performance-standby#performance-standby-nodes
+			case int(PerformanceStandby):
+				if cluster.Standby1.Hostname == "" {
+					cluster.Standby1.Hostname = node
+					assertStatus(t, cluster.Standby1, PerformanceStandby)
+				} else if cluster.Standby2.Hostname == "" {
+					cluster.Standby2.Hostname = node
+					assertStatus(t, cluster.Standby2, PerformanceStandby)
+				}
+			default:
+				errMsg := fmt.Sprintf("error: Unexpected vault cluster node status %d", status)
+				require.NoError(t, errors.New(errMsg), "Failed to check if vault cluster is already initialized and unsealed")
+			}
+		}
+	}
+
+	logger.Logf(t, "Retrieved Vault Cluster: [Leader: %s, Standby1: %s , Standby2: %s]", cluster.Leader.Hostname, cluster.Standby1.Hostname, cluster.Standby2.Hostname)
 
 	return cluster
 }
@@ -401,7 +496,7 @@ func boolToTerraformVar(val bool) int {
 	}
 }
 
-// Check that the Vault node at the given host has the given
+// Check that the Vault node at the given host has the given status
 func assertStatus(t *testing.T, host ssh.Host, expectedStatus VaultStatus) {
 	description := fmt.Sprintf("Check that the Vault node %s has status %d", host.Hostname, int(expectedStatus))
 	logger.Logf(t, description)
@@ -423,17 +518,9 @@ func cleanupTlsCertFiles(tlsCert TlsCert) {
 	os.Remove(tlsCert.PublicKeyPath)
 }
 
-// Check the status of the given Vault node and ensure it matches the expected status. Note that we use curl to do the
-// status check so we can ensure that TLS certificates work for curl (and not just the Vault client).
+// Check the status of the given Vault node and ensure it matches the expected status.
 func checkStatus(t *testing.T, host ssh.Host, expectedStatus VaultStatus) (string, error) {
-	curlCommand := "curl -s -o /dev/null -w '%{http_code}' https://127.0.0.1:8200/v1/sys/health"
-	logger.Logf(t, "Using curl to check status of Vault server %s: %s", host.Hostname, curlCommand)
-
-	output, err := ssh.CheckSshCommandE(t, host, curlCommand)
-	if err != nil {
-		return "", err
-	}
-	status, err := strconv.Atoi(output)
+	status, err := getNodeStatus(t, host)
 	if err != nil {
 		return "", err
 	}
@@ -443,4 +530,21 @@ func checkStatus(t *testing.T, host ssh.Host, expectedStatus VaultStatus) (strin
 	} else {
 		return "", fmt.Errorf("Expected status code %d for host %s, but got %d", int(expectedStatus), host.Hostname, status)
 	}
+}
+
+// Get the status of the given Vault node. Note that we use curl to do the status check so we can ensure that
+// TLS certificates work for curl (and not just the Vault client).
+func getNodeStatus(t *testing.T, host ssh.Host) (int, error) {
+	curlCommand := "curl -s -o /dev/null -w '%{http_code}' https://127.0.0.1:8200/v1/sys/health"
+	logger.Logf(t, "Using curl to check status of Vault server %s: %s", host.Hostname, curlCommand)
+
+	output, err := ssh.CheckSshCommandE(t, host, curlCommand)
+	if err != nil {
+		return 0, err
+	}
+	status, err := strconv.Atoi(output)
+	if err != nil {
+		return 0, err
+	}
+	return status, nil
 }

@@ -86,4 +86,3 @@ variable "force_destroy_s3_bucket" {
   type        = bool
   default     = false
 }
-

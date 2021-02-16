@@ -65,3 +65,15 @@ variable "dynamo_write_capacity" {
   description = "Sets the DynamoDB write capacity for storage backend"
   default     = 5
 }
+
+variable "s3_bucket_name" {
+  description = "The name of an S3 bucket to create and use as a storage backend (if configured). Note: S3 bucket names must be *globally* unique."
+  type        = string
+  default     = "my-vault-bucket"
+}
+
+variable "force_destroy_s3_bucket" {
+  description = "If you set this to true, when you run terraform destroy, this tells Terraform to delete all the objects in the S3 bucket used for backend storage (if configured). You should NOT set this to true in production or you risk losing all your data! This property is only here so automated tests of this module can clean up after themselves."
+  type        = bool
+  default     = false
+}

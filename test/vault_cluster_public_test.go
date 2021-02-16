@@ -23,6 +23,7 @@ const VAULT_CLUSTER_PUBLIC_VAR_VAULT_DOMAIN_NAME = "vault_domain_name"
 // 4. SSH to a Vault node and initialize the Vault cluster
 // 5. SSH to each Vault node and unseal it
 // 6. Connect to the Vault cluster via the ELB
+// 7. SSH to a Vault node and make sure you can communicate with the nodes via Consul-managed DNS
 func runVaultPublicClusterTest(t *testing.T, amiId string, awsRegion string, sshUserName string) {
 	examplesDir := test_structure.CopyTerraformFolderToTemp(t, REPO_ROOT, ".")
 
@@ -46,14 +47,22 @@ func runVaultPublicClusterTest(t *testing.T, amiId string, awsRegion string, ssh
 			VAR_CONSUL_CLUSTER_NAME:                          fmt.Sprintf("consul-test-%s", uniqueId),
 			VAR_CONSUL_CLUSTER_TAG_KEY:                       fmt.Sprintf("consul-test-%s", uniqueId),
 		}
-		deployCluster(t, amiId, awsRegion, examplesDir, random.UniqueId(), terraformVars)
+		deployCluster(t, amiId, awsRegion, examplesDir, uniqueId, terraformVars)
+	})
+
+	test_structure.RunTestStage(t, "initialize_unseal", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
+		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
+
+		initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, examplesDir)
 		keyPair := test_structure.LoadEc2KeyPair(t, examplesDir)
 
-		initializeAndUnsealVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
+		cluster := getInitializedAndUnsealedVaultCluster(t, OUTPUT_VAULT_CLUSTER_ASG_NAME, sshUserName, terraformOptions, awsRegion, keyPair)
 		testVaultViaElb(t, terraformOptions)
+		testVaultUsesConsulForDns(t, cluster)
 	})
 }

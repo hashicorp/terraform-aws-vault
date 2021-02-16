@@ -89,6 +89,7 @@ func TestMainVaultCluster(t *testing.T) {
 
 	// os.Setenv("SKIP_setup_amis", "true")
 	// os.Setenv("SKIP_deploy", "true")
+	// os.Setenv("SKIP_initialize_unseal", "true")
 	// os.Setenv("SKIP_validate", "true")
 	// os.Setenv("SKIP_log", "true")
 	// os.Setenv("SKIP_teardown", "true")

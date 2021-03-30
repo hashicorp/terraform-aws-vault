@@ -24,6 +24,18 @@ resource "aws_elb" "vault" {
   security_groups = [aws_security_group.vault.id]
   subnets         = var.subnet_ids
 
+  # optional access_logs creation  
+  dynamic "access_logs" {
+    for_each = var.access_logs == null ? [] : ["once"]
+
+    content {
+      enabled       = lookup(access_logs.value, "enabled", lookup(access_logs.value, "bucket", null) != null)
+      bucket        = lookup(access_logs.value, "bucket", null)
+      bucket_prefix = lookup(access_logs.value, "bucket_prefix", null)
+      interval      = lookup(access_logs.value, "interval", 60)
+    }
+  }
+
   # Run the ELB in TCP passthrough mode
   listener {
     lb_port           = var.lb_port
@@ -111,4 +123,3 @@ resource "aws_route53_record" "vault_elb" {
     evaluate_target_health = false
   }
 }
-

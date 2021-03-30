@@ -125,12 +125,14 @@ function install_dependencies {
       log_info "Running apt-get update"
       sudo apt-get update -y
     fi
+    log_info "Installing: awscli curl unzip jq libcap2-bin"
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y awscli curl unzip jq libcap2-bin
   elif $(has_yum); then
     if [[ "$skip_package_update" != "true" ]]; then
       log_info "Running yum update"
       sudo yum update -y
     fi
+    log_info "Installing: awscli curl unzip jq"
     sudo yum install -y awscli curl unzip jq
   else
     log_error "Could not find apt-get or yum. Cannot install dependencies on this OS."

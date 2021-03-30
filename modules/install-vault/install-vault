@@ -121,12 +121,14 @@ function install_dependencies {
   log_info "Installing dependencies"
 
   if $(has_apt_get); then
-    if [[ "$skip_package_update" != true ]]; then
+    if [[ "$skip_package_update" != "true" ]]; then
+      log_info "Running apt-get update"
       sudo apt-get update -y
     fi
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y awscli curl unzip jq libcap2-bin
   elif $(has_yum); then
-    if [[ "$skip_package_update" != true ]]; then
+    if [[ "$skip_package_update" != "true" ]]; then
+      log_info "Running yum update"
       sudo yum update -y
     fi
     sudo yum install -y awscli curl unzip jq

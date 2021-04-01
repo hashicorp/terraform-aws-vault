@@ -10,7 +10,7 @@ set -e
 
 readonly DEFAULT_INSTALL_PATH="/opt/vault"
 readonly DEFAULT_VAULT_USER="vault"
-readonly DEFAULT_SKIP_PACKAGE_UPDATE=false
+readonly DEFAULT_SKIP_PACKAGE_UPDATE="false"
 
 readonly DOWNLOAD_PACKAGE_PATH="/tmp/vault.zip"
 

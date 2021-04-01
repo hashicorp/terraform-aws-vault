@@ -31,7 +31,7 @@ function print_usage {
   echo -e "  --download-url\t\tUrl to exact Vault package to be installed. Optional if version is provided."
   echo -e "  --path\t\tThe path where Vault should be installed. Optional. Default: $DEFAULT_INSTALL_PATH."
   echo -e "  --user\t\tThe user who will own the Vault install directories. Optional. Default: $DEFAULT_VAULT_USER."
-  echo -e "  --skip-package-update\t\tSkip yum/apt updates. Optional. Default: $DEFAULT_SKIP_PACKAGE_UPDATE."
+  echo -e "  --skip-package-update\t\tSkip yum/apt updates. Optional. Only recommended if you already ran yum update or apt-get update yourself. Default: $DEFAULT_SKIP_PACKAGE_UPDATE."
   echo
   echo "Example:"
   echo

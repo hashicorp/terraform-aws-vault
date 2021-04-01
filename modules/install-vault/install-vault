@@ -249,8 +249,7 @@ function install {
         shift
         ;;
       --skip-package-update)
-        skip_package_update="$2"
-        shift
+        skip_package_update="true"
         ;;
       --help)
         print_usage

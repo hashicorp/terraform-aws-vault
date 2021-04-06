@@ -25,17 +25,17 @@ variable "vault_asg_name" {
 # These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------
 
-# Due to terraform type limitations this variable is set to be a map of any.
+# Due to terraform type limitations this variable is set to be any.
 # In reality it is a map of mixed parameters, some of them are booleans, some ints.
 #  access_logs = {
-#    enabled = true # mandatory
+#    enabled = true            # mandatory
 #    bucket = "s3_bucket_name" # mandatory
-#    bucket_prefix = "alb" # mandatory
-#    interval = 60 # optional
+#    bucket_prefix = "alb"     # mandatory
+#    interval = 60             # optional
 #  }
 variable "access_logs" {
   description = "If specified, enables access logging for the ELB. This variable should be set to a map with the same keys and values as in the access_log block of the aws_elb resource (https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elb), including bucket, bucket_prefix, interval, and enabled."
-  type        = map(any)
+  type        = any
   default     = null
 }
 

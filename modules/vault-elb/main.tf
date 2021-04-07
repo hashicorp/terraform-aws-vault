@@ -29,7 +29,7 @@ resource "aws_elb" "vault" {
     for_each = var.access_logs == null ? [] : ["once"]
 
     content {
-      enabled       = lookup(access_logs.value, "enabled", lookup(access_logs.value, "bucket", null) != null)
+      enabled       = lookup(access_logs.value, "enabled", lookup(access_logs.value, "bucket", null))
       bucket        = lookup(access_logs.value, "bucket", null)
       bucket_prefix = lookup(access_logs.value, "bucket_prefix", null)
       interval      = lookup(access_logs.value, "interval", 60)

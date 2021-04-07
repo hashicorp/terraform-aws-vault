@@ -28,9 +28,9 @@ variable "vault_asg_name" {
 # Due to terraform type limitations this variable is set to be any.
 # In reality it is a map of mixed parameters, some of them are booleans, some ints.
 #  access_logs = {
-#    enabled       = true             # mandatory
+#    enabled       = true             # optional
 #    bucket        = "s3_bucket_name" # mandatory
-#    bucket_prefix = "alb"            # mandatory
+#    bucket_prefix = "alb"            # optional
 #    interval      = 60               # optional
 #  }
 variable "access_logs" {

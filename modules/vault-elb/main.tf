@@ -32,7 +32,7 @@ resource "aws_elb" "vault" {
       enabled       = lookup(access_logs.value, "enabled", lookup(access_logs.value, "bucket", null))
       bucket        = lookup(access_logs.value, "bucket", null)
       bucket_prefix = lookup(access_logs.value, "bucket_prefix", null)
-      interval      = lookup(access_logs.value, "interval", 60)
+      interval      = lookup(access_logs.value, "interval", null)
     }
   }
 

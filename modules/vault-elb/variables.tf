@@ -25,6 +25,20 @@ variable "vault_asg_name" {
 # These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------
 
+# Due to terraform type limitations this variable is set to be any.
+# In reality it is a map of mixed parameters, some of them are booleans, some ints.
+#  access_logs = {
+#    enabled       = true             # optional
+#    bucket        = "s3_bucket_name" # mandatory
+#    bucket_prefix = "alb"            # optional
+#    interval      = 60               # optional
+#  }
+variable "access_logs" {
+  description = "If specified, enables access logging for the ELB. This variable should be set to a map with the same keys and values as in the access_log block of the aws_elb resource (https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elb), including bucket, bucket_prefix, interval, and enabled."
+  type        = any
+  default     = null
+}
+
 variable "subnet_ids" {
   description = "The subnet IDs into which the ELB should be deployed. You will typically want to deploy the ELB into public subnets so your Vault cluster can run in private subnets."
   type        = list(string)
@@ -126,4 +140,3 @@ variable "security_group_tags" {
   type        = map(string)
   default     = {}
 }
-

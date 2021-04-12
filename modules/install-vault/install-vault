@@ -10,6 +10,7 @@ set -e
 
 readonly DEFAULT_INSTALL_PATH="/opt/vault"
 readonly DEFAULT_VAULT_USER="vault"
+readonly DEFAULT_SKIP_PACKAGE_UPDATE="false"
 
 readonly DOWNLOAD_PACKAGE_PATH="/tmp/vault.zip"
 
@@ -30,6 +31,7 @@ function print_usage {
   echo -e "  --download-url\t\tUrl to exact Vault package to be installed. Optional if version is provided."
   echo -e "  --path\t\tThe path where Vault should be installed. Optional. Default: $DEFAULT_INSTALL_PATH."
   echo -e "  --user\t\tThe user who will own the Vault install directories. Optional. Default: $DEFAULT_VAULT_USER."
+  echo -e "  --skip-package-update\t\tSkip yum/apt updates. Optional. Only recommended if you already ran yum update or apt-get update yourself. Default: $DEFAULT_SKIP_PACKAGE_UPDATE."
   echo
   echo "Example:"
   echo
@@ -115,13 +117,19 @@ function has_apt_get {
 }
 
 function install_dependencies {
+  local -r skip_package_update=$1
   log_info "Installing dependencies"
-
   if $(has_apt_get); then
-    sudo apt-get update -y
+    if [[ "$skip_package_update" != "true" ]]; then
+      log_info "Running apt-get update"
+      sudo apt-get update -y
+    fi
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y awscli curl unzip jq libcap2-bin
   elif $(has_yum); then
-    sudo yum update -y
+    if [[ "$skip_package_update" != "true" ]]; then
+      log_info "Running yum update"
+      sudo yum update -y
+    fi
     sudo yum install -y awscli curl unzip jq
   else
     log_error "Could not find apt-get or yum. Cannot install dependencies on this OS."
@@ -218,6 +226,7 @@ function install {
   local download_url=""
   local path="$DEFAULT_INSTALL_PATH"
   local user="$DEFAULT_VAULT_USER"
+  local skip_package_update="$DEFAULT_SKIP_PACKAGE_UPDATE"
 
   while [[ $# > 0 ]]; do
     local key="$1"
@@ -239,6 +248,9 @@ function install {
         user="$2"
         shift
         ;;
+      --skip-package-update)
+        skip_package_update="true"
+        ;;
       --help)
         print_usage
         exit
@@ -259,7 +271,7 @@ function install {
 
   log_info "Starting Vault install"
 
-  install_dependencies
+  install_dependencies "$skip_package_update"
   create_vault_user "$user"
   create_vault_install_paths "$path" "$user"
   fetch_binary "$version" "$download_url"

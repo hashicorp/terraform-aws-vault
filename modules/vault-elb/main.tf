@@ -26,7 +26,7 @@ resource "aws_elb" "vault" {
 
   # optional access_logs creation  
   dynamic "access_logs" {
-    for_each = var.access_logs == null ? [] : ["once"]
+    for_each = var.access_logs == null ? [] : [ var.access_logs ]
 
     content {
       enabled       = lookup(access_logs.value, "enabled", lookup(access_logs.value, "bucket", null))

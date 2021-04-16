@@ -15,17 +15,23 @@
 # the response from GetCallerIdentity, which tells who is trying to authenticate
 # ------------------------------------------------------------------------------
 
+import base64
+import json
+import sys
+
 import botocore.session
 from botocore.awsrequest import create_request_object
-import json
-import base64
-import sys
+
 
 def headers_to_go_style(headers):
     retval = {}
-    for k, v in headers.iteritems():
-        retval[k] = [v]
+    for k, v in headers.items():
+        try:
+            retval[k] = [v.decode()]
+        except AttributeError:
+            retval[k] = [v]
     return retval
+
 
 def generate_vault_request(awsIamServerId):
     session = botocore.session.get_session()
@@ -40,12 +46,22 @@ def generate_vault_request(awsIamServerId):
 
     return {
         'iam_http_request_method': request.method,
-        'iam_request_url':         base64.b64encode(request.url),
-        'iam_request_body':        base64.b64encode(request.body),
-        'iam_request_headers':     base64.b64encode(json.dumps(headers_to_go_style(dict(request.headers)))), # It's a CaseInsensitiveDict, which is not JSON-serializable
+        'iam_request_url':         base64.b64encode(request.url.encode()),
+        'iam_request_body':        base64.b64encode(request.body.encode()),
+        'iam_request_headers':     base64.b64encode(json.dumps(headers_to_go_style(dict(request.headers))).encode()),  # It's a CaseInsensitiveDict, which is not JSON-serializable
     }
+
+
+def decode_byte_values_from_dict(_dict):
+    for k, v in _dict.items():
+        try:
+            _dict[k] = v.decode()
+        except AttributeError:
+            _dict[k] = v
+    return _dict
 
 
 if __name__ == "__main__":
     awsIamServerId = sys.argv[1]
-    print json.dumps(generate_vault_request(awsIamServerId))
+    vault_request = generate_vault_request(awsIamServerId)
+    print(json.dumps(decode_byte_values_from_dict(vault_request)))

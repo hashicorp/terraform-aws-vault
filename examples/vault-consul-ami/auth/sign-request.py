@@ -22,13 +22,18 @@ import sys
 import botocore.session
 
 
-def headers_to_go_style(headers):
+def decode_bytes_from_dict_values(dict_, to_go_style=False):
     retval = {}
-    for k, v in headers.items():
+    for k, v in dict_.items():
         try:
-            retval[k] = [v.decode()]
+            value = v.decode()
         except AttributeError:
-            retval[k] = [v]
+            value = v
+
+        if to_go_style:
+            value = [value]
+
+        retval[k] = value
     return retval
 
 
@@ -47,20 +52,11 @@ def generate_vault_request(awsIamServerId):
         'iam_http_request_method': request.method,
         'iam_request_url':         base64.b64encode(request.url.encode()),
         'iam_request_body':        base64.b64encode(request.body.encode()),
-        'iam_request_headers':     base64.b64encode(json.dumps(headers_to_go_style(dict(request.headers))).encode()),  # It's a CaseInsensitiveDict, which is not JSON-serializable
+        'iam_request_headers':     base64.b64encode(json.dumps(decode_bytes_from_dict_values(dict(request.headers), to_go_style=True)).encode()),  # It's a CaseInsensitiveDict, which is not JSON-serializable
     }
-
-
-def decode_byte_values_from_dict(_dict):
-    for k, v in _dict.items():
-        try:
-            _dict[k] = v.decode()
-        except AttributeError:
-            _dict[k] = v
-    return _dict
 
 
 if __name__ == "__main__":
     awsIamServerId = sys.argv[1]
     vault_request = generate_vault_request(awsIamServerId)
-    print(json.dumps(decode_byte_values_from_dict(vault_request)))
+    print(json.dumps(decode_bytes_from_dict_values(vault_request)))

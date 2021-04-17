@@ -20,7 +20,6 @@ import json
 import sys
 
 import botocore.session
-from botocore.awsrequest import create_request_object
 
 
 def headers_to_go_style(headers):

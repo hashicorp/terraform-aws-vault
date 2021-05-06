@@ -1,4 +1,5 @@
 [![Maintained by Gruntwork.io](https://img.shields.io/badge/maintained%20by-gruntwork.io-%235849a6.svg)](https://gruntwork.io/?ref=repo_aws_vault)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhashicorp%2Fterraform-aws-vault.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhashicorp%2Fterraform-aws-vault?ref=badge_shield)
 # Vault AWS Module
 
 This repo contains a set of modules in the [modules folder](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules) for deploying a [Vault](https://www.vaultproject.io/) cluster on
@@ -140,3 +141,6 @@ This code is released under the Apache 2.0 License. Please see [LICENSE](https:/
 details.
 
 Copyright &copy; 2020 Gruntwork, Inc.
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhashicorp%2Fterraform-aws-vault.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhashicorp%2Fterraform-aws-vault?ref=badge_large)

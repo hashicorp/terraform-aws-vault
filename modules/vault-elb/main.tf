@@ -31,7 +31,7 @@ resource "aws_elb" "vault" {
     content {
       # enabled flag is optional. The user can choose to specify or not. If not specified we check if bucket param is specified and assume that
       #  the user wants the logging to be enabled.
-      enabled       = lookup(access_logs.value, "enabled", false) ? lookup(access_logs.value, "enabled") : can(lookup(access_logs.value, "bucket"))
+      enabled       = lookup(access_logs.value, "enabled", true)
       bucket        = lookup(access_logs.value, "bucket", null)
       bucket_prefix = lookup(access_logs.value, "bucket_prefix", null)
       interval      = lookup(access_logs.value, "interval", null)

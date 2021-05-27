@@ -82,7 +82,7 @@
     "type": "shell",
     "inline": [
       "if test -n \"{{user `vault_download_url`}}\"; then",
-      " /tmp/terraform-aws-vault/modules/install-vault/install-vault --download-url {{user `vault_download_url`}};",
+      " /tmp/terraform-aws-vault/modules/install-vault/install-vault --download-url '{{user `vault_download_url`}}';",
       "else",
       " /tmp/terraform-aws-vault/modules/install-vault/install-vault --version {{user `vault_version`}};",
       "fi"
@@ -146,7 +146,7 @@
     "inline": [
       "git clone --branch {{user `consul_module_version`}} https://github.com/hashicorp/terraform-aws-consul.git /tmp/terraform-aws-consul",
       "if test -n \"{{user `consul_download_url`}}\"; then",
-      " /tmp/terraform-aws-consul/modules/install-consul/install-consul --download-url {{user `consul_download_url`}};",
+      " /tmp/terraform-aws-consul/modules/install-consul/install-consul --download-url '{{user `consul_download_url`}}';",
       "else",
       " /tmp/terraform-aws-consul/modules/install-consul/install-consul --version {{user `consul_version`}};",
       "fi"

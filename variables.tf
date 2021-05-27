@@ -90,6 +90,13 @@ variable "vault_instance_type" {
   default     = "t2.micro"
 }
 
+variable "vault_iam_instance_profile_arn" {
+  description = "The ARN of the IAM instance profile to use instead of having this module create one internally."
+  type        = "string"
+  default     = "null"
+}
+
+
 variable "consul_instance_type" {
   description = "The type of EC2 Instance to run in the Consul ASG"
   type        = string

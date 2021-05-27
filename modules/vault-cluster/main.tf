@@ -114,7 +114,11 @@ resource "aws_launch_configuration" "launch_configuration" {
   instance_type = var.instance_type
   user_data     = var.user_data
 
-  iam_instance_profile = aws_iam_instance_profile.instance_profile.name
+  iam_instance_profile = var.iam_instance_profile_arn == null ? element(
+    concat(aws_iam_instance_profile.instance_profile.*.name, [""]),
+    0,
+  ) : var.iam_instance_profile_arn
+
   key_name             = var.ssh_key_name
   # TF-UPGRADE-TODO: In Terraform v0.10 and earlier, it was sometimes necessary to
   # force an interpolation expression to be interpreted as a list by wrapping it
@@ -230,9 +234,16 @@ module "security_group_rules" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_iam_instance_profile" "instance_profile" {
+  count       = var.iam_instance_profile_arn == null ? 1 : 0
   name_prefix = var.cluster_name
   path        = var.instance_profile_path
-  role        = aws_iam_role.instance_role.name
+  role        = element(
+    concat(
+      aws_iam_role.instance_role.*.name,
+      [""]
+    ),
+    0,
+  )
 
   # aws_launch_configuration.launch_configuration in this module sets create_before_destroy to true, which means
   # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
@@ -243,8 +254,15 @@ resource "aws_iam_instance_profile" "instance_profile" {
 }
 
 resource "aws_iam_role" "instance_role" {
+  count              = var.iam_instance_profile_arn == null ? 1 : 0
   name_prefix        = var.cluster_name
-  assume_role_policy = data.aws_iam_policy_document.instance_role.json
+  assume_role_policy = element(
+    concat(
+      data.aws_iam_policy_document.instance_role.*.json,
+      [""]
+    ),
+    0,
+  )
 
   permissions_boundary = var.iam_permissions_boundary
 
@@ -257,6 +275,8 @@ resource "aws_iam_role" "instance_role" {
 }
 
 data "aws_iam_policy_document" "instance_role" {
+  count = var.iam_instance_profile_arn == null ? 1 : 0
+
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
@@ -293,9 +313,15 @@ resource "aws_s3_bucket" "vault_storage" {
 }
 
 resource "aws_iam_role_policy" "vault_s3" {
-  count = var.enable_s3_backend ? 1 : 0
+  count = var.enable_s3_backend && var.iam_instance_profile_arn == null ? 1 : 0
   name  = "vault_s3"
-  role  = aws_iam_role.instance_role.id
+  role  = element(
+    concat(
+      aws_iam_role.instance_role.*.id,
+      [""]
+    ),
+    0,
+  )
   policy = element(
     concat(data.aws_iam_policy_document.vault_s3.*.json, [""]),
     0,
@@ -310,7 +336,7 @@ resource "aws_iam_role_policy" "vault_s3" {
 }
 
 data "aws_iam_policy_document" "vault_s3" {
-  count = var.enable_s3_backend ? 1 : 0
+  count = var.enable_s3_backend && var.iam_instance_profile_arn == null ? 1 : 0
 
   statement {
     effect  = "Allow"
@@ -367,7 +393,7 @@ resource "aws_iam_role_policy" "vault_dynamo" {
 }
 
 data "aws_iam_policy_document" "vault_auto_unseal_kms" {
-  count = var.enable_auto_unseal ? 1 : 0
+  count = var.enable_auto_unseal && var.iam_instance_profile_arn == null ? 1 : 0
 
   statement {
     effect = "Allow"
@@ -383,9 +409,15 @@ data "aws_iam_policy_document" "vault_auto_unseal_kms" {
 }
 
 resource "aws_iam_role_policy" "vault_auto_unseal_kms" {
-  count = var.enable_auto_unseal ? 1 : 0
+  count = var.enable_auto_unseal && var.iam_instance_profile_arn == null ? 1 : 0
   name  = "vault_auto_unseal_kms"
-  role  = aws_iam_role.instance_role.id
+  role  = element(
+    concat(
+      aws_iam_role.instance_role.*.id,
+      [""]
+    ),
+    0,
+  )
   policy = element(
     concat(
       data.aws_iam_policy_document.vault_auto_unseal_kms.*.json,

@@ -167,6 +167,12 @@ variable "health_check_grace_period" {
   default     = 300
 }
 
+variable "iam_instance_profile_arn" {
+  description = "The ARN of the IAM instance profile to use instead of having this module create one internally."
+  type        = string
+  default     = null
+}
+
 variable "instance_profile_path" {
   description = "Path in which to create the IAM instance profile."
   default     = "/"

@@ -13,7 +13,7 @@ with the Vault VPC. The Vault cluster uses [Consul][consul] as the storage backe
 so this example also deploys a separate Consul server cluster using the
 [consul-cluster module][consul_cluster] from the Consul AWS Module. Each of the
 servers in this example has [Dnsmasq][dnsmasq] installed (via the [install-dnsmasq module][dnsmasq_module])
-or [setup-systemd-resolved][setup_systemd_resolved] (in the case of Ubuntu 18.04)
+or [setup-systemd-resolved][setup_systemd_resolved] (in the case of Ubuntu 18.04 or 20.04)
 which allows them to use the Consul server cluster for service discovery and thereby
 access Vault via DNS using the domain name `vault.service.consul`.
 

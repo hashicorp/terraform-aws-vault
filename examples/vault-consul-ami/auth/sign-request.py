@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -What-------------------------------------------------------------------------
 # This script creates a request to the AWS Security Token Service API
 # with the action "GetCallerIdentity" and then signs the request using the

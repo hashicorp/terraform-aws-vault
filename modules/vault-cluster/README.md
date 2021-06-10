@@ -193,7 +193,7 @@ using a nice domain name instead, such as `vault.service.consul`.
 
 To set this up, use the [install-dnsmasq
 module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq) on each server that
-needs to access Vault or [setup-systemd-resolved](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/setup-systemd-resolved) if using Ubuntu 18.04. This allows you to access Vault from your EC2 Instances as follows:
+needs to access Vault or [setup-systemd-resolved](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/setup-systemd-resolved) if using Ubuntu 18.04 or 20.04. This allows you to access Vault from your EC2 Instances as follows:
 
 ```
 vault -address=https://vault.service.consul:8200 read secret/foo
@@ -417,7 +417,7 @@ for more info.
 Note that if you want to enable encryption for the root EBS Volume for your Vault Instances (despite the fact that
 Vault itself doesn't write anything to this volume), you need to enable that in your AMI. If you're creating the AMI
 using Packer (e.g. as shown in the [vault-consul-ami example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-consul-ami)), you need to set the [encrypt_boot
-parameter](https://www.packer.io/docs/builders/amazon-ebs.html#encrypt_boot) to `true`.  
+parameter](https://www.packer.io/docs/builders/amazon-ebs.html#encrypt_boot) to `true`.
 
 
 ### Dedicated instances
@@ -431,13 +431,13 @@ This module attaches a security group to each EC2 Instance that allows inbound r
 
 * **Vault**: For the Vault API port (default: 8200), you can use the `allowed_inbound_cidr_blocks` parameter to control
   the list of [CIDR blocks](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) that will be allowed access
-  and the `allowed_inbound_security_group_ids` parameter to control the security groups that will be allowed access.  
+  and the `allowed_inbound_security_group_ids` parameter to control the security groups that will be allowed access.
 
-* **SSH**: For the SSH port (default: 22), you can use the `allowed_ssh_cidr_blocks` parameter to control the list of   
+* **SSH**: For the SSH port (default: 22), you can use the `allowed_ssh_cidr_blocks` parameter to control the list of
   [CIDR blocks](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) that will be allowed access. You can use the `allowed_ssh_security_group_ids` parameter to control the list of source Security Groups that will be allowed access.
 
 Note that all the ports mentioned above are configurable via the `xxx_port` variables (e.g. `api_port`). See
-[variables.tf](variables.tf) for the full list.  
+[variables.tf](variables.tf) for the full list.
 
 
 

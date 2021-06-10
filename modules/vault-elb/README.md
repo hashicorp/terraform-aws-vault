@@ -6,7 +6,7 @@ from the [vault-cluster module](https://github.com/hashicorp/terraform-aws-vault
 Internet. Note that for most users, we recommend NOT making Vault accessible from the public Internet and using
 DNS to access your Vault cluster instead (see the [install-dnsmasq
 module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq) or [setup-systemd-resolved](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/setup-systemd-resolved)
-in the case of Ubuntu 18.04 for details).
+in the case of Ubuntu 18.04 or 20.04 for details).
 
 
 

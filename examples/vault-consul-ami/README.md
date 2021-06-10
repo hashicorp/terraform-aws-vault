@@ -7,8 +7,9 @@ and [install-dnsmasq](https://github.com/hashicorp/terraform-aws-consul/tree/mas
 modules from the Consul AWS Module with [Packer](https://www.packer.io/) to create [Amazon Machine Images
 (AMIs)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) that have Vault and Consul installed on top of:
 
-1. Ubuntu 18.04
 1. Ubuntu 16.04
+1. Ubuntu 18.04
+1. Ubuntu 20.04
 1. Amazon Linux 2
 
 You can use this AMI to deploy a [Vault cluster](https://www.vaultproject.io/) by using the [vault-cluster

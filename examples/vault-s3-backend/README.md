@@ -10,7 +10,7 @@ This example creates a Vault cluster spread across the subnets in the default VP
 servers in this example has [Dnsmasq](http://www.thekelleys.org.uk/dnsmasq/doc.html) installed (via the
 [install-dnsmasq module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq))
 or [setup-systemd-resolved](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/setup-systemd-resolved)
-(in the case Ubuntu of 18.04) which allow it to use the Consul server cluster for service discovery and thereby access Vault via DNS using the domain name `vault.service.consul`. For an example of a Vault cluster
+(in the case Ubuntu of 18.04 or 20.04) which allow it to use the Consul server cluster for service discovery and thereby access Vault via DNS using the domain name `vault.service.consul`. For an example of a Vault cluster
 that is publicly accessible, see [the root example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example).
 
 ![Vault architecture](https://github.com/hashicorp/terraform-aws-vault/blob/master/_docs/architecture-with-s3.png?raw=true)

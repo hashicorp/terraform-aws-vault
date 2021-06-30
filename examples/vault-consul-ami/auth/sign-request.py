@@ -22,19 +22,11 @@ import sys
 import botocore.session
 
 
-def decode_bytes_from_dict_values(dict_, to_go_style=False):
-    retval = {}
-    for k, v in dict_.items():
-        try:
-            value = v.decode()
-        except AttributeError:
-            value = v
-
-        if to_go_style:
-            value = [value]
-
-        retval[k] = value
-    return retval
+def decode_if_bytes(val):
+    try:
+        return val.decode()
+    except (UnicodeDecodeError, AttributeError):
+        return val
 
 
 def generate_vault_request(awsIamServerId):
@@ -47,16 +39,17 @@ def generate_vault_request(awsIamServerId):
     request_dict['headers']['X-Vault-AWS-IAM-Server-ID'] = awsIamServerId
 
     request = endpoint.create_request(request_dict, operation_model)
+    request_headers_go_style = {k: [decode_if_bytes(v)] for k, v in request.headers.items()}
 
     return {
-        'iam_http_request_method': request.method,
-        'iam_request_url':         base64.b64encode(request.url.encode()),
-        'iam_request_body':        base64.b64encode(request.body.encode()),
-        'iam_request_headers':     base64.b64encode(json.dumps(decode_bytes_from_dict_values(dict(request.headers), to_go_style=True)).encode()),  # It's a CaseInsensitiveDict, which is not JSON-serializable
+        'iam_http_request_method': decode_if_bytes(request.method),
+        'iam_request_url':         base64.b64encode(request.url.encode()).decode(),
+        'iam_request_body':        base64.b64encode(request.body.encode()).decode(),
+        'iam_request_headers':     base64.b64encode(json.dumps(request_headers_go_style).encode()).decode(),
     }
 
 
 if __name__ == "__main__":
     awsIamServerId = sys.argv[1]
     vault_request = generate_vault_request(awsIamServerId)
-    print(json.dumps(decode_bytes_from_dict_values(vault_request)))
+    print(json.dumps(vault_request))

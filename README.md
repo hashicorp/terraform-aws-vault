@@ -74,7 +74,7 @@ To deploy the Vault cluster:
 1. If you only need to access Vault from inside your AWS account (recommended), run the [install-dnsmasq
    module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq) on each server or
    [setup-systemd-resolved](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/setup-systemd-resolved)
-   (in the case of Ubuntu 18.04) and 
+   (in the case of Ubuntu 18.04 or 20.04) and
    that server will be able to reach Vault using the Consul Server cluster as the DNS resolver (e.g. using an address
    like `vault.service.consul`). See the [vault-cluster-private example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) for working
    sample code.

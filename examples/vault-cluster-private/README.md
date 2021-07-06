@@ -14,7 +14,7 @@ still be accessible from the public Internet.
 Each of the servers in this example has [Dnsmasq](http://www.thekelleys.org.uk/dnsmasq/doc.html) installed (via the
 [install-dnsmasq module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq)) or
 [setup-systemd-resolved](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/setup-systemd-resolved)
-(in the case Ubuntu of 18.04) 
+(in the case Ubuntu of 18.04 or 20.04)
 which allows it to use the Consul server cluster for service discovery and thereby access Vault via DNS using the
 domain name `vault.service.consul`. For an example of a Vault cluster
 that is publicly accessible, see [the root example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/root-example).

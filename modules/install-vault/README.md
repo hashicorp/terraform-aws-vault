@@ -9,6 +9,7 @@ This script has been tested on the following operating systems:
 
 * Ubuntu 16.04
 * Ubuntu 18.04
+* Ubuntu 20.04
 * Amazon Linux 2
 
 There is a good chance it will work on other flavors of Debian, CentOS, and RHEL as well.

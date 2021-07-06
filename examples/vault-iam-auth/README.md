@@ -26,7 +26,7 @@ You will need to create an [Amazon Machine Image (AMI)][ami] that has both Vault
 installed, which you can do using the [vault-consul-ami example][vault_consul_ami]). All the EC2
 Instances in this example (including the EC2 Instance that authenticates to Vault) install
 [Dnsmasq][dnsmasq] (via the [install-dnsmasq module][dnsmasq_module]) or
-[setup-systemd-resolved][setup_systemd_resolved] (in the case of Ubuntu 18.04) so that all DNS queries
+[setup-systemd-resolved][setup_systemd_resolved] (in the case of Ubuntu 18.04 or 20.04) so that all DNS queries
 for `*.consul` will be directed to the Consul Server cluster. Because Consul has knowledge of
 all the Vault nodes (and in some cases, of other services as well), this setup allows the EC2
 Instance to use Consul's DNS server for service discovery, and thereby to discover the IP addresses
@@ -135,7 +135,7 @@ as Go, Java or Ruby, for example. For more details on the IAM auth method, there
 a talk by J. Thompson called [Deep Dive into Vault's AWS Auth Backend][talk].
 
 ```bash
-signed_request=$(python /opt/vault/scripts/sign-request.py vault.service.consul)
+signed_request=$(python3 /opt/vault/scripts/sign-request.py vault.service.consul)
 ```
 
 Once we have the encrypted request created by the python script, we can pass it

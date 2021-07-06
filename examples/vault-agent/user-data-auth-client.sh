@@ -76,4 +76,4 @@ response=$(retry \
 # Serves the answer in a web server so we can test that this auth client is
 # authenticating to vault and fetching data correctly
 echo $response | jq -r .data.the_answer > index.html
-python -m SimpleHTTPServer 8080 &
+python3 -m SimpleHTTPServer 8080 &

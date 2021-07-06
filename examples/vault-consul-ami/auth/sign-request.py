@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -What-------------------------------------------------------------------------
 # This script creates a request to the AWS Security Token Service API
 # with the action "GetCallerIdentity" and then signs the request using the
@@ -15,17 +15,19 @@
 # the response from GetCallerIdentity, which tells who is trying to authenticate
 # ------------------------------------------------------------------------------
 
-import botocore.session
-from botocore.awsrequest import create_request_object
-import json
 import base64
+import json
 import sys
 
-def headers_to_go_style(headers):
-    retval = {}
-    for k, v in headers.iteritems():
-        retval[k] = [v]
-    return retval
+import botocore.session
+
+
+def decode_if_bytes(val):
+    try:
+        return val.decode()
+    except (UnicodeDecodeError, AttributeError):
+        return val
+
 
 def generate_vault_request(awsIamServerId):
     session = botocore.session.get_session()
@@ -37,15 +39,17 @@ def generate_vault_request(awsIamServerId):
     request_dict['headers']['X-Vault-AWS-IAM-Server-ID'] = awsIamServerId
 
     request = endpoint.create_request(request_dict, operation_model)
+    request_headers_go_style = {k: [decode_if_bytes(v)] for k, v in request.headers.items()}
 
     return {
-        'iam_http_request_method': request.method,
-        'iam_request_url':         base64.b64encode(request.url),
-        'iam_request_body':        base64.b64encode(request.body),
-        'iam_request_headers':     base64.b64encode(json.dumps(headers_to_go_style(dict(request.headers)))), # It's a CaseInsensitiveDict, which is not JSON-serializable
+        'iam_http_request_method': decode_if_bytes(request.method),
+        'iam_request_url':         base64.b64encode(request.url.encode()).decode(),
+        'iam_request_body':        base64.b64encode(request.body.encode()).decode(),
+        'iam_request_headers':     base64.b64encode(json.dumps(request_headers_go_style).encode()).decode(),
     }
 
 
 if __name__ == "__main__":
     awsIamServerId = sys.argv[1]
-    print json.dumps(generate_vault_request(awsIamServerId))
+    vault_request = generate_vault_request(awsIamServerId)
+    print(json.dumps(vault_request))

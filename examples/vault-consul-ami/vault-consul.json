@@ -51,25 +51,6 @@
     },
     "ssh_username": "ubuntu"
   },{
-    "ami_name": "vault-consul-ubuntu16-{{isotime | clean_resource_name}}-{{uuid}}",
-    "ami_description": "An Ubuntu 16.04 AMI that has Vault and Consul installed.",
-    "instance_type": "t2.micro",
-    "name": "ubuntu16-ami",
-    "region": "{{user `aws_region`}}",
-    "type": "amazon-ebs",
-    "source_ami_filter": {
-      "filters": {
-        "virtualization-type": "hvm",
-        "architecture": "x86_64",
-        "name": "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*",
-        "block-device-mapping.volume-type": "gp2",
-        "root-device-type": "ebs"
-      },
-      "owners": ["099720109477"],
-      "most_recent": true
-    },
-    "ssh_username": "ubuntu"
-  },{
     "ami_name": "vault-consul-amazon-linux-2-{{isotime | clean_resource_name}}-{{uuid}}",
     "ami_description": "An Amazon Linux 2 AMI that has Vault and Consul installed.",
     "instance_type": "t2.micro",
@@ -149,7 +130,7 @@
       "fi"
     ],
     "inline_shebang": "/bin/bash -e",
-    "only": ["ubuntu16-ami","ubuntu18-ami","ubuntu20-ami"]
+    "only": ["ubuntu18-ami","ubuntu20-ami"]
   },{
     "type": "shell",
     "inline": [
@@ -173,7 +154,7 @@
     "pause_before": "30s"
   },{
     "type": "shell",
-    "only": ["ubuntu16-ami", "amazon-linux-2-ami"],
+    "only": ["amazon-linux-2-ami"],
     "inline": [
       "/tmp/terraform-aws-consul/modules/install-dnsmasq/install-dnsmasq"
     ]

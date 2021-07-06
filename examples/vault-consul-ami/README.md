@@ -58,8 +58,8 @@ examples.
 
 **NOTE**: This packer template will build two versions of the AMI - an Ubuntu version and Amazon Linux 2 version. You
 can restrict packer to only build one of them by using the `only` CLI arg. For example, to only build the Amazon Linux 2
-AMI, run `packer build -only amazon-linux-2-ami vault-consul.json`. You can use the parameter `ubuntu16-ami` for the
-ubuntu AMI.
+AMI, run `packer build -only amazon-linux-2-ami vault-consul.json`. You can use the parameter `ubuntu18-ami` for the
+ubuntu 18.04 AMI.
 
 
 

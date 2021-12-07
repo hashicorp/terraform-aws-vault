@@ -34,7 +34,14 @@ module "vault_cluster" {
   instance_type = var.vault_instance_type
 
   ami_id    = var.ami_id
-  user_data = data.template_file.user_data_vault_cluster.rendered
+
+  # The user data script that will run on each vault server when it's booting
+  # This script will configure and start Vault
+  user_data = templatefile("${path.module}/user-data-vault.sh", {
+    aws_region        = data.aws_region.current.name
+    dynamo_table_name = var.dynamo_table_name
+    s3_bucket_name    = var.s3_bucket_name
+  })
 
   # Enable S3 storage backend
   enable_s3_backend       = true
@@ -59,21 +66,6 @@ module "vault_cluster" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# THE USER DATA SCRIPT THAT WILL RUN ON EACH VAULT SERVER WHEN IT'S BOOTING
-# This script will configure and start Vault
-# ---------------------------------------------------------------------------------------------------------------------
-
-data "template_file" "user_data_vault_cluster" {
-  template = file("${path.module}/user-data-vault.sh")
-
-  vars = {
-    aws_region        = data.aws_region.current.name
-    dynamo_table_name = var.dynamo_table_name
-    s3_bucket_name    = var.s3_bucket_name
-  }
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY THE CLUSTERS IN THE DEFAULT VPC AND AVAILABILITY ZONES
 # Using the default VPC and subnets makes this example easy to run and test, but it means Vault is
 # accessible from the public Internet. In a production deployment, we strongly recommend deploying into a custom VPC
@@ -91,4 +83,3 @@ data "aws_subnet_ids" "default" {
 
 data "aws_region" "current" {
 }
-

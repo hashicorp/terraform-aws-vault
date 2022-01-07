@@ -102,7 +102,7 @@ module "consul_cluster" {
 
   ami_id    = var.ami_id
 
-  # The user data script that will run on eacht consul server when it's booting
+  # The user data script that will run on each consul server when it's booting
   # This script will configure and start Consul
   user_data = templatefile("${path.module}/user-data-consul.sh", {
     consul_cluster_tag_key   = var.consul_cluster_tag_key

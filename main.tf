@@ -66,7 +66,7 @@ module "vault_cluster" {
   instance_type = var.vault_instance_type
 
   ami_id    = var.ami_id == null ? data.aws_ami.vault_consul.image_id : var.ami_id
-  # The user data script that will run on eacht Vault server when it's booting
+  # The user data script that will run on each Vault server when it's booting
   # This script will configure and start Vault
   user_data = templatefile("${path.module}/examples/root-example/user-data-vault.sh", { aws_region = data.aws_region.current.name, consul_cluster_tag_key = var.consul_cluster_tag_key, consul_cluster_tag_value = var.consul_cluster_name })
 

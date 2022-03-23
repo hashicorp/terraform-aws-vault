@@ -1,5 +1,6 @@
 # DISCLAIMER
-This repository is no longer supported, please consider using [this repository](https://registry.terraform.io/modules/hashicorp/vault-starter/aws/latest) for the latest and most supported version for Vault.
+**This repository is no longer supported, please consider using [this repository](https://registry.terraform.io/modules/hashicorp/vault-starter/aws/latest) for the latest and most supported version for Vault.**
+
 Moving forward in the future this repository will be no longer supported and eventually lead to
 deprecation. Please use our latest versions of our products moving forward or alternatively you
 may fork the repository to continue use and development for your personal/business use.
@@ -108,25 +109,9 @@ you can leverage the work of the Module community and maintainers, and pick up i
 a version number bump.
 
 
+## Who created this Module?
 
-## Who maintains this Module?
-
-This Module is maintained by [Gruntwork](http://www.gruntwork.io/?ref=repo_aws_vault). If you're looking for help or commercial
-support, send an email to [modules@gruntwork.io](mailto:modules@gruntwork.io?Subject=Vault%20Module).
-Gruntwork can help with:
-
-* Setup, customization, and support for this Module.
-* Modules for other types of infrastructure, such as VPCs, Docker clusters, databases, and continuous integration.
-* Modules that meet compliance requirements, such as HIPAA.
-* Consulting & Training on AWS, Terraform, and DevOps.
-
-
-
-
-## How do I contribute to this Module?
-
-Contributions are very welcome! Check out the [Contribution Guidelines](https://github.com/hashicorp/terraform-aws-vault/tree/master/CONTRIBUTING.md) for instructions.
-
+These modules were created by [Gruntwork](http://www.gruntwork.io/?ref=repo_aws_vault), in partnership with HashiCorp, in 2017 and maintained through 2021. They were deprecated in 2022 in favor of newer alternatives (see the top of the README for details).
 
 
 ## How is this Module versioned?

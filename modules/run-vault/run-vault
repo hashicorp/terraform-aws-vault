@@ -521,8 +521,7 @@ function run {
         shift
         ;;
       --unauthenticated-metrics-access)
-        unauthenticated_metrics_access="$2"
-        shift
+        unauthenticated_metrics_access="true"
         ;;
       --config-dir)
         assert_not_empty "$key" "$2"

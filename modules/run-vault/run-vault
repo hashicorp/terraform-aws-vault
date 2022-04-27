@@ -33,6 +33,7 @@ function print_usage {
   echo -e "  --tls-key-file\tSpecifies the path to the private key for the certificate. Required."
   echo -e "  --port\t\tThe port for Vault to listen on. Optional. Default is $DEFAULT_PORT."
   echo -e "  --cluster-port\tThe port for Vault to listen on for server-to-server requests. Optional. Default is --port + 1."
+  echo -e "  --unauthenticated_metrics_access\t\tAllows unauthenticated access to the /v1/sys/metrics endpoint. Optional. Default is false."
   echo -e "  --api-addr\t\tThe full address to use for Client Redirection when running Vault in HA mode. Defaults to \"https://[instance_ip]:$DEFAULT_PORT\". Optional."
   echo -e "  --config-dir\t\tThe path to the Vault config folder. Optional. Default is the absolute path of '../config', relative to this script."
   echo -e "  --bin-dir\t\tThe path to the folder with Vault binary. Optional. Default is the absolute path of the parent folder of this script."
@@ -233,21 +234,22 @@ function generate_vault_config {
   local -r tls_key_file="$2"
   local -r port="$3"
   local -r cluster_port="$4"
-  local -r api_addr="$5"
-  local -r config_dir="$6"
-  local -r user="$7"
-  local -r enable_s3_backend="$8"
-  local -r s3_bucket="$9"
-  local -r s3_bucket_path="${10}"
-  local -r s3_bucket_region="${11}"
-  local -r consul_agent_service_registration_address="${12}"
-  local -r enable_dynamo_backend="${13}"
-  local -r dynamo_region="${14}"
-  local -r dynamo_table="${15}"
-  local -r enable_auto_unseal="${16}"
-  local -r auto_unseal_kms_key_id="${17}"
-  local -r auto_unseal_kms_key_region="${18}"
-  local -r auto_unseal_endpoint="${19}"
+  local -r unauthenticated_metrics_access="$5"
+  local -r api_addr="$6"
+  local -r config_dir="$7"
+  local -r user="$8"
+  local -r enable_s3_backend="$9"
+  local -r s3_bucket="${10}"
+  local -r s3_bucket_path="${11}"
+  local -r s3_bucket_region="${12}"
+  local -r consul_agent_service_registration_address="${13}"
+  local -r enable_dynamo_backend="${14}"
+  local -r dynamo_region="${15}"
+  local -r dynamo_table="${16}"
+  local -r enable_auto_unseal="${17}"
+  local -r auto_unseal_kms_key_id="${18}"
+  local -r auto_unseal_kms_key_region="${19}"
+  local -r auto_unseal_endpoint="${20}"
   local -r config_path="$config_dir/$VAULT_CONFIG_FILE"
 
   local instance_ip_address
@@ -278,12 +280,23 @@ ui = true
 EOF
 )
 
+  local unauthenticated_metrics_access_config=""
+  if [[ "$unauthenticated_metrics_access" == "true" ]]; then
+    unauthenticated_metrics_access_config=$(cat <<EOF
+telemetry {
+    unauthenticated_metrics_access = true
+  }\n
+EOF
+)
+  fi
+
   local -r listener_config=$(cat <<EOF
 listener "tcp" {
   address         = "0.0.0.0:$port"
   cluster_address = "0.0.0.0:$cluster_port"
   tls_cert_file   = "$tls_cert_file"
   tls_key_file    = "$tls_key_file"
+  $unauthenticated_metrics_access_config
 }\n
 EOF
 )
@@ -452,6 +465,7 @@ function run {
   local tls_key_file=""
   local port="$DEFAULT_PORT"
   local cluster_port=""
+  local unauthenticated_metrics_access=""
   local api_addr=""
   local config_dir=""
   local bin_dir=""
@@ -504,6 +518,10 @@ function run {
       --cluster-port)
         assert_not_empty "$key" "$2"
         cluster_port="$2"
+        shift
+        ;;
+      --unauthenticated-metrics-access)
+        unauthenticated_metrics_access="$2"
         shift
         ;;
       --config-dir)
@@ -664,7 +682,7 @@ function run {
       assert_not_empty "--consul-agent-service-registration-address" "${consul_agent_service_registration_address}"
     fi
   fi
-  
+
   if [[ "$enable_dynamo_backend" == "true" ]]; then
     assert_not_empty "--dynamo-table" "$dynamo_table"
     assert_not_empty "--dynamo-region" "$dynamo_region"
@@ -730,6 +748,7 @@ function run {
         "$tls_key_file" \
         "$port" \
         "$cluster_port" \
+        "$unauthenticated_metrics_access" \
         "$api_addr" \
         "$config_dir" \
         "$user" \

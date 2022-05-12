@@ -33,7 +33,7 @@ function print_usage {
   echo -e "  --tls-key-file\tSpecifies the path to the private key for the certificate. Required."
   echo -e "  --port\t\tThe port for Vault to listen on. Optional. Default is $DEFAULT_PORT."
   echo -e "  --cluster-port\tThe port for Vault to listen on for server-to-server requests. Optional. Default is --port + 1."
-  echo -e "  --unauthenticated_metrics_access\t\tAllows unauthenticated access to the /v1/sys/metrics endpoint. Optional. Default is false."
+  echo -e "  --unauthenticated-metrics-access\t\tAllows unauthenticated access to the /v1/sys/metrics endpoint. Optional. Default is false."
   echo -e "  --api-addr\t\tThe full address to use for Client Redirection when running Vault in HA mode. Defaults to \"https://[instance_ip]:$DEFAULT_PORT\". Optional."
   echo -e "  --config-dir\t\tThe path to the Vault config folder. Optional. Default is the absolute path of '../config', relative to this script."
   echo -e "  --bin-dir\t\tThe path to the folder with Vault binary. Optional. Default is the absolute path of the parent folder of this script."

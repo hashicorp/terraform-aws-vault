@@ -176,8 +176,30 @@ function fetch_binary {
   local -r version="$1"
   local download_url="$2"
 
+  local cpu_arch
+  cpu_arch="$(uname -m)"
+  local binary_arch=""
+  case "$cpu_arch" in
+    x86_64)
+      binary_arch="amd64"
+      ;;
+    x86)
+      binary_arch="386"
+      ;;
+    arm64|aarch64)
+      binary_arch="arm64"
+      ;;
+    arm*)
+      binary_arch="arm"
+      ;;
+    *)
+      log_error "CPU architecture $cpu_arch is not a supported by Vault."
+      exit 1
+      ;;
+    esac
+
   if [[ -z "$download_url" && -n "$version" ]];  then
-    download_url="https://releases.hashicorp.com/vault/${version}/vault_${version}_linux_amd64.zip"
+    download_url="https://releases.hashicorp.com/vault/${version}/vault_${version}_linux_${binary_arch}.zip"
   fi
 
   retry \

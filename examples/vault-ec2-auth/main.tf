@@ -21,7 +21,14 @@ resource "aws_instance" "example_auth_to_vault" {
     aws_security_group.auth_instance.id,
   ]
 
-  user_data            = data.template_file.user_data_auth_client.rendered
+  # The user data script that will run on the instance
+  # This script will run consul, which is used for discovering vault cluster
+  user_data            = templatefile("${path.module}/user-data-auth-client.sh", {
+    consul_cluster_tag_key   = var.consul_cluster_tag_key
+    consul_cluster_tag_value = var.consul_cluster_name
+    example_role_name        = var.example_role_name
+  })
+
   iam_instance_profile = aws_iam_instance_profile.example_instance_profile.name
 
   tags = {
@@ -35,21 +42,6 @@ resource "aws_instance" "example_auth_to_vault" {
 resource "aws_iam_instance_profile" "example_instance_profile" {
   path = "/"
   role = module.vault_cluster.iam_role_name
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-# THE USER DATA SCRIPT THAT WILL RUN ON THE INSTANCE
-# This script will run consul, which is used for discovering vault cluster
-# ---------------------------------------------------------------------------------------------------------------------
-
-data "template_file" "user_data_auth_client" {
-  template = file("${path.module}/user-data-auth-client.sh")
-
-  vars = {
-    consul_cluster_tag_key   = var.consul_cluster_tag_key
-    consul_cluster_tag_value = var.consul_cluster_name
-    example_role_name        = var.example_role_name
-  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -87,7 +79,19 @@ module "vault_cluster" {
   instance_type = var.vault_instance_type
 
   ami_id    = var.ami_id
-  user_data = data.template_file.user_data_vault_cluster.rendered
+
+  # The user data script that will run on each Vault server when it's booting
+  # This script will configure and start Vault
+  user_data = templatefile("${path.module}/user-data-vault.sh", {
+    aws_region               = data.aws_region.current.name
+    consul_cluster_tag_key   = var.consul_cluster_tag_key
+    consul_cluster_tag_value = var.consul_cluster_name
+    example_role_name        = var.example_role_name
+    # Please note that normally we would never pass a secret this way
+    # This is just for test purposes so we can verify that our example instance is authenticating correctly
+    example_secret = var.example_secret
+    ami_id         = var.ami_id
+  })
 
   vpc_id     = data.aws_vpc.default.id
   subnet_ids = data.aws_subnet_ids.default.ids
@@ -112,26 +116,6 @@ module "consul_iam_policies_servers" {
   source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-iam-policies?ref=v0.8.0"
 
   iam_role_id = module.vault_cluster.iam_role_id
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-# THE USER DATA SCRIPT THAT WILL RUN ON EACH VAULT SERVER WHEN IT'S BOOTING
-# This script will configure and start Vault
-# ---------------------------------------------------------------------------------------------------------------------
-
-data "template_file" "user_data_vault_cluster" {
-  template = file("${path.module}/user-data-vault.sh")
-
-  vars = {
-    aws_region               = data.aws_region.current.name
-    consul_cluster_tag_key   = var.consul_cluster_tag_key
-    consul_cluster_tag_value = var.consul_cluster_name
-    example_role_name        = var.example_role_name
-    # Please note that normally we would never pass a secret this way
-    # This is just for test purposes so we can verify that our example instance is authenticating correctly
-    example_secret = var.example_secret
-    ami_id         = var.ami_id
-  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -167,7 +151,13 @@ module "consul_cluster" {
   cluster_tag_value = var.consul_cluster_name
 
   ami_id    = var.ami_id
-  user_data = data.template_file.user_data_consul.rendered
+
+  # The user data script that will run on each consul server when it's booting
+  # This script will configure and start Consul
+  user_data = templatefile("${path.module}/user-data-consul.sh", {
+    consul_cluster_tag_key   = var.consul_cluster_tag_key
+    consul_cluster_tag_value = var.consul_cluster_name
+  })
 
   vpc_id     = data.aws_vpc.default.id
   subnet_ids = data.aws_subnet_ids.default.ids
@@ -178,20 +168,6 @@ module "consul_cluster" {
   allowed_ssh_cidr_blocks     = ["0.0.0.0/0"]
   allowed_inbound_cidr_blocks = ["0.0.0.0/0"]
   ssh_key_name                = var.ssh_key_name
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-# THE USER DATA SCRIPT THAT WILL RUN ON EACH CONSUL SERVER WHEN IT'S BOOTING
-# This script will configure and start Consul
-# ---------------------------------------------------------------------------------------------------------------------
-
-data "template_file" "user_data_consul" {
-  template = file("${path.module}/user-data-consul.sh")
-
-  vars = {
-    consul_cluster_tag_key   = var.consul_cluster_tag_key
-    consul_cluster_tag_value = var.consul_cluster_name
-  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -212,4 +188,3 @@ data "aws_subnet_ids" "default" {
 
 data "aws_region" "current" {
 }
-

@@ -13,6 +13,25 @@
     "tls_private_key_path": null
   },
   "builders": [{
+    "ami_name": "vault-consul-ubuntu20-{{isotime | clean_resource_name}}-{{uuid}}",
+    "ami_description": "An Ubuntu 20.04 AMI that has Vault and Consul installed.",
+    "instance_type": "t2.micro",
+    "name": "ubuntu20-ami",
+    "region": "{{user `aws_region`}}",
+    "type": "amazon-ebs",
+    "source_ami_filter": {
+      "filters": {
+        "virtualization-type": "hvm",
+        "architecture": "x86_64",
+        "name": "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*",
+        "block-device-mapping.volume-type": "gp2",
+        "root-device-type": "ebs"
+      },
+      "owners": ["099720109477"],
+      "most_recent": true
+    },
+    "ssh_username": "ubuntu"
+ },{
     "ami_name": "vault-consul-ubuntu18-{{isotime | clean_resource_name}}-{{uuid}}",
     "ami_description": "An Ubuntu 18.04 AMI that has Vault and Consul installed.",
     "instance_type": "t2.micro",
@@ -93,6 +112,10 @@
     "destination": "/tmp/sign-request.py"
   },{
     "type": "file",
+    "source": "{{template_dir}}/auth/sign-request.py3",
+    "destination": "/tmp/sign-request.py3"
+  },{
+    "type": "file",
     "source": "{{user `ca_public_key_path`}}",
     "destination": "/tmp/ca.crt.pem"
   },{
@@ -107,9 +130,9 @@
     "type": "shell",
     "inline": [
       "if [[ '{{user `install_auth_signing_script`}}' == 'true' ]]; then",
-      "sudo mv /tmp/sign-request.py /opt/vault/scripts/",
+      "sudo mv /tmp/sign-request.py* /opt/vault/scripts/",
       "else",
-      "sudo rm /tmp/sign-request.py",
+      "sudo rm /tmp/sign-request.py*",
       "fi",
       "sudo mv /tmp/ca.crt.pem /opt/vault/tls/",
       "sudo mv /tmp/vault.crt.pem /opt/vault/tls/",
@@ -131,6 +154,17 @@
     ],
     "inline_shebang": "/bin/bash -e",
     "only": ["ubuntu16-ami","ubuntu18-ami"]
+  },{
+    "type": "shell",
+    "inline": [
+      "sudo apt-get install -y git",
+      "if [[ '{{user `install_auth_signing_python3_script`}}' == 'true' ]]; then",
+      "sudo apt-get install -y python3-pip",
+      "LC_ALL=C && sudo pip3 install boto3",
+      "fi"
+    ],
+    "inline_shebang": "/bin/bash -e",
+    "only": ["ubuntu20-ami"]
   },{
     "type": "shell",
     "inline": [
@@ -160,7 +194,7 @@
     ]
   },{
     "type": "shell",
-    "only": ["ubuntu18-ami"],
+    "only": ["ubuntu18-ami","ubuntu20-ami"],
     "inline": [
       "/tmp/terraform-aws-consul/modules/setup-systemd-resolved/setup-systemd-resolved"
     ],

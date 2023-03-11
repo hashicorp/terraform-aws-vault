@@ -54,7 +54,7 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 
   tag {
     key                 = "s3_bucket_id"
-    value               = element(concat(aws_s3_bucket.vault_storage.*.id, [""]), 0)
+    value               = local.s3_bucket_id
     propagate_at_launch = true
   }
 
@@ -268,8 +268,13 @@ data "aws_iam_policy_document" "instance_role" {
   }
 }
 
+locals {
+  s3_bucket_arn = var.use_existing_s3_bucket ? element(concat(data.aws_s3_bucket.vault_storage.*.arn, [""]), 0) : element(concat(aws_s3_bucket.vault_storage.*.id, [""]), 0)
+  s3_bucket_id = var.use_existing_s3_bucket ? element(concat(data.aws_s3_bucket.vault_storage.*.id, [""]), 0) : element(concat(aws_s3_bucket.vault_storage.*.id, [""]), 0)
+}
+
 resource "aws_s3_bucket" "vault_storage" {
-  count         = var.enable_s3_backend ? 1 : 0
+  count         = ( var.enable_s3_backend && var.use_existing_s3_bucket == false ) ? 1 : 0
   bucket        = var.s3_bucket_name
   force_destroy = var.force_destroy_s3_bucket
 
@@ -290,6 +295,11 @@ resource "aws_s3_bucket" "vault_storage" {
   lifecycle {
     create_before_destroy = true
   }
+}
+
+data "aws_s3_bucket" "vault_storage" {
+  count         = ( var.enable_s3_backend && var.use_existing_s3_bucket == true ) ? 1 : 0
+  bucket        = var.s3_bucket_name
 }
 
 resource "aws_iam_role_policy" "vault_s3" {
@@ -317,8 +327,8 @@ data "aws_iam_policy_document" "vault_s3" {
     actions = ["s3:*"]
 
     resources = [
-      aws_s3_bucket.vault_storage[0].arn,
-      "${aws_s3_bucket.vault_storage[0].arn}/*",
+      local.s3_bucket_arn,
+      "${local.s3_bucket_arn}/*",
     ]
   }
 }

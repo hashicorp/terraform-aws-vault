@@ -48,12 +48,12 @@ to trust this certificate.
 
 ## Quick start
 
-To use the `update-certificate-script`, use `git` to clone this repository at a specific tag (see the
-[releases page](../../../../releases) for all available tags) and run the `update-certificate-script` script:
+To use the `update-certificate-store` script, use `git` to clone this repository at a specific tag (see the
+[releases page](../../../../releases) for all available tags) and run the `update-certificate-store` script:
 
 ```
 git clone --branch <VERSION> https://github.com/hashicorp/terraform-aws-vault.git
-terraform-aws-vault/modules/update-certificate-script/update-certificate-script --cert-file-path /opt/vault/tls/ca.cert.pem
+terraform-aws-vault/modules/update-certificate-store/update-certificate-store --cert-file-path /opt/vault/tls/ca.cert.pem
 ```
 
 That's it!
@@ -77,7 +77,7 @@ See the [vault-consul-ami example](https://github.com/hashicorp/terraform-aws-va
 
 ## Command line Arguments
 
-The `update-certificate-script` script accepts the following arguments:
+The `update-certificate-store` script accepts the following arguments:
 
 * `--cert-file-path` (required): The path to the CA certificate public key to add to the OS certificate store.
 * `--dest-file-name` (optional): This script will copy `--cert-file-path` to a file with this name in a shared
@@ -87,5 +87,5 @@ The `update-certificate-script` script accepts the following arguments:
 Example:
 
 ```
-terraform-aws-vault/modules/update-certificate-script/update-certificate-script --cert-file-path /opt/vault/tls/ca.cert.pem
+terraform-aws-vault/modules/update-certificate-store/update-certificate-store --cert-file-path /opt/vault/tls/ca.cert.pem
 ```

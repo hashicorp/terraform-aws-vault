@@ -32,22 +32,17 @@ even if you immediately delete it.
 ### Quick start
 
 1. `git clone` this repo to your computer.
-1. Build a Vault and Consul AMI. See the [vault-consul-ami example][vault_consul_ami]
+2. Build a Vault and Consul AMI. See the [vault-consul-ami example][vault_consul_ami]
   documentation for instructions. Don't forget to set the variable `vault_download_url`
   with the url of the enterprise version of Vault if you wish to use Vault Enterprise.
   Make sure to note down the ID of the AMI.
-1. Install [Terraform][terraform].
-1. [Create an AWS KMS key][key_creation]. Take note of the key alias.
-1. Open `variables.tf`, set the environment variables specified at the top of the file,
-  and fill in any other variables that don't have a default. Put the AMI ID you
-  previously took note into the `ami_id` variable and the KMS key alias into
-  `auto_unseal_kms_key_alias`.
-1. Run `terraform init`.
-1. Run `terraform apply`.
-1. Run the [vault-examples-helper.sh script][examples_helper] to
+3. Install [Terraform][terraform].
+4. Run `terraform init`.
+5. Run `terraform apply`.
+6. Run the [vault-examples-helper.sh script][examples_helper] to
    print out the IP addresses of the Vault server and some example commands you
    can run to interact with the cluster: `../vault-examples-helper/vault-examples-helper.sh`.
-1. Ssh to an instance in the vault cluster and run `vault operator init` to initialize
+7. Ssh to an instance in the vault cluster and run `vault operator init` to initialize
   the cluster, then `vault status` to check that it is unsealed. If you ssh to a
   different node in the cluster, you might have to restart Vault first with
   `sudo systemctl restart vault.service` so it will rejoin the cluster and unseal.
@@ -91,17 +86,10 @@ you to pass the following flags to it:
 
 In this example, like in other examples, we execute `run-vault` at the [`user-data`
 script][user_data], which runs on boot for every node in the Vault cluster. The
-`key-id` is passed to this script by Terraform, after Terraform reads this value from a
-data source through the key alias. This means that the AWS key has to be previously
-manually created and we are using Terraform just to find this resource, not to
-create it. It is important to notice that AWS KMS keys have a [cost][kms_pricing]
+`key-id` is passed to this script by Terraform, after Terraform reads this value from a 
+resource block that creates the KMS key as given in the file - `kms.tf`. 
+It is important to notice that AWS KMS keys have a [cost][kms_pricing]
 per month per key, as well as an API usage cost.
-
-```
-data "aws_kms_alias" "vault-example" {
-  name = "alias/${var.auto_unseal_kms_key_alias}"
-}
-```
 
 If you wish to use Vault Enterprise, you still need to apply your Vault
 Enterprise License to the cluster with `vault write /sys/license "text=$LICENSE_KEY_TEXT"`.
